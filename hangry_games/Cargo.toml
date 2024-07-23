@@ -1,0 +1,6 @@
+[package]
+name = "hangry_games"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
