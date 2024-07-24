@@ -1,3 +1,5 @@
+use super::tribute_actions::TributeActions;
+
 #[derive(Debug)]
 pub struct Tribute {
     pub name: String,
@@ -21,6 +23,27 @@ impl Tribute {
             movement: 100,
             is_alive: true,
         }
+    }
+
+    /// The AI for a tribute. Automatic decisions based on current state.
+    pub fn decide_on_action(&self) -> TributeActions {
+        if self.health < 20 {
+            return TributeActions::Hide;
+        }
+
+        if self.hunger < 50 {
+            return TributeActions::UseItem;
+        }
+
+        if self.sleep < 10 {
+            return TributeActions::Sleep;
+        }
+
+        if self.movement > 20 {
+            return TributeActions::Move;
+        }
+
+        TributeActions::Hide
     }
 
     /// Reduces health
