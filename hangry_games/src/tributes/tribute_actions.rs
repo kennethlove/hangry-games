@@ -1,7 +1,9 @@
-#[derive(Debug)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum TributeActions {
-    Sleep,
+    #[default]
+    Idle,
     Move,
+    Rest,
     UseItem,
     Attack,
     Hide,
