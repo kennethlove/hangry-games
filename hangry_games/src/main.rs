@@ -1,21 +1,25 @@
-use hangry_games::areas::Area;
-use hangry_games::tributes::tribute_actors::Tribute;
+use futures::executor::block_on;
 
-fn main() {
-    let cornucopia = Area::Cornucopia;
-    let mut katniss = Tribute::new();
-    katniss.name = "Katniss".to_string();
-    katniss.district = 12;
+use entity::sea_orm::{DbErr, EntityTrait};
+use entity::area::Entity as Area;
+use hangry_games::db::Database;
+use dotenv::dotenv;
 
-    katniss.changes_area(cornucopia);
+async fn run() -> Result<(), DbErr> {
+    let db = Database::new().await;
+    let areas = Area::find().all(&db.connection).await?;
+    for area in areas {
+        println!("Area: {}", area.name);
+    }
+    Ok(())
+}
 
-    // let nearby_enemies = cornucopia.nearby_enemies(&katniss.clone());
-    // dbg!(nearby_enemies);
+#[tokio::main]
+async fn main() {
+    #[cfg(debug_assertions)]
+    dotenv().ok();
 
-    for mut tribute in vec![katniss] {
-        tribute.brain.act(&tribute.clone());
-        tribute.takes_physical_damage(90);
-        tribute.brain.act(&tribute.clone());
-        dbg!(tribute);
+    if let Err(err) = block_on(run()) {
+        panic!("{}", err);
     }
 }

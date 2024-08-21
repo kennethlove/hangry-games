@@ -1,2 +1,4 @@
 pub mod tributes;
-pub mod areas;
+pub mod area;
+
+pub mod db;

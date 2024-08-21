@@ -1,6 +1,6 @@
-use crate::areas::Area;
+use crate::area::Area;
 
-use super::tribute_actions::TributeActions;
+use super::actions::TributeActions;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
