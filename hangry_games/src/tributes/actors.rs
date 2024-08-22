@@ -72,10 +72,10 @@ impl TributeBrain {
 
 impl Tribute {
     /// Creates a new Tribute with full health, sanity, and movement
-    pub fn new() -> Self {
+    pub fn new(name: String) -> Self {
         let brain = TributeBrain::new();
         Self {
-            name: String::from("Tribute"),
+            name: name.clone(),
             health: 100,
             sanity: 100,
             movement: 100,
@@ -133,7 +133,7 @@ impl Tribute {
 
 impl Default for Tribute {
     fn default() -> Self {
-        Self::new()
+        Self::new("Tribute".to_string())
     }
 }
 

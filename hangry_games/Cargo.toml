@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dotenv = "0.15.0"
+dotenvy = "0.15.7"
 futures = "0.3.30"
-entity = { path = "entity" }
 tokio = { version="1.39.2", features=["full"] }
+clap = { version = "4.5.16", features = ["derive", "unicode"] }
+diesel = { version = "2.2.2", features = ["sqlite", "returning_clauses_for_sqlite_3_35"] }
