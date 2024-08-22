@@ -2,6 +2,7 @@ pub use sea_orm_migration::prelude::*;
 
 mod m20220101_000001_create_area_table;
 mod m20240810_224544_add_areas;
+mod m20240822_000021_create_tribute_table;
 
 pub struct Migrator;
 
@@ -11,6 +12,7 @@ impl MigratorTrait for Migrator {
         vec![
             Box::new(m20220101_000001_create_area_table::Migration),
             Box::new(m20240810_224544_add_areas::Migration),
+            Box::new(m20240822_000021_create_tribute_table::Migration),
         ]
     }
 }

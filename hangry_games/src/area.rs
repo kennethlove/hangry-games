@@ -43,7 +43,7 @@ impl Area {
         }
     }
 
-    pub fn to_str(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         match self {
             Area::Cornucopia => "The Cornucopia",
             Area::NorthEast => "North East",
