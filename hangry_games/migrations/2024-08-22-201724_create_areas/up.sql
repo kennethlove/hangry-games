@@ -1,5 +1,5 @@
 -- Your SQL goes here
 CREATE TABLE IF NOT EXISTS areas (
-    id INTEGER PRIMARY KEY,
-    name VARCHAR NOT NULL
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
 )

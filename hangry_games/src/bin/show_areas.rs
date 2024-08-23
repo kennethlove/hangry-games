@@ -7,7 +7,6 @@ fn main() {
 
     let connection = &mut establish_connection();
     let results = areas
-        .limit(5)
         .select(Area::as_select())
         .load(connection)
         .expect("Error loading areas");

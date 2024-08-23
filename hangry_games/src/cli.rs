@@ -11,6 +11,7 @@ pub struct Cli {
 #[derive(Debug, Subcommand)]
 enum Commands {
     AddTribute { name: String },
+    AddArea { name: String },
 }
 
 
@@ -20,6 +21,9 @@ pub fn parse() {
         Commands::AddTribute { name } => {
             let tribute = Tribute::new(name);
             dbg!(&tribute);
+        }
+        Commands::AddArea { name } => {
+            println!("Add area: {}", name);
         }
     }
 }

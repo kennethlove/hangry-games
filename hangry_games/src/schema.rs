@@ -2,7 +2,8 @@
 
 diesel::table! {
     areas (id) {
-        id -> Nullable<Integer>,
-        name -> Text,
+        id -> Int4,
+        #[max_length = 255]
+        name -> Varchar,
     }
 }

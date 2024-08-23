@@ -1,4 +1,5 @@
 use hangry_games::*;
+use hangry_games::db::create_area;
 use std::io::{stdin, Read};
 
 fn main() {
