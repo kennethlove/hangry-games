@@ -1,5 +1,5 @@
-pub mod areas;
-pub mod tributes;
+pub mod area;
+pub mod tribute;
 
-pub use areas::*;
-pub use tributes::*;
+pub use area::*;
+pub use tribute::*;

@@ -1,1 +1,1 @@
-DELETE FROM areas WHERE id > 0;
+DELETE FROM area WHERE id > 0;

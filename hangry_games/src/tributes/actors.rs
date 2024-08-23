@@ -1,4 +1,4 @@
-use crate::area::Area;
+use crate::areas::Area;
 
 use super::actions::TributeActions;
 
