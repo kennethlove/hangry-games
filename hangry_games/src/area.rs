@@ -63,3 +63,10 @@ impl Area {
         }
     }
 }
+
+use super::models::areas::Area as AreaModel;
+impl From<AreaModel> for Area {
+    fn from(area: AreaModel) -> Self {
+        Self::from_str(area.name.as_str()).unwrap_or(Area::Cornucopia)
+    }
+}

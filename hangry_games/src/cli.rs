@@ -1,8 +1,6 @@
 use clap::{Parser, Subcommand};
-use crate::models::areas::create_area;
-use crate::models::tributes::create_tribute;
 use crate::establish_connection;
-use crate::models::{get_areas, get_tributes};
+use crate::models::{create_area, create_tribute, get_area, get_areas, get_tributes};
 
 #[derive(Debug, Parser)]
 #[command(version, about, long_about = None)]
@@ -17,6 +15,7 @@ enum Commands {
     ShowTributes,
     AddArea { name: String },
     ShowAreas,
+    GetArea { name: String },
 }
 
 
@@ -41,6 +40,10 @@ pub fn parse() {
             for area in get_areas(connection) {
                 println!("{}", area.name);
             }
+        }
+        Commands::GetArea { name } => {
+            let area = get_area(connection, &name);
+            dbg!(&area);
         }
     }
 }

@@ -137,6 +137,22 @@ impl Default for Tribute {
     }
 }
 
+use super::super::models::Tribute as TributeModel;
+impl From<TributeModel> for Tribute {
+    fn from(tribute: TributeModel) -> Self {
+        Self {
+            name: tribute.name,
+            health: tribute.health as u32,
+            sanity: tribute.sanity as u32,
+            movement: tribute.movement as u32,
+            is_alive: tribute.is_alive,
+            district: tribute.district as u32,
+            brain: TributeBrain::new(),
+            area: None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
