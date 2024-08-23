@@ -36,7 +36,6 @@ pub fn create_tribute(conn: &mut PgConnection, name: &str) -> Tribute {
         .expect("Error counting tributes");
     let district = district as i32;
     let district = district % 12 + 1;
-    dbg!(district);
 
     let new_tribute = NewTribute { name, district };
 

@@ -14,3 +14,19 @@ pub struct Area {
 pub struct NewArea<'a> {
     pub name: &'a str,
 }
+
+pub fn create_area(conn: &mut PgConnection, name: &str) -> Area {
+    let new_area = NewArea { name };
+
+    diesel::insert_into(areas::table)
+        .values(&new_area)
+        .returning(Area::as_returning())
+        .get_result(conn)
+        .expect("Error saving new area")
+}
+
+pub fn get_areas(conn: &mut PgConnection) -> Vec<Area> {
+    areas::table
+        .load::<Area>(conn)
+        .expect("Error loading areas")
+}
