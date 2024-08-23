@@ -1,6 +1,6 @@
 use hangry_games::*;
 use hangry_games::db::create_area;
-use std::io::{stdin, Read};
+use std::io::stdin;
 
 fn main() {
     let connection = &mut establish_connection();

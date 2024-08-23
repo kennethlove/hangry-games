@@ -1,4 +1,4 @@
-use self::models::*;
+use self::models::areas::*;
 use diesel::prelude::*;
 use hangry_games::*;
 
