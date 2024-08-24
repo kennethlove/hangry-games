@@ -1,5 +1,5 @@
-use diesel::prelude::*;
 use crate::schema::area;
+use diesel::prelude::*;
 
 #[derive(Queryable, Selectable, Debug)]
 #[diesel(table_name = area)]
@@ -26,18 +26,26 @@ pub fn create_area(conn: &mut PgConnection, name: &str) -> Area {
 }
 
 pub fn get_areas(conn: &mut PgConnection) -> Vec<Area> {
-    area::table
-        .load::<Area>(conn)
-        .expect("Error loading areas")
+    area::table.load::<Area>(conn).expect("Error loading areas")
 }
 
-// I'm not sure if I need this function to convert the Area model to the Area enum
-// or not, but I'll leave it in case I need a refresher elsewhere.
-pub fn get_area(conn: &mut PgConnection, name: &str) -> crate::areas::Area {
+pub fn get_area(conn: &mut PgConnection, name: &str) -> Area {
     let area: Area = area::table
         .filter(area::name.ilike(name))
         .first::<Area>(conn)
-        .expect("Error loading area").into();
-    let area = crate::areas::Area::from(area);
+        .expect("Error loading area")
+        .into();
     area
+}
+
+pub fn get_area_by_id(conn: &mut PgConnection, id: Option<i32>) -> Option<Area> {
+    if id.is_none() {
+        return None;
+    }
+    let area: Area = area::table
+        .find(id.unwrap())
+        .first::<Area>(conn)
+        .expect("Error loading area")
+        .into();
+    Some(area)
 }

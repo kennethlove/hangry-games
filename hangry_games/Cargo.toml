@@ -9,3 +9,4 @@ futures = "0.3.30"
 tokio = { version="1.39.2", features=["full"] }
 clap = { version = "4.5.16", features = ["derive", "unicode"] }
 diesel = { version = "2.2.2", features = ["postgres"] }
+fake = { version = "2.9.2", features = ["derive"] }

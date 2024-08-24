@@ -159,7 +159,7 @@ mod tests {
 
     #[test]
     fn new() {
-        let tribute = Tribute::new();
+        let tribute = Tribute::new("Katniss".to_string());
         assert_eq!(tribute.health, 100);
         assert_eq!(tribute.sanity, 100);
         assert_eq!(tribute.movement, 100);
@@ -168,21 +168,21 @@ mod tests {
 
     #[test]
     fn takes_physical_damage() {
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         tribute.takes_physical_damage(10);
         assert_eq!(tribute.health, 90);
     }
 
     #[test]
     fn takes_mental_damage() {
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         tribute.takes_mental_damage(10);
         assert_eq!(tribute.sanity, 90);
     }
 
     #[test]
     fn moves_and_rests() {
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         tribute.moves(10);
         assert_eq!(tribute.movement, 90);
         tribute.rests();
@@ -191,7 +191,7 @@ mod tests {
 
     #[test]
     fn takes_damage_and_dies() {
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         tribute.takes_physical_damage(100);
         assert!(!tribute.is_alive);
     }
@@ -199,7 +199,7 @@ mod tests {
     #[test]
     #[ignore = "No way to find nearby enemies yet"]
     fn no_nearby_enemies() {
-        let _tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         let _area = Area::default();
         assert!(true);
     }
@@ -207,15 +207,15 @@ mod tests {
     #[test]
     #[ignore = "No way to find nearby enemies yet"]
     fn nearby_enemies() {
-        let tribute = Tribute::new();
-        let _ = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
+        let mut tribute = Tribute::new("Peeta".to_string());
         assert!(tribute.area.is_some());
     }
 
     #[test]
     fn decide_on_action_default() {
         // If there are no enemies nearby, the tribute should move
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         let action = tribute.brain.act(&tribute.clone());
         assert_eq!(action, TributeActions::Move);
     }
@@ -223,7 +223,7 @@ mod tests {
     #[test]
     fn decide_on_action_low_health() {
         // If the tribute has low health, they should hide
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         tribute.takes_physical_damage(90);
         let action = tribute.brain.act(&tribute.clone());
         assert_eq!(action, TributeActions::Hide);
@@ -232,7 +232,7 @@ mod tests {
     #[test]
     fn decide_on_action_no_movement() {
         // If the tribute has no movement, they should rest
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         tribute.moves(100);
         let action = tribute.brain.act(&tribute.clone());
         assert_eq!(action, TributeActions::Rest);
@@ -242,7 +242,7 @@ mod tests {
     #[ignore = "No way to find nearby enemies yet"]
     fn decide_on_action_enemies() {
         // If there are enemies nearby, the tribute should attack
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         let _ = Tribute::new();
         let action = tribute.brain.act(&tribute.clone());
         assert_eq!(action, TributeActions::Attack);
@@ -253,7 +253,7 @@ mod tests {
     fn decide_on_action_enemies_low_health() {
         // If there are enemies nearby, but the tribute is low on health
         // the tribute should attack
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         tribute.takes_physical_damage(90);
         let _ = Tribute::new();
         let action = tribute.brain.act(&tribute.clone());

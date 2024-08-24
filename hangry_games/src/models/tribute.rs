@@ -1,5 +1,12 @@
-use diesel::prelude::*;
+use crate::establish_connection;
 use crate::models::Area;
+use crate::schema::tribute;
+use diesel::prelude::*;
+use fake::faker::name::raw::*;
+use fake::locales::*;
+use fake::Fake;
+
+use super::get_area_by_id;
 
 #[derive(Queryable, Selectable, Debug, Associations)]
 #[diesel(table_name = tribute)]
@@ -14,6 +21,21 @@ pub struct Tribute {
     pub is_alive: bool,
     pub district: i32,
     pub area_id: Option<i32>,
+}
+
+impl Tribute {
+    pub fn set_area(&mut self, area: Area) {
+        self.area_id = Some(area.id);
+    }
+
+    pub fn unset_area(&mut self) {
+        self.area_id = None;
+    }
+
+    pub fn area(&mut self) -> Option<Area> {
+        let connection = &mut establish_connection();
+        get_area_by_id(connection, self.area_id)
+    }
 }
 
 #[derive(Insertable, Debug)]
@@ -50,4 +72,32 @@ pub fn get_tributes(conn: &mut PgConnection) -> Vec<Tribute> {
         .select(tribute::all_columns)
         .load::<Tribute>(conn)
         .expect("Error loading tributes")
+}
+
+/// Fill the tribute table with up to 24 tributes.
+pub fn fill_tributes(conn: &mut PgConnection) {
+    let tributes = get_tributes(conn);
+    if tributes.len() < 24 {
+        for _ in tributes.len()..24 {
+            let name: String = Name(EN).fake();
+            create_tribute(conn, &name);
+        }
+    }
+}
+
+pub fn place_tribute_in_area(conn: &mut PgConnection, tribute: &Tribute, area: &Area) {
+    diesel::update(tribute::table.find(tribute.id))
+        .set(tribute::area_id.eq(Some(area.id)))
+        .execute(conn)
+        .expect("Error updating tribute");
+}
+
+pub fn get_tribute(conn: &mut PgConnection, name: &str) -> Tribute {
+    use crate::schema::tribute;
+    let tribute: Tribute = tribute::table
+        .filter(tribute::name.ilike(name))
+        .first::<Tribute>(conn)
+        .expect("Error loading tribute")
+        .into();
+    tribute
 }
