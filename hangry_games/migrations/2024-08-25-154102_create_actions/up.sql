@@ -1,4 +1,4 @@
--- Your SQL goes here
+-- Create the default actions.
 CREATE TABLE action (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,

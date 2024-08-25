@@ -1,3 +1,4 @@
+-- Add the five available areas to the database.
 INSERT INTO area (name) VALUES ('The Cornucopia');
 INSERT INTO area (name) VALUES ('Northwest');
 INSERT INTO area (name) VALUES ('Northeast');

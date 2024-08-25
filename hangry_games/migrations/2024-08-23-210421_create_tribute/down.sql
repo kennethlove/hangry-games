@@ -1,2 +1,2 @@
--- This file should undo anything in `up.sql`
+-- Drop the tribute table.
 DROP TABLE tribute

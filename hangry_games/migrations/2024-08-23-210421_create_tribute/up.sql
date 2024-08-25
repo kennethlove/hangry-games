@@ -1,4 +1,4 @@
--- Your SQL goes here
+-- Create the tribute table.
 CREATE TABLE tribute (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,

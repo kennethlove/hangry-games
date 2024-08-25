@@ -1,2 +1,2 @@
--- This file should undo anything in `up.sql`
+-- Drop the tribute->action relationship table.
 DROP TABLE tribute_action;

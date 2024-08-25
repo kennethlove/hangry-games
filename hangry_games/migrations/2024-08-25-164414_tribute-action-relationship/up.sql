@@ -1,4 +1,4 @@
--- Your SQL goes here
+-- Create the tribute->action relationship table.
 CREATE TABLE tribute_action (
     id SERIAL PRIMARY KEY,
     tribute_id INT NOT NULL,
