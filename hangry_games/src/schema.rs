@@ -1,6 +1,15 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    action (id) {
+        id -> Int4,
+        #[max_length = 255]
+        name -> Varchar,
+        description -> Text,
+    }
+}
+
+diesel::table! {
     area (id) {
         id -> Int4,
         #[max_length = 255]
@@ -22,9 +31,22 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    tribute_action (id) {
+        id -> Int4,
+        tribute_id -> Int4,
+        action_id -> Int4,
+        created_at -> Timestamp,
+    }
+}
+
 diesel::joinable!(tribute -> area (area_id));
+diesel::joinable!(tribute_action -> action (action_id));
+diesel::joinable!(tribute_action -> tribute (tribute_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    action,
     area,
     tribute,
+    tribute_action,
 );

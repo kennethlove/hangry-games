@@ -1,5 +1,5 @@
 use crate::establish_connection;
-use crate::models::Area;
+use crate::models::{Action, Area};
 use crate::schema::tribute;
 use diesel::prelude::*;
 use fake::faker::name::raw::*;
@@ -35,6 +35,19 @@ impl Tribute {
     pub fn area(&mut self) -> Option<Area> {
         let connection = &mut establish_connection();
         get_area_by_id(connection, self.area_id)
+    }
+
+    pub fn actions(&self) -> Vec<Action> {
+        use crate::schema::action;
+        use crate::schema::tribute_action;
+
+        let connection = &mut establish_connection();
+        tribute_action::table
+            .inner_join(action::table)
+            .filter(tribute_action::tribute_id.eq(self.id))
+            .select(action::all_columns)
+            .load::<Action>(connection)
+            .expect("Error loading actions")
     }
 }
 
@@ -97,7 +110,6 @@ pub fn get_tribute(conn: &mut PgConnection, name: &str) -> Tribute {
     let tribute: Tribute = tribute::table
         .filter(tribute::name.ilike(name))
         .first::<Tribute>(conn)
-        .expect("Error loading tribute")
-        .into();
+        .expect("Error loading tribute");
     tribute
 }

@@ -21,6 +21,7 @@ enum Commands {
     ShowTributes,
     FillTributes,
     PlaceTribute { name: String, area: String },
+    ShowActions { name: String }
 }
 
 pub fn parse() {
@@ -66,6 +67,12 @@ pub fn parse() {
             let tribute = get_tribute(connection, &name);
             let area = get_area(connection, &area);
             place_tribute_in_area(connection, &tribute, &area);
+        }
+        Commands::ShowActions { name } => {
+            let tribute = get_tribute(connection, &name);
+            for action in tribute.actions() {
+                println!("{}", action.name);
+            }
         }
     }
 }
