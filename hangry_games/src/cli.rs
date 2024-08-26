@@ -1,7 +1,7 @@
 use crate::establish_connection;
 use crate::models::{
     create_area, create_game, create_tribute, fill_tributes, get_action, get_all_tributes,
-    get_area, get_areas, get_tribute, place_tribute_in_area,
+    get_area, get_areas, get_tribute, place_tribute_in_area, get_game, get_game_tributes, get_games,
 };
 use clap::{Parser, Subcommand};
 
@@ -17,13 +17,15 @@ enum Commands {
     AddArea { name: String },
     ShowAreas,
     GetArea { name: String },
-    AddTribute { name: String },
-    ShowTributes,
-    FillTributes,
+    AddTribute { name: String, game: String },
+    ShowAllTributes,
+    ShowTributes { game: String },
+    FillTributes { game: String },
     PlaceTribute { tribute: String, area: String },
     ShowTributeActions { tribute: String },
     TributeTakesAction { tribute: String, action: String },
     AddGame,
+    ShowGames,
 }
 
 pub fn parse() {
@@ -46,18 +48,27 @@ pub fn parse() {
         }
 
         // Tributes
-        // TODO: Add game to AddTribute
-        Commands::AddTribute { name } => {
-            let tribute = create_tribute(connection, &name);
+        Commands::AddTribute { name, game } => {
+            let game = get_game(connection, &game).expect("Game not found");
+            let mut tribute = create_tribute(connection, &name);
+            tribute.try_set_game(&game).expect("Error adding tribute to game");
             dbg!(&tribute);
         }
-        Commands::ShowTributes => {
+        Commands::ShowAllTributes => {
             for tribute in get_all_tributes(connection) {
                 println!("{}, District {}", tribute.name, tribute.district);
             }
         }
-        Commands::FillTributes => {
-            let count = fill_tributes(connection);
+        Commands::ShowTributes { game } => {
+            let game = get_game(connection, &game).expect("Game not found");
+            dbg!(get_game_tributes(connection, &game));
+            for tribute in get_game_tributes(connection, &game) {
+                println!("{}, District {}", tribute.name, tribute.district);
+            }
+        }
+        Commands::FillTributes { game } => {
+            let game = get_game(connection, &game).expect("Game not found");
+            let count = fill_tributes(connection, game);
             println!("{} tributes created", count);
         }
         Commands::PlaceTribute {
@@ -95,6 +106,11 @@ pub fn parse() {
         Commands::AddGame => {
             let game = create_game(connection);
             dbg!(&game);
+        }
+        Commands::ShowGames => {
+            for game in get_games(connection) {
+                println!("{}", game.name);
+            }
         }
     }
 }

@@ -1,5 +1,5 @@
 use crate::establish_connection;
-use crate::models::{Action, Area};
+use crate::models::{Action, Area, Game};
 use crate::schema::tribute;
 use diesel::prelude::*;
 use fake::faker::name::raw::*;
@@ -12,6 +12,7 @@ use super::get_area_by_id;
 #[diesel(table_name = tribute)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[diesel(belongs_to(Area, foreign_key = area_id))]
+#[diesel(belongs_to(Game, foreign_key = game_id))]
 pub struct Tribute {
     pub id: i32,
     pub name: String,
@@ -21,15 +22,24 @@ pub struct Tribute {
     pub is_alive: bool,
     pub district: i32,
     pub area_id: Option<i32>,
+    pub game_id: Option<i32>,
 }
 
 impl Tribute {
     pub fn set_area(&mut self, area: Area) {
-        self.area_id = Some(area.id);
+        let connection = &mut establish_connection();
+        diesel::update(tribute::table.find(self.id))
+            .set(tribute::area_id.eq(Some(area.id)))
+            .execute(connection)
+            .expect("Error updating tribute");
     }
 
     pub fn unset_area(&mut self) {
-        self.area_id = None;
+        let connection = &mut establish_connection();
+        diesel::update(tribute::table.find(self.id))
+            .set(tribute::area_id.eq(None::<i32>))
+            .execute(connection)
+            .expect("Error updating tribute");
     }
 
     pub fn area(&self) -> Option<Area> {
@@ -53,6 +63,34 @@ impl Tribute {
     pub fn take_action(&self, action: &Action) {
         use crate::models::TributeAction;
         TributeAction::create(self.id, action.id);
+    }
+
+    pub fn set_game(&mut self, game: &Game) {
+        let connection = &mut establish_connection();
+        diesel::update(tribute::table.find(self.id))
+            .set(tribute::game_id.eq(Some(game.id)))
+            .execute(connection)
+            .expect("Error updating tribute");
+    }
+
+    pub fn unset_game(&mut self) {
+        let connection = &mut establish_connection();
+        diesel::update(tribute::table.find(self.id))
+            .set(tribute::game_id.eq(None::<i32>))
+            .execute(connection)
+            .expect("Error updating tribute");
+    }
+
+    pub fn try_set_game(&mut self, game: &Game) -> Result<(), String> {
+        if self.game_id.is_some() {
+            return Err("Tribute already has a game".to_string());
+        }
+        dbg!(game.tributes().len());
+        if game.tributes().len() >= 24 {
+            return Err("Game is full".to_string());
+        }
+        self.set_game(game);
+        Ok(())
     }
 }
 
@@ -92,18 +130,28 @@ pub fn get_all_tributes(conn: &mut PgConnection) -> Vec<Tribute> {
         .expect("Error loading tributes")
 }
 
+pub fn get_game_tributes(conn: &mut PgConnection, game: &Game) -> Vec<Tribute> {
+    use crate::schema::tribute;
+    tribute::table
+        .select(tribute::all_columns)
+        .filter(tribute::game_id.eq(game.id))
+        .load::<Tribute>(conn)
+        .expect("Error loading tributes")
+}
+
 /// Fill the tribute table with up to 24 tributes.
 /// Return the number of tributes created.
-pub fn fill_tributes(conn: &mut PgConnection) -> usize {
-    let tributes = get_all_tributes(conn);
+pub fn fill_tributes(conn: &mut PgConnection, game: Game) -> usize {
+    let tributes = get_game_tributes(conn, &game);
     let count = tributes.len();
     if count < 24 {
         for _ in count..24 {
             let name: String = Name(EN).fake();
-            create_tribute(conn, &name);
+            let mut tribute = create_tribute(conn, &name);
+            tribute.set_game(&game)
         }
     }
-    count
+    24 - count
 }
 
 pub fn place_tribute_in_area(conn: &mut PgConnection, tribute: &Tribute, area: &Area) {

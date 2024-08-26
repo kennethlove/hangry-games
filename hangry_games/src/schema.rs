@@ -36,6 +36,7 @@ diesel::table! {
         is_alive -> Bool,
         district -> Int4,
         area_id -> Nullable<Int4>,
+        game_id -> Nullable<Int4>,
     }
 }
 
@@ -49,6 +50,7 @@ diesel::table! {
 }
 
 diesel::joinable!(tribute -> area (area_id));
+diesel::joinable!(tribute -> game (game_id));
 diesel::joinable!(tribute_action -> action (action_id));
 diesel::joinable!(tribute_action -> tribute (tribute_id));
 
