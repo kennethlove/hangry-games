@@ -26,7 +26,7 @@ pub struct Tribute {
 }
 
 impl Tribute {
-    pub fn set_area(&mut self, area: Area) {
+    pub fn set_area(&mut self, area: &Area) {
         let connection = &mut establish_connection();
         diesel::update(tribute::table.find(self.id))
             .set(tribute::area_id.eq(Some(area.id)))

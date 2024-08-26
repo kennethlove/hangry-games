@@ -22,6 +22,7 @@ diesel::table! {
         id -> Int4,
         name -> Text,
         created_at -> Timestamp,
+        day -> Nullable<Int4>,
     }
 }
 

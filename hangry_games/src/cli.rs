@@ -17,15 +17,17 @@ enum Commands {
     AddArea { name: String },
     ShowAreas,
     GetArea { name: String },
-    AddTribute { name: String, game: String },
+    AddTribute { name: String, game_id: String },
     ShowAllTributes,
-    ShowTributes { game: String },
-    FillTributes { game: String },
-    PlaceTribute { tribute: String, area: String },
-    ShowTributeActions { tribute: String },
-    TributeTakesAction { tribute: String, action: String },
+    ShowTributes { game_id: String },
+    ShowTribute { game_id: String, tribute_id: String },
+    FillTributes { game_id: String },
+    PlaceTribute { tribute_id: String, area_id: String },
+    ShowTributeActions { tribute_id: String },
+    TributeTakesAction { tribute_id: String, action_id: String },
     AddGame,
     ShowGames,
+    StartGame { name: String },
 }
 
 pub fn parse() {
@@ -48,7 +50,7 @@ pub fn parse() {
         }
 
         // Tributes
-        Commands::AddTribute { name, game } => {
+        Commands::AddTribute { name, game_id: game } => {
             let game = get_game(connection, &game).expect("Game not found");
             let mut tribute = create_tribute(connection, &name);
             tribute.try_set_game(&game).expect("Error adding tribute to game");
@@ -59,21 +61,29 @@ pub fn parse() {
                 println!("{}, District {}", tribute.name, tribute.district);
             }
         }
-        Commands::ShowTributes { game } => {
+        Commands::ShowTributes { game_id: game } => {
             let game = get_game(connection, &game).expect("Game not found");
-            dbg!(get_game_tributes(connection, &game));
             for tribute in get_game_tributes(connection, &game) {
                 println!("{}, District {}", tribute.name, tribute.district);
             }
         }
-        Commands::FillTributes { game } => {
+        Commands::ShowTribute { game_id: game, tribute_id: tribute } => {
+            let game = get_game(connection, &game).expect("Game not found");
+            let tribute = get_tribute(connection, &tribute);
+            if tribute.game_id != Some(game.id) {
+                println!("Tribute is not in this game");
+                return;
+            }
+            println!("{:?}", tribute);
+        }
+        Commands::FillTributes { game_id: game } => {
             let game = get_game(connection, &game).expect("Game not found");
             let count = fill_tributes(connection, game);
             println!("{} tributes created", count);
         }
         Commands::PlaceTribute {
-            tribute: name,
-            area,
+            tribute_id: name,
+            area_id: area,
         } => {
             let tribute = get_tribute(connection, &name);
             let current_area = tribute.area();
@@ -90,13 +100,13 @@ pub fn parse() {
         }
 
         // Actions
-        Commands::ShowTributeActions { tribute: name } => {
+        Commands::ShowTributeActions { tribute_id: name } => {
             let tribute = get_tribute(connection, &name);
-            for action in tribute.actions() {
-                println!("{}", action.name);
+            for (i, action) in tribute.actions().iter().enumerate() {
+                println!("{}. {}", i, action.name);
             }
         }
-        Commands::TributeTakesAction { tribute, action } => {
+        Commands::TributeTakesAction { tribute_id: tribute, action_id: action } => {
             let tribute = get_tribute(connection, &tribute);
             let action = get_action(connection, &action);
             tribute.take_action(&action);
@@ -108,9 +118,13 @@ pub fn parse() {
             dbg!(&game);
         }
         Commands::ShowGames => {
-            for game in get_games(connection) {
-                println!("{}", game.name);
+            for _game in get_games(connection) {
+                println!("{}", _game.name);
             }
+        }
+        Commands::StartGame { name } => {
+            let game = get_game(connection, &name).expect("Game not found");
+            game.start();
         }
     }
 }
