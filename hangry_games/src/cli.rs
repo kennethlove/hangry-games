@@ -1,7 +1,7 @@
 use crate::establish_connection;
 use crate::models::{
-    create_area, create_tribute, fill_tributes, get_area, get_area_by_id, get_areas, get_tribute,
-    get_tributes, place_tribute_in_area,
+    create_area, create_game, create_tribute, fill_tributes, get_action, get_all_tributes,
+    get_area, get_areas, get_tribute, place_tribute_in_area,
 };
 use clap::{Parser, Subcommand};
 
@@ -20,8 +20,10 @@ enum Commands {
     AddTribute { name: String },
     ShowTributes,
     FillTributes,
-    PlaceTribute { name: String, area: String },
-    ShowActions { name: String }
+    PlaceTribute { tribute: String, area: String },
+    ShowTributeActions { tribute: String },
+    TributeTakesAction { tribute: String, action: String },
+    AddGame,
 }
 
 pub fn parse() {
@@ -44,35 +46,55 @@ pub fn parse() {
         }
 
         // Tributes
+        // TODO: Add game to AddTribute
         Commands::AddTribute { name } => {
             let tribute = create_tribute(connection, &name);
             dbg!(&tribute);
         }
         Commands::ShowTributes => {
-            for mut tribute in get_tributes(connection) {
-                if let Some(area) = tribute.area() {
-                    println!(
-                        "{}, District {}, in {:?}",
-                        tribute.name, tribute.district, area.name
-                    );
-                } else {
-                    println!("{}, District {}", tribute.name, tribute.district,);
-                }
+            for tribute in get_all_tributes(connection) {
+                println!("{}, District {}", tribute.name, tribute.district);
             }
         }
         Commands::FillTributes => {
-            fill_tributes(connection);
+            let count = fill_tributes(connection);
+            println!("{} tributes created", count);
         }
-        Commands::PlaceTribute { name, area } => {
+        Commands::PlaceTribute {
+            tribute: name,
+            area,
+        } => {
             let tribute = get_tribute(connection, &name);
+            let current_area = tribute.area();
             let area = get_area(connection, &area);
             place_tribute_in_area(connection, &tribute, &area);
+            if let Some(area) = current_area {
+                println!(
+                    "{} moves from {:?} to {:?}",
+                    tribute.name, area.name, area.name
+                );
+            } else {
+                println!("{} moves to {:?}", tribute.name, area.name);
+            }
         }
-        Commands::ShowActions { name } => {
+
+        // Actions
+        Commands::ShowTributeActions { tribute: name } => {
             let tribute = get_tribute(connection, &name);
             for action in tribute.actions() {
                 println!("{}", action.name);
             }
+        }
+        Commands::TributeTakesAction { tribute, action } => {
+            let tribute = get_tribute(connection, &tribute);
+            let action = get_action(connection, &action);
+            tribute.take_action(&action);
+        }
+
+        // Games
+        Commands::AddGame => {
+            let game = create_game(connection);
+            dbg!(&game);
         }
     }
 }

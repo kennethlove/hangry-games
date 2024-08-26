@@ -32,7 +32,7 @@ impl Tribute {
         self.area_id = None;
     }
 
-    pub fn area(&mut self) -> Option<Area> {
+    pub fn area(&self) -> Option<Area> {
         let connection = &mut establish_connection();
         get_area_by_id(connection, self.area_id)
     }
@@ -48,6 +48,11 @@ impl Tribute {
             .select(action::all_columns)
             .load::<Action>(connection)
             .expect("Error loading actions")
+    }
+
+    pub fn take_action(&self, action: &Action) {
+        use crate::models::TributeAction;
+        TributeAction::create(self.id, action.id);
     }
 }
 
@@ -79,7 +84,7 @@ pub fn create_tribute(conn: &mut PgConnection, name: &str) -> Tribute {
         .expect("Error saving new tribute")
 }
 
-pub fn get_tributes(conn: &mut PgConnection) -> Vec<Tribute> {
+pub fn get_all_tributes(conn: &mut PgConnection) -> Vec<Tribute> {
     use crate::schema::tribute;
     tribute::table
         .select(tribute::all_columns)
@@ -88,14 +93,17 @@ pub fn get_tributes(conn: &mut PgConnection) -> Vec<Tribute> {
 }
 
 /// Fill the tribute table with up to 24 tributes.
-pub fn fill_tributes(conn: &mut PgConnection) {
-    let tributes = get_tributes(conn);
-    if tributes.len() < 24 {
-        for _ in tributes.len()..24 {
+/// Return the number of tributes created.
+pub fn fill_tributes(conn: &mut PgConnection) -> usize {
+    let tributes = get_all_tributes(conn);
+    let count = tributes.len();
+    if count < 24 {
+        for _ in count..24 {
             let name: String = Name(EN).fake();
             create_tribute(conn, &name);
         }
     }
+    count
 }
 
 pub fn place_tribute_in_area(conn: &mut PgConnection, tribute: &Tribute, area: &Area) {

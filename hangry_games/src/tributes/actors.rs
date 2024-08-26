@@ -56,8 +56,8 @@ impl TributeBrain {
         // no enemies nearby
         match tribute.health {
             // health is low, rest
-            0..=10 => return TributeActions::Hide,
-            11..=20 => return TributeActions::Rest,
+            0..=10 => TributeActions::Hide,
+            11..=20 => TributeActions::Rest,
             // health is good, move
             _ => {
                 // If the tribute has movement, move
@@ -69,6 +69,7 @@ impl TributeBrain {
         }
     }
 }
+
 
 impl Tribute {
     /// Creates a new Tribute with full health, sanity, and movement

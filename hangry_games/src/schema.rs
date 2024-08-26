@@ -18,6 +18,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    game (id) {
+        id -> Int4,
+        name -> Text,
+        created_at -> Timestamp,
+    }
+}
+
+diesel::table! {
     tribute (id) {
         id -> Int4,
         #[max_length = 255]
@@ -47,6 +55,7 @@ diesel::joinable!(tribute_action -> tribute (tribute_id));
 diesel::allow_tables_to_appear_in_same_query!(
     action,
     area,
+    game,
     tribute,
     tribute_action,
 );

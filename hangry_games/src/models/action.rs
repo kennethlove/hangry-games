@@ -14,3 +14,10 @@ pub struct NewAction<'a> {
     pub name: &'a str,
     pub description: &'a str,
 }
+
+pub fn get_action(connection: &mut PgConnection, name: &str) -> Action {
+    action::table
+        .filter(action::name.ilike(name))
+        .first(connection)
+        .expect("Error loading action")
+}

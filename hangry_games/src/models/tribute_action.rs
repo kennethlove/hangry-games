@@ -1,3 +1,4 @@
+use crate::establish_connection;
 use crate::models::{Action, Tribute};
 use crate::schema::tribute_action;
 use diesel::prelude::*;
@@ -19,4 +20,25 @@ pub struct TributeAction {
 pub struct NewTributeAction {
     pub tribute_id: i32,
     pub action_id: i32,
+}
+
+impl TributeAction {
+    pub fn create(tribute_id: i32, action_id: i32) -> TributeAction {
+        let connection = &mut establish_connection();
+        let new_tribute_action = NewTributeAction { tribute_id, action_id };
+
+        diesel::insert_into(tribute_action::table)
+            .values(&new_tribute_action)
+            .returning(TributeAction::as_returning())
+            .get_result(connection)
+            .expect("Error saving new tribute action")
+    }
+}
+
+pub fn take_action(tribute: &Tribute, action: &Action) {
+    TributeAction::create(tribute.id, action.id);
+    println!(
+        "{} takes action {}",
+        tribute.name, action.name
+    );
 }
