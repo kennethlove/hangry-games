@@ -1,8 +1,5 @@
 use crate::establish_connection;
-use crate::models::{
-    create_area, create_game, create_tribute, fill_tributes, get_action, get_all_tributes,
-    get_area, get_areas, get_tribute, place_tribute_in_area, get_game, get_game_tributes, get_games,
-};
+use crate::models::{create_area, create_game, create_tribute, fill_tributes, get_action, get_all_tributes, get_area, get_areas, get_tribute, place_tribute_in_area, get_game, get_game_tributes, get_games, Tribute, get_all_living_tributes};
 use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
@@ -130,10 +127,24 @@ pub fn parse() {
         Commands::RunNextDay { game_id } => {
             let game = get_game(connection, &game_id).expect("Game not found");
             game.set_day(game.day.unwrap_or(0) + 1);
-            for tribute in game.tributes().iter_mut().filter(|t| t.is_alive) {
-                tribute.do_day();
-                dbg!(&tribute.actions());
+
+            println!("Day {}", game.day.unwrap_or(0));
+            println!("{} tributes left", get_all_living_tributes(connection, &game).len());
+
+            let mut deaths: Vec<Tribute> = vec![];
+            for mut tribute in get_all_living_tributes(connection, &game) {
+                tribute = tribute.do_day();
+                if tribute.health <= 0 {
+                    deaths.push(tribute.clone());
+                }
             }
+            // Kill tributes
+            for tribute in &deaths {
+                tribute.kill();
+                println!("{} dies", tribute.name);
+            }
+            println!("{} left alive", get_all_living_tributes(connection, &game).len());
+            // dbg!(get_all_living_tributes(connection, &game));
         }
     }
 }

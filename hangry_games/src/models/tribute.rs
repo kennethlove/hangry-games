@@ -92,24 +92,154 @@ impl Tribute {
         Ok(())
     }
 
-    pub fn do_day(&mut self) { //-> Self {
+    pub fn kill(&self) {
+        let connection = &mut establish_connection();
+        diesel::update(tribute::table.find(self.id))
+            .set((
+                tribute::is_alive.eq(false),
+                tribute::health.eq(0),
+            ))
+            .execute(connection)
+            .expect("Error killing tribute");
+    }
+
+    pub fn do_day(&mut self) -> Self {
         use crate::tributes::actors::Tribute as ATribute;
+        use crate::tributes::actions::TributeAction;
+
+        if self.is_alive == false || self.health == 0 {
+            return self.clone();
+        }
+
         let connection = &mut establish_connection();
 
         // Create Tribute struct
-        let tribute = ATribute::from(self.clone());
+        let mut tribute = ATribute::from(self.clone());
 
         // Get Brain struct
         let mut brain = tribute.brain.clone();
 
+        // Get nearby tributes
+        let nearby_tributes = self.area().unwrap().tributes();
+        let living_tributes = nearby_tributes.iter().filter(|t| t.is_alive && t.health > 0);
+        let nearby_atributes = living_tributes.map(|t| ATribute::from(t.clone())).collect();
+
         // Decide the next logical action
-        brain.act(&tribute);
+        brain.act(&tribute, nearby_atributes);
+
+        use rand::seq::SliceRandom;
+
+        match brain.last_action() {
+            TributeAction::Move => {
+                let current_area = tribute.area.unwrap();
+                let random_neighbor = current_area.neighbors().choose(&mut rand::thread_rng()).unwrap().clone();
+
+                tribute.area = Some(random_neighbor);
+                tribute.movement = 0;
+
+                let tribute_instance = Tribute::from(tribute);
+                // save tribute_instance
+                diesel::update(tribute::table.find(self.id))
+                    .set((
+                        tribute::area_id.eq(tribute_instance.area_id),
+                        tribute::movement.eq(tribute_instance.movement),
+                    ))
+                    .execute(connection)
+                    .expect("Error moving tribute");
+            }
+            TributeAction::Rest | TributeAction::Hide | TributeAction::Idle => {
+                // Rest the tribute
+                self.health = std::cmp::min(self.health + 50, 100);
+                self.sanity = std::cmp::min(self.sanity + 50, 100);
+                self.movement = std::cmp::min(self.movement + 50, 100);
+
+                diesel::update(tribute::table.find(self.id))
+                    .set((
+                        tribute::health.eq(self.health),
+                        tribute::sanity.eq(self.sanity),
+                        tribute::movement.eq(self.movement),
+                    ))
+                    .execute(connection)
+                    .expect("Error resting tribute");
+            }
+            TributeAction::Attack => {
+                let victim;
+
+                // Am I alone?
+                if nearby_tributes.len() == 1 {
+                    // Am I sane?
+                    println!("{} is alone", self.name);
+                    if self.sanity > 10 {
+                        println!("Decides not to kill themself");
+                        return self.clone();
+                    }
+
+                    // Suicide/self-harm
+                    println!("Can't take it, kills themself");
+                    victim = self.clone();
+                } else {
+                    // I am NOT alone
+                    let mut chosen_victim = nearby_tributes.choose(&mut rand::thread_rng()).unwrap();
+                    while chosen_victim.id == self.id || chosen_victim.is_alive == false || chosen_victim.health == 0 {
+                        chosen_victim = nearby_tributes.choose(&mut rand::thread_rng()).unwrap();
+                    }
+                    victim = chosen_victim.clone();
+                }
+                // Attack another tribute
+                let success = rand::random::<f32>() < 0.5;
+                if success {
+                    let victim_health = std::cmp::max(victim.health - 50, 0);
+                    let victim_sanity = std::cmp::max(victim.sanity - 20, 0);
+                    let victim_movement = std::cmp::max(victim.movement - 10, 0);
+
+                    diesel::update(tribute::table.find(victim.id))
+                        .set((
+                            tribute::health.eq(victim_health),
+                            tribute::sanity.eq(victim_sanity),
+                            tribute::movement.eq(victim_movement),
+                        ))
+                        .execute(connection)
+                        .expect("Error attacking tribute");
+
+                    println!("{} attacks {}", self.name, victim.name);
+                    println!("{} health {}", self.health, victim.health);
+                    println!("{} sanity {}", self.sanity, victim.sanity);
+                }
+            }
+            _ => {
+                // Do nothing
+            }
+        }
 
         // Find the action model instance
         let last_action = crate::models::action::get_action(connection, brain.last_action().as_str());
 
         // Connect Tribute to Action
-        tribute_action::take_action(self, &last_action);
+        tribute_action::take_action(&self.clone(), &last_action);
+        self.clone()
+    }
+}
+
+impl From<crate::tributes::actors::Tribute> for Tribute {
+    fn from(tribute: crate::tributes::actors::Tribute) -> Self {
+        let connection = &mut establish_connection();
+
+        let current_tribute = get_tribute(connection, &tribute.name);
+        let area = crate::models::get_area(connection, tribute.area.unwrap().as_str());
+        let game_id = current_tribute.game_id.unwrap();
+
+        let out_tribute = Tribute {
+            id: current_tribute.id,
+            name: tribute.name,
+            health: tribute.health as i32,
+            sanity: tribute.sanity as i32,
+            movement: tribute.movement as i32,
+            is_alive: tribute.is_alive,
+            district: tribute.district as i32,
+            area_id: Some(area.id),
+            game_id: Some(game_id),
+        };
+        out_tribute
     }
 }
 
@@ -145,6 +275,16 @@ pub fn get_all_tributes(conn: &mut PgConnection) -> Vec<Tribute> {
     use crate::schema::tribute;
     tribute::table
         .select(tribute::all_columns)
+        .load::<Tribute>(conn)
+        .expect("Error loading tributes")
+}
+
+pub fn get_all_living_tributes(conn: &mut PgConnection, game: &Game) -> Vec<Tribute> {
+    use crate::schema::tribute;
+    tribute::table
+        .select(tribute::all_columns)
+        .filter(tribute::is_alive.eq(true))
+        .filter(tribute::game_id.eq(game.id))
         .load::<Tribute>(conn)
         .expect("Error loading tributes")
 }

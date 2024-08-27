@@ -4,20 +4,20 @@ use std::fmt::Display;
 pub enum Area {
     #[default]
     Cornucopia,
-    NorthEast,
-    NorthWest,
-    SouthEast,
-    SouthWest,
+    Northeast,
+    Northwest,
+    Southeast,
+    Southwest,
 }
 
 impl Display for Area {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Area::Cornucopia => write!(f, "The Cornucopia"),
-            Area::NorthEast => write!(f, "North East"),
-            Area::NorthWest => write!(f, "North West"),
-            Area::SouthEast => write!(f, "South East"),
-            Area::SouthWest => write!(f, "South West"),
+            Area::Northeast => write!(f, "North East"),
+            Area::Northwest => write!(f, "North West"),
+            Area::Southeast => write!(f, "South East"),
+            Area::Southwest => write!(f, "South West"),
         }
     }
 }
@@ -27,18 +27,18 @@ impl Area {
         match s.to_lowercase().as_str() {
             "the cornucopia" => Some(Area::Cornucopia),
             "cornucopia" => Some(Area::Cornucopia),
-            "north east" => Some(Area::NorthEast),
-            "northeast" => Some(Area::NorthEast),
-            "ne" => Some(Area::NorthEast),
-            "north west" => Some(Area::NorthWest),
-            "northwest" => Some(Area::NorthWest),
-            "nw" => Some(Area::NorthWest),
-            "south east" => Some(Area::SouthEast),
-            "southeast" => Some(Area::SouthEast),
-            "se" => Some(Area::SouthEast),
-            "south west" => Some(Area::SouthWest),
-            "southwest" => Some(Area::SouthWest),
-            "sw" => Some(Area::SouthWest),
+            "north east" => Some(Area::Northeast),
+            "northeast" => Some(Area::Northeast),
+            "ne" => Some(Area::Northeast),
+            "north west" => Some(Area::Northwest),
+            "northwest" => Some(Area::Northwest),
+            "nw" => Some(Area::Northwest),
+            "south east" => Some(Area::Southeast),
+            "southeast" => Some(Area::Southeast),
+            "se" => Some(Area::Southeast),
+            "south west" => Some(Area::Southwest),
+            "southwest" => Some(Area::Southwest),
+            "sw" => Some(Area::Southwest),
             _ => None,
         }
     }
@@ -46,20 +46,20 @@ impl Area {
     pub fn as_str(&self) -> &str {
         match self {
             Area::Cornucopia => "The Cornucopia",
-            Area::NorthEast => "North East",
-            Area::NorthWest => "North West",
-            Area::SouthEast => "South East",
-            Area::SouthWest => "South West",
+            Area::Northeast => "Northeast",
+            Area::Northwest => "Northwest",
+            Area::Southeast => "Southeast",
+            Area::Southwest => "Southwest",
         }
     }
 
     pub fn neighbors(&self) -> Vec<Area> {
         match self {
-            Area::Cornucopia => vec![Area::NorthEast, Area::NorthWest, Area::SouthEast, Area::SouthWest],
-            Area::NorthEast => vec![Area::Cornucopia, Area::NorthWest],
-            Area::NorthWest => vec![Area::Cornucopia, Area::NorthEast],
-            Area::SouthEast => vec![Area::Cornucopia, Area::SouthWest],
-            Area::SouthWest => vec![Area::Cornucopia, Area::SouthEast],
+            Area::Cornucopia => vec![Area::Northeast, Area::Northwest, Area::Southeast, Area::Southwest],
+            Area::Northeast => vec![Area::Cornucopia, Area::Northwest],
+            Area::Northwest => vec![Area::Cornucopia, Area::Northeast],
+            Area::Southeast => vec![Area::Cornucopia, Area::Southwest],
+            Area::Southwest => vec![Area::Cornucopia, Area::Southeast],
         }
     }
 }

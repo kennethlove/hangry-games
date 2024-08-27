@@ -1,5 +1,6 @@
 use crate::schema::area;
 use diesel::prelude::*;
+use crate::establish_connection;
 
 #[derive(Queryable, Selectable, Debug)]
 #[diesel(table_name = area)]
@@ -7,6 +8,29 @@ use diesel::prelude::*;
 pub struct Area {
     pub id: i32,
     pub name: String,
+}
+
+impl Area {
+    pub fn random() -> Area {
+        let connection = &mut establish_connection();
+        let areas = get_areas(connection);
+        let random_index = rand::random::<usize>() % areas.len();
+        Area { id: areas[random_index].id, name: areas[random_index].name.clone() }
+    }
+
+    /// Get all the tributes in an area.
+    pub fn tributes(&self) -> Vec<crate::models::Tribute> {
+        let connection = &mut establish_connection();
+        let tributes = crate::models::get_all_tributes(connection);
+        tributes.into_iter().filter(|t| t.area_id == Some(self.id)).collect()
+    }
+}
+
+impl From<crate::areas::Area> for Area {
+    fn from(area: crate::areas::Area) -> Self {
+        let aa = get_area(&mut establish_connection(), &area.as_str());
+        Area { id: aa.id, name: aa.name }
+    }
 }
 
 #[derive(Insertable, Debug)]

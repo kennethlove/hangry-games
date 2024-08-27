@@ -12,3 +12,4 @@ diesel = { version = "2.2.2", features = ["chrono", "postgres"] }
 fake = { version = "2.9.2", features = ["derive"] }
 chrono = "0.4.38"
 witty-phrase-generator = "0.2.0"
+rand = "0.8.5"

@@ -26,8 +26,8 @@ impl TributeBrain {
         }
     }
 
-    pub fn act(&mut self, tribute: &Tribute) -> TributeAction {
-        let action = TributeBrain::decide_on_action(tribute);
+    pub fn act(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
+        let action = TributeBrain::decide_on_action(tribute, nearby_tributes);
         self.previous_actions.push(action.clone());
         action
     }
@@ -41,7 +41,7 @@ impl TributeBrain {
     }
 
     /// The AI for a tribute. Automatic decisions based on current state.
-    fn decide_on_action(tribute: &Tribute) -> TributeAction {
+    fn decide_on_action(tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
         // If the tribute isn't in the area, they do nothing
         if tribute.area.is_none() {
             return TributeAction::Idle;
@@ -49,13 +49,13 @@ impl TributeBrain {
 
         let _area = tribute.area.as_ref().unwrap();
 
-        let nearby: Vec<Tribute> = vec![];
-
-        if !nearby.is_empty() {
+        if !nearby_tributes.is_empty() {
             // enemies are nearby
-            match tribute.health {
+            return match tribute.health {
                 // health is low, hide
-                0..=20 => TributeAction::Hide,
+                1..=20 => TributeAction::Hide,
+                // health isn't great, run away
+                21..=50 => TributeAction::Move,
                 // health is good, attack
                 _ => TributeAction::Attack,
             };
