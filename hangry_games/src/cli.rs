@@ -132,8 +132,8 @@ pub fn parse() {
             game.set_day(game.day.unwrap_or(0) + 1);
             for tribute in game.tributes().iter_mut().filter(|t| t.is_alive) {
                 tribute.do_day();
+                dbg!(&tribute.actions());
             }
-
         }
     }
 }

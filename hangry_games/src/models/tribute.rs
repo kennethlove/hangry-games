@@ -1,5 +1,5 @@
 use crate::establish_connection;
-use crate::models::{Action, Area, Game};
+use crate::models::{tribute_action, Action, Area, Game};
 use crate::schema::tribute;
 use diesel::prelude::*;
 use fake::faker::name::raw::*;
@@ -93,9 +93,23 @@ impl Tribute {
     }
 
     pub fn do_day(&mut self) { //-> Self {
-        use crate::tributes::actors::{Tribute as ATribute, TributeBrain};
+        use crate::tributes::actors::Tribute as ATribute;
+        let connection = &mut establish_connection();
+
+        // Create Tribute struct
         let tribute = ATribute::from(self.clone());
-        dbg!(&tribute);
+
+        // Get Brain struct
+        let mut brain = tribute.brain.clone();
+
+        // Decide the next logical action
+        brain.act(&tribute);
+
+        // Find the action model instance
+        let last_action = crate::models::action::get_action(connection, brain.last_action().as_str());
+
+        // Connect Tribute to Action
+        tribute_action::take_action(self, &last_action);
     }
 }
 

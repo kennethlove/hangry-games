@@ -32,6 +32,14 @@ impl TributeBrain {
         action
     }
 
+    pub fn last_action(&self) -> TributeAction {
+        if let Some(last) = self.previous_actions.last() {
+            last.clone()
+        } else {
+            TributeAction::Idle
+        }
+    }
+
     /// The AI for a tribute. Automatic decisions based on current state.
     fn decide_on_action(tribute: &Tribute) -> TributeAction {
         // If the tribute isn't in the area, they do nothing
@@ -147,7 +155,7 @@ impl From<TributeModel> for Tribute {
         let area = Area::from(tribute.area().unwrap());
         let actions: Vec<TributeAction> = tribute.actions()
             .iter()
-            .map(|a| TributeAction::from(a))
+            .map(TributeAction::from)
             .collect();
 
         let brain = TributeBrain {
