@@ -25,10 +25,19 @@ impl Game {
     pub fn start(&self) {
         let connection = &mut establish_connection();
         let cornucopia = crate::models::get_area(connection, "The Cornucopia");
+
         let tributes = self.tributes();
         for mut tribute in tributes {
             tribute.set_area(&cornucopia);
         }
+    }
+
+    pub fn set_day(&self, day_number: i32) {
+        let connection = &mut establish_connection();
+        diesel::update(game::table.find(self.id))
+            .set(game::day.eq(Some(day_number)))
+            .execute(connection)
+            .expect("Error updating game");
     }
 }
 

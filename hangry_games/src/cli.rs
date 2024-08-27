@@ -27,7 +27,8 @@ enum Commands {
     TributeTakesAction { tribute_id: String, action_id: String },
     AddGame,
     ShowGames,
-    StartGame { name: String },
+    StartGame { game_id: String },
+    RunNextDay { game_id: String },
 }
 
 pub fn parse() {
@@ -122,9 +123,17 @@ pub fn parse() {
                 println!("{}", _game.name);
             }
         }
-        Commands::StartGame { name } => {
-            let game = get_game(connection, &name).expect("Game not found");
+        Commands::StartGame { game_id } => {
+            let game = get_game(connection, &game_id).expect("Game not found");
             game.start();
+        }
+        Commands::RunNextDay { game_id } => {
+            let game = get_game(connection, &game_id).expect("Game not found");
+            game.set_day(game.day.unwrap_or(0) + 1);
+            for tribute in game.tributes().iter_mut().filter(|t| t.is_alive) {
+                tribute.do_day();
+            }
+
         }
     }
 }

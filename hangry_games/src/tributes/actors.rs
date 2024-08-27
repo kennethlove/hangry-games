@@ -1,6 +1,6 @@
 use crate::areas::Area;
 
-use super::actions::TributeActions;
+use super::actions::TributeAction;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
@@ -16,7 +16,7 @@ pub struct Tribute {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TributeBrain {
-    previous_actions: Vec<TributeActions>,
+    previous_actions: Vec<TributeAction>,
 }
 
 impl TributeBrain {
@@ -26,17 +26,17 @@ impl TributeBrain {
         }
     }
 
-    pub fn act(&mut self, tribute: &Tribute) -> TributeActions {
+    pub fn act(&mut self, tribute: &Tribute) -> TributeAction {
         let action = TributeBrain::decide_on_action(tribute);
         self.previous_actions.push(action.clone());
         action
     }
 
     /// The AI for a tribute. Automatic decisions based on current state.
-    fn decide_on_action(tribute: &Tribute) -> TributeActions {
+    fn decide_on_action(tribute: &Tribute) -> TributeAction {
         // If the tribute isn't in the area, they do nothing
         if tribute.area.is_none() {
-            return TributeActions::Idle;
+            return TributeAction::Idle;
         }
 
         let _area = tribute.area.as_ref().unwrap();
@@ -47,23 +47,23 @@ impl TributeBrain {
             // enemies are nearby
             match tribute.health {
                 // health is low, hide
-                0..=20 => return TributeActions::Hide,
+                0..=20 => TributeAction::Hide,
                 // health is good, attack
-                _ => return TributeActions::Attack,
-            }
+                _ => TributeAction::Attack,
+            };
         }
 
         // no enemies nearby
         match tribute.health {
             // health is low, rest
-            0..=10 => TributeActions::Hide,
-            11..=20 => TributeActions::Rest,
+            0..=10 => TributeAction::Hide,
+            11..=20 => TributeAction::Rest,
             // health is good, move
             _ => {
                 // If the tribute has movement, move
                 match tribute.movement {
-                    0 => TributeActions::Idle,
-                    _ => TributeActions::Move,
+                    0 => TributeAction::Idle,
+                    _ => TributeAction::Move,
                 }
             }
         }
@@ -138,18 +138,31 @@ impl Default for Tribute {
     }
 }
 
-use super::super::models::Tribute as TributeModel;
+use crate::models::Tribute as TributeModel;
 impl From<TributeModel> for Tribute {
-    fn from(tribute: TributeModel) -> Self {
+    fn from(tribute: crate::models::tribute::Tribute) -> Self {
+        use crate::areas::Area;
+        use crate::tributes::actions::TributeAction;
+
+        let area = Area::from(tribute.area().unwrap());
+        let actions: Vec<TributeAction> = tribute.actions()
+            .iter()
+            .map(|a| TributeAction::from(a))
+            .collect();
+
+        let brain = TributeBrain {
+            previous_actions: actions,
+        };
+
         Self {
-            name: tribute.name,
+            name: tribute.name.clone(),
             health: tribute.health as u32,
             sanity: tribute.sanity as u32,
             movement: tribute.movement as u32,
             is_alive: tribute.is_alive,
             district: tribute.district as u32,
-            brain: TributeBrain::new(),
-            area: None,
+            brain,
+            area: Some(area),
         }
     }
 }
@@ -218,7 +231,7 @@ mod tests {
         // If there are no enemies nearby, the tribute should move
         let mut tribute = Tribute::new("Katniss".to_string());
         let action = tribute.brain.act(&tribute.clone());
-        assert_eq!(action, TributeActions::Move);
+        assert_eq!(action, TributeAction::Move);
     }
 
     #[test]
@@ -227,7 +240,7 @@ mod tests {
         let mut tribute = Tribute::new("Katniss".to_string());
         tribute.takes_physical_damage(90);
         let action = tribute.brain.act(&tribute.clone());
-        assert_eq!(action, TributeActions::Hide);
+        assert_eq!(action, TributeAction::Hide);
     }
 
     #[test]
@@ -236,7 +249,7 @@ mod tests {
         let mut tribute = Tribute::new("Katniss".to_string());
         tribute.moves(100);
         let action = tribute.brain.act(&tribute.clone());
-        assert_eq!(action, TributeActions::Rest);
+        assert_eq!(action, TributeAction::Rest);
     }
 
     #[test]
@@ -246,7 +259,7 @@ mod tests {
         let mut tribute = Tribute::new("Katniss".to_string());
         let _ = Tribute::new();
         let action = tribute.brain.act(&tribute.clone());
-        assert_eq!(action, TributeActions::Attack);
+        assert_eq!(action, TributeAction::Attack);
     }
 
     #[test]
@@ -258,6 +271,6 @@ mod tests {
         tribute.takes_physical_damage(90);
         let _ = Tribute::new();
         let action = tribute.brain.act(&tribute.clone());
-        assert_eq!(action, TributeActions::Hide);
+        assert_eq!(action, TributeAction::Hide);
     }
 }

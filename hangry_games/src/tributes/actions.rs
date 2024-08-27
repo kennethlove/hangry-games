@@ -3,7 +3,7 @@ use std::str::FromStr;
 use diesel::deserialize::FromSql;
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub enum TributeActions {
+pub enum TributeAction {
     #[default]
     Idle,
     Move,
@@ -13,38 +13,48 @@ pub enum TributeActions {
     Hide,
 }
 
-impl TributeActions {
+impl TributeAction {
     pub fn as_str(&self) -> &str {
         match self {
-            TributeActions::Idle => "Idle",
-            TributeActions::Move => "Move",
-            TributeActions::Rest => "Rest",
-            TributeActions::UseItem => "Use Item",
-            TributeActions::Attack => "Attack",
-            TributeActions::Hide => "Hide",
+            TributeAction::Idle => "Idle",
+            TributeAction::Move => "Move",
+            TributeAction::Rest => "Rest",
+            TributeAction::UseItem => "Use Item",
+            TributeAction::Attack => "Attack",
+            TributeAction::Hide => "Hide",
         }
     }
 }
 
-impl FromSql<diesel::sql_types::Text, diesel::pg::Pg> for TributeActions {
+impl FromSql<diesel::sql_types::Text, diesel::pg::Pg> for TributeAction {
     fn from_sql(bytes: diesel::pg::PgValue<'_>) -> diesel::deserialize::Result<Self> {
         let s = <String as FromSql<diesel::sql_types::Text, diesel::pg::Pg>>::from_sql(bytes)?;
-        TributeActions::from_str(&s).map_err(|_| "Invalid TributeActions".into())
+        TributeAction::from_str(&s).map_err(|_| "Invalid TributeActions".into())
     }
 }
 
-impl FromStr for TributeActions {
+impl FromStr for TributeAction {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "Idle" => Ok(TributeActions::Idle),
-            "Move" => Ok(TributeActions::Move),
-            "Rest" => Ok(TributeActions::Rest),
-            "Use Item" => Ok(TributeActions::UseItem),
-            "Attack" => Ok(TributeActions::Attack),
-            "Hide" => Ok(TributeActions::Hide),
+        match s.to_lowercase().as_str() {
+            "idle" => Ok(TributeAction::Idle),
+            "move" => Ok(TributeAction::Move),
+            "rest" => Ok(TributeAction::Rest),
+            "use item" => Ok(TributeAction::UseItem),
+            "attack" => Ok(TributeAction::Attack),
+            "hide" => Ok(TributeAction::Hide),
             _ => Err(()),
         }
     }
 }
+
+use crate::models::Action as ActionModel;
+impl From<&ActionModel> for TributeAction {
+    fn from(value: &ActionModel) -> Self {
+        let name = value.name.as_str();
+        let action = Self::from_str(name);
+        action.expect("Couldn't match that action")
+    }
+}
+

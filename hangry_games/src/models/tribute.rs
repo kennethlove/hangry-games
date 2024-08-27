@@ -8,7 +8,7 @@ use fake::Fake;
 
 use super::get_area_by_id;
 
-#[derive(Queryable, Selectable, Debug, Associations)]
+#[derive(Queryable, Selectable, Debug, Clone, Associations)]
 #[diesel(table_name = tribute)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[diesel(belongs_to(Area, foreign_key = area_id))]
@@ -85,12 +85,17 @@ impl Tribute {
         if self.game_id.is_some() {
             return Err("Tribute already has a game".to_string());
         }
-        dbg!(game.tributes().len());
         if game.tributes().len() >= 24 {
             return Err("Game is full".to_string());
         }
         self.set_game(game);
         Ok(())
+    }
+
+    pub fn do_day(&mut self) { //-> Self {
+        use crate::tributes::actors::{Tribute as ATribute, TributeBrain};
+        let tribute = ATribute::from(self.clone());
+        dbg!(&tribute);
     }
 }
 
