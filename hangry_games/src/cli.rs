@@ -26,6 +26,7 @@ enum Commands {
     ShowGames,
     StartGame { game_id: String },
     RunNextDay { game_id: String },
+    EndGame { game_id: String },
 }
 
 pub fn parse() {
@@ -153,6 +154,10 @@ pub fn parse() {
                 println!("{} dies", tribute.name);
             }
             println!("{} left alive", get_all_living_tributes(connection, &game).len());
+        }
+        Commands::EndGame { game_id } => {
+            let game = get_game(connection, &game_id).expect("Game not found");
+            game.end();
         }
     }
 }

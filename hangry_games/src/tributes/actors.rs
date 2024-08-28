@@ -27,6 +27,7 @@ impl TributeBrain {
     }
 
     pub fn act(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
+        if tribute.health == 0 { return TributeAction::Idle; }
         let action = TributeBrain::decide_on_action(tribute, nearby_tributes);
         self.previous_actions.push(action.clone());
         action

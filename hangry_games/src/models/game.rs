@@ -32,6 +32,13 @@ impl Game {
         }
     }
 
+    pub fn end(&self) {
+        let tributes = self.tributes();
+        for tribute in tributes {
+            tribute.unset_area();
+        }
+    }
+
     pub fn set_day(&self, day_number: i32) {
         let connection = &mut establish_connection();
         diesel::update(game::table.find(self.id))

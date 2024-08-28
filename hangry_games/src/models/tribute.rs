@@ -34,7 +34,7 @@ impl Tribute {
             .expect("Error updating tribute");
     }
 
-    pub fn unset_area(&mut self) {
+    pub fn unset_area(&self) {
         let connection = &mut establish_connection();
         diesel::update(tribute::table.find(self.id))
             .set(tribute::area_id.eq(None::<i32>))
@@ -169,7 +169,7 @@ impl Tribute {
             TributeAction::Attack => {
                 dbg!("Attacking");
                 let mut victim;
-                let mut success = rand::random::<f32>() < 0.5;
+                let success = rand::random::<f32>() < 0.5;
 
                 // Am I alone?
                 if nearby_tributes.len() == 1 {
