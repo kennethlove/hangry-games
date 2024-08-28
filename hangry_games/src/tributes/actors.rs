@@ -1,6 +1,6 @@
-use crate::area::Area;
+use crate::areas::Area;
 
-use super::actions::TributeActions;
+use super::actions::TributeAction;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
@@ -16,7 +16,7 @@ pub struct Tribute {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TributeBrain {
-    previous_actions: Vec<TributeActions>,
+    previous_actions: Vec<TributeAction>,
 }
 
 impl TributeBrain {
@@ -26,49 +26,59 @@ impl TributeBrain {
         }
     }
 
-    pub fn act(&mut self, tribute: &Tribute) -> TributeActions {
-        let action = TributeBrain::decide_on_action(tribute);
+    pub fn act(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
+        let action = TributeBrain::decide_on_action(tribute, nearby_tributes);
         self.previous_actions.push(action.clone());
         action
     }
 
+    pub fn last_action(&self) -> TributeAction {
+        if let Some(last) = self.previous_actions.last() {
+            last.clone()
+        } else {
+            TributeAction::Idle
+        }
+    }
+
     /// The AI for a tribute. Automatic decisions based on current state.
-    fn decide_on_action(tribute: &Tribute) -> TributeActions {
+    fn decide_on_action(tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
         // If the tribute isn't in the area, they do nothing
         if tribute.area.is_none() {
-            return TributeActions::Idle;
+            return TributeAction::Idle;
         }
 
         let _area = tribute.area.as_ref().unwrap();
+        dbg!(&nearby_tributes.iter().map(|t| t.name.clone()).collect::<Vec<String>>());
 
-        let nearby: Vec<Tribute> = vec![];
-
-        if !nearby.is_empty() {
+        if nearby_tributes.len() > 1 {
             // enemies are nearby
-            match tribute.health {
+            return match tribute.health {
                 // health is low, hide
-                0..=20 => return TributeActions::Hide,
+                1..=20 => TributeAction::Hide,
+                // health isn't great, run away
+                21..=50 => TributeAction::Move,
                 // health is good, attack
-                _ => return TributeActions::Attack,
-            }
+                _ => TributeAction::Attack,
+            };
         }
 
         // no enemies nearby
         match tribute.health {
             // health is low, rest
-            0..=10 => return TributeActions::Hide,
-            11..=20 => return TributeActions::Rest,
+            0..=10 => TributeAction::Hide,
+            11..=20 => TributeAction::Rest,
             // health is good, move
             _ => {
                 // If the tribute has movement, move
                 match tribute.movement {
-                    0 => TributeActions::Idle,
-                    _ => TributeActions::Move,
+                    0 => TributeAction::Idle,
+                    _ => TributeAction::Move,
                 }
             }
         }
     }
 }
+
 
 impl Tribute {
     /// Creates a new Tribute with full health, sanity, and movement
@@ -137,18 +147,31 @@ impl Default for Tribute {
     }
 }
 
-use super::super::models::Tribute as TributeModel;
+use crate::models::Tribute as TributeModel;
 impl From<TributeModel> for Tribute {
-    fn from(tribute: TributeModel) -> Self {
+    fn from(tribute: crate::models::tribute::Tribute) -> Self {
+        use crate::areas::Area;
+        use crate::tributes::actions::TributeAction;
+
+        let area = Area::from(tribute.area().unwrap());
+        let actions: Vec<TributeAction> = tribute.actions()
+            .iter()
+            .map(TributeAction::from)
+            .collect();
+
+        let brain = TributeBrain {
+            previous_actions: actions,
+        };
+
         Self {
-            name: tribute.name,
+            name: tribute.name.clone(),
             health: tribute.health as u32,
             sanity: tribute.sanity as u32,
             movement: tribute.movement as u32,
             is_alive: tribute.is_alive,
             district: tribute.district as u32,
-            brain: TributeBrain::new(),
-            area: None,
+            brain,
+            area: Some(area),
         }
     }
 }
@@ -159,7 +182,7 @@ mod tests {
 
     #[test]
     fn new() {
-        let tribute = Tribute::new();
+        let tribute = Tribute::new("Katniss".to_string());
         assert_eq!(tribute.health, 100);
         assert_eq!(tribute.sanity, 100);
         assert_eq!(tribute.movement, 100);
@@ -168,21 +191,21 @@ mod tests {
 
     #[test]
     fn takes_physical_damage() {
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         tribute.takes_physical_damage(10);
         assert_eq!(tribute.health, 90);
     }
 
     #[test]
     fn takes_mental_damage() {
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         tribute.takes_mental_damage(10);
         assert_eq!(tribute.sanity, 90);
     }
 
     #[test]
     fn moves_and_rests() {
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         tribute.moves(10);
         assert_eq!(tribute.movement, 90);
         tribute.rests();
@@ -191,7 +214,7 @@ mod tests {
 
     #[test]
     fn takes_damage_and_dies() {
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         tribute.takes_physical_damage(100);
         assert!(!tribute.is_alive);
     }
@@ -199,7 +222,7 @@ mod tests {
     #[test]
     #[ignore = "No way to find nearby enemies yet"]
     fn no_nearby_enemies() {
-        let _tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         let _area = Area::default();
         assert!(true);
     }
@@ -207,45 +230,45 @@ mod tests {
     #[test]
     #[ignore = "No way to find nearby enemies yet"]
     fn nearby_enemies() {
-        let tribute = Tribute::new();
-        let _ = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
+        let mut tribute = Tribute::new("Peeta".to_string());
         assert!(tribute.area.is_some());
     }
 
     #[test]
     fn decide_on_action_default() {
         // If there are no enemies nearby, the tribute should move
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         let action = tribute.brain.act(&tribute.clone());
-        assert_eq!(action, TributeActions::Move);
+        assert_eq!(action, TributeAction::Move);
     }
 
     #[test]
     fn decide_on_action_low_health() {
         // If the tribute has low health, they should hide
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         tribute.takes_physical_damage(90);
         let action = tribute.brain.act(&tribute.clone());
-        assert_eq!(action, TributeActions::Hide);
+        assert_eq!(action, TributeAction::Hide);
     }
 
     #[test]
     fn decide_on_action_no_movement() {
         // If the tribute has no movement, they should rest
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         tribute.moves(100);
         let action = tribute.brain.act(&tribute.clone());
-        assert_eq!(action, TributeActions::Rest);
+        assert_eq!(action, TributeAction::Rest);
     }
 
     #[test]
     #[ignore = "No way to find nearby enemies yet"]
     fn decide_on_action_enemies() {
         // If there are enemies nearby, the tribute should attack
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         let _ = Tribute::new();
         let action = tribute.brain.act(&tribute.clone());
-        assert_eq!(action, TributeActions::Attack);
+        assert_eq!(action, TributeAction::Attack);
     }
 
     #[test]
@@ -253,10 +276,10 @@ mod tests {
     fn decide_on_action_enemies_low_health() {
         // If there are enemies nearby, but the tribute is low on health
         // the tribute should attack
-        let mut tribute = Tribute::new();
+        let mut tribute = Tribute::new("Katniss".to_string());
         tribute.takes_physical_damage(90);
         let _ = Tribute::new();
         let action = tribute.brain.act(&tribute.clone());
-        assert_eq!(action, TributeActions::Hide);
+        assert_eq!(action, TributeAction::Hide);
     }
 }

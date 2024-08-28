@@ -1,1 +1,2 @@
-DELETE FROM areas WHERE id > 0;
+-- Delete all areas from the game.
+DELETE FROM area WHERE id > 0;

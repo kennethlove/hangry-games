@@ -1,5 +1,5 @@
--- Your SQL goes here
-CREATE TABLE tributes (
+-- Create the tribute table.
+CREATE TABLE tribute (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     health INTEGER NOT NULL DEFAULT 100,

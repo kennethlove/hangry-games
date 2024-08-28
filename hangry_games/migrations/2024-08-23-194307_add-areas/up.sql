@@ -1,5 +1,6 @@
-INSERT INTO areas (name) VALUES ('The Cornucopia');
-INSERT INTO areas (name) VALUES ('Northwest');
-INSERT INTO areas (name) VALUES ('Northeast');
-INSERT INTO areas (name) VALUES ('Southeast');
-INSERT INTO areas (name) VALUES ('Southwest');
+-- Add the five available areas to the database.
+INSERT INTO area (name) VALUES ('The Cornucopia');
+INSERT INTO area (name) VALUES ('Northwest');
+INSERT INTO area (name) VALUES ('Northeast');
+INSERT INTO area (name) VALUES ('Southeast');
+INSERT INTO area (name) VALUES ('Southwest');
