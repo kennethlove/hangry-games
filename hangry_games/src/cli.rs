@@ -126,10 +126,17 @@ pub fn parse() {
         }
         Commands::RunNextDay { game_id } => {
             let game = get_game(connection, &game_id).expect("Game not found");
+            let living_tributes = get_all_living_tributes(connection, &game);
+
+            if living_tributes.len() == 1 {
+                println!("{} wins!", living_tributes[0].name);
+                return;
+            }
+
             game.set_day(game.day.unwrap_or(0) + 1);
 
             println!("Day {}", game.day.unwrap_or(0));
-            println!("{} tributes left", get_all_living_tributes(connection, &game).len());
+            println!("{} tributes left", living_tributes.len());
 
             let mut deaths: Vec<Tribute> = vec![];
             for mut tribute in get_all_living_tributes(connection, &game) {
@@ -142,11 +149,10 @@ pub fn parse() {
             }
             // Kill tributes
             for tribute in &deaths {
-                tribute.kill();
+                tribute.dies();
                 println!("{} dies", tribute.name);
             }
             println!("{} left alive", get_all_living_tributes(connection, &game).len());
-            // dbg!(get_all_living_tributes(connection, &game));
         }
     }
 }

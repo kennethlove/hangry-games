@@ -1,5 +1,5 @@
 use crate::establish_connection;
-use crate::models::{tribute_action, Action, Area, Game};
+use crate::models::{get_game, tribute_action, Action, Area, Game};
 use crate::schema::tribute;
 use diesel::prelude::*;
 use fake::faker::name::raw::*;
@@ -92,7 +92,7 @@ impl Tribute {
         Ok(())
     }
 
-    pub fn kill(&self) {
+    pub fn dies(&self) {
         let connection = &mut establish_connection();
         diesel::update(tribute::table.find(self.id))
             .set((
@@ -137,7 +137,7 @@ impl Tribute {
                 let random_neighbor = current_area.neighbors().choose(&mut rand::thread_rng()).unwrap().clone();
 
                 tribute.area = Some(random_neighbor.clone());
-                tribute.movement = 0;
+                tribute.movement = tribute.movement.saturating_sub(50);
                 println!("{} moves from {} to {}", tribute.name, current_area.as_str(), &random_neighbor.as_str());
 
                 let tribute_instance = Tribute::from(tribute);
@@ -199,10 +199,11 @@ impl Tribute {
 
                 // Attack another tribute
                 if success {
-                    let victim_health = std::cmp::max(victim.health - 50, 0);
-                    let victim_sanity = std::cmp::max(victim.sanity - 20, 0);
-                    let victim_movement = std::cmp::max(victim.movement - 10, 0);
+                    let victim_health = victim.health.saturating_sub(50);
+                    let victim_sanity = victim.sanity.saturating_sub(30);
+                    let victim_movement = victim.movement.saturating_sub(10);
 
+                    // Injure the victim
                     diesel::update(tribute::table.find(victim.id))
                         .set((
                             tribute::health.eq(victim_health),
@@ -212,9 +213,17 @@ impl Tribute {
                         .execute(connection)
                         .expect("Error attacking tribute");
 
+                    // Stress the attacker
+                    self.sanity = std::cmp::max(self.sanity - 20, 0);
+
+                    diesel::update(tribute::table.find(self.id))
+                        .set(tribute::sanity.eq(self.sanity))
+                        .execute(connection)
+                        .expect("Error stressing tribute");
+
                     println!("Attack succeeds");
-                    println!("{} health {}", self.health, victim.health);
-                    println!("{} sanity {}", self.sanity, victim.sanity);
+                    println!("{} health {}", self.health, victim_health);
+                    println!("{} sanity {}", self.sanity, victim_sanity);
                 } else { println!("Attack fails"); }
             }
             _ => {
