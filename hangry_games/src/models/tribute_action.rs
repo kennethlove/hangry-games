@@ -37,8 +37,4 @@ impl TributeAction {
 
 pub fn take_action(tribute: &Tribute, action: &Action) {
     TributeAction::create(tribute.id, action.id);
-    println!(
-        "{} takes action {}",
-        tribute.name, action.name
-    );
 }

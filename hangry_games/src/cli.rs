@@ -133,6 +133,8 @@ pub fn parse() {
 
             let mut deaths: Vec<Tribute> = vec![];
             for mut tribute in get_all_living_tributes(connection, &game) {
+                println!("-----------------------------------");
+                println!("{}, District {}, in {}", tribute.name, tribute.district, tribute.area().unwrap().name);
                 tribute = tribute.do_day();
                 if tribute.health <= 0 {
                     deaths.push(tribute.clone());

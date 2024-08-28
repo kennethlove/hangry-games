@@ -48,8 +48,9 @@ impl TributeBrain {
         }
 
         let _area = tribute.area.as_ref().unwrap();
+        dbg!(&nearby_tributes.iter().map(|t| t.name.clone()).collect::<Vec<String>>());
 
-        if !nearby_tributes.is_empty() {
+        if nearby_tributes.len() > 1 {
             // enemies are nearby
             return match tribute.health {
                 // health is low, hide

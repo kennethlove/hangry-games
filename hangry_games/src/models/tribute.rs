@@ -108,6 +108,7 @@ impl Tribute {
         use crate::tributes::actions::TributeAction;
 
         if self.is_alive == false || self.health == 0 {
+            dbg!("Tribute is dead");
             return self.clone();
         }
 
@@ -120,22 +121,24 @@ impl Tribute {
         let mut brain = tribute.brain.clone();
 
         // Get nearby tributes
-        let nearby_tributes = self.area().unwrap().tributes();
-        let living_tributes = nearby_tributes.iter().filter(|t| t.is_alive && t.health > 0);
-        let nearby_atributes = living_tributes.map(|t| ATribute::from(t.clone())).collect();
+        let area_tributes = self.area().unwrap().tributes();
+        let living_tributes = area_tributes.iter().filter(|t| t.is_alive && t.health > 0 && t.game_id == self.game_id);
+        let nearby_tributes: Vec<_> = living_tributes.clone().map(|t| ATribute::from(t.clone())).collect();
 
         // Decide the next logical action
-        brain.act(&tribute, nearby_atributes);
+        brain.act(&tribute, nearby_tributes.clone());
 
         use rand::seq::SliceRandom;
 
         match brain.last_action() {
             TributeAction::Move => {
+                dbg!("Moving");
                 let current_area = tribute.area.unwrap();
                 let random_neighbor = current_area.neighbors().choose(&mut rand::thread_rng()).unwrap().clone();
 
-                tribute.area = Some(random_neighbor);
+                tribute.area = Some(random_neighbor.clone());
                 tribute.movement = 0;
+                println!("{} moves from {} to {}", tribute.name, current_area.as_str(), &random_neighbor.as_str());
 
                 let tribute_instance = Tribute::from(tribute);
                 // save tribute_instance
@@ -148,6 +151,7 @@ impl Tribute {
                     .expect("Error moving tribute");
             }
             TributeAction::Rest | TributeAction::Hide | TributeAction::Idle => {
+                dbg!("Resting");
                 // Rest the tribute
                 self.health = std::cmp::min(self.health + 50, 100);
                 self.sanity = std::cmp::min(self.sanity + 50, 100);
@@ -163,30 +167,37 @@ impl Tribute {
                     .expect("Error resting tribute");
             }
             TributeAction::Attack => {
-                let victim;
+                dbg!("Attacking");
+                let mut victim;
+                let mut success = rand::random::<f32>() < 0.5;
 
                 // Am I alone?
                 if nearby_tributes.len() == 1 {
                     // Am I sane?
                     println!("{} is alone", self.name);
                     if self.sanity > 10 {
-                        println!("Decides not to kill themself");
+                        println!("Decides not to live another day");
                         return self.clone();
                     }
 
                     // Suicide/self-harm
-                    println!("Can't take it, kills themself");
+                    println!("Can't take it, unalives themself");
                     victim = self.clone();
                 } else {
                     // I am NOT alone
-                    let mut chosen_victim = nearby_tributes.choose(&mut rand::thread_rng()).unwrap();
-                    while chosen_victim.id == self.id || chosen_victim.is_alive == false || chosen_victim.health == 0 {
-                        chosen_victim = nearby_tributes.choose(&mut rand::thread_rng()).unwrap();
+                    let victims = living_tributes.clone().filter(|t| {
+                            t.is_alive == true && t.health > 0 && t.id != self.id
+                        })
+                        .collect::<Vec<&Tribute>>();
+                    victim = victims[0].clone();
+                    if let Some(chosen_victim) = victims.choose(&mut rand::thread_rng()) {
+                        victim = chosen_victim.clone().clone();
                     }
-                    victim = chosen_victim.clone();
                 }
+
+                println!("{} attacks {}", self.name, victim.name);
+
                 // Attack another tribute
-                let success = rand::random::<f32>() < 0.5;
                 if success {
                     let victim_health = std::cmp::max(victim.health - 50, 0);
                     let victim_sanity = std::cmp::max(victim.sanity - 20, 0);
@@ -201,10 +212,10 @@ impl Tribute {
                         .execute(connection)
                         .expect("Error attacking tribute");
 
-                    println!("{} attacks {}", self.name, victim.name);
+                    println!("Attack succeeds");
                     println!("{} health {}", self.health, victim.health);
                     println!("{} sanity {}", self.sanity, victim.sanity);
-                }
+                } else { println!("Attack fails"); }
             }
             _ => {
                 // Do nothing
@@ -283,8 +294,8 @@ pub fn get_all_living_tributes(conn: &mut PgConnection, game: &Game) -> Vec<Trib
     use crate::schema::tribute;
     tribute::table
         .select(tribute::all_columns)
-        .filter(tribute::is_alive.eq(true))
         .filter(tribute::game_id.eq(game.id))
+        .filter(tribute::is_alive.eq(true))
         .load::<Tribute>(conn)
         .expect("Error loading tributes")
 }
