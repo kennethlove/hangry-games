@@ -27,6 +27,8 @@ enum Commands {
     StartGame { game_id: String },
     RunNextDay { game_id: String },
     EndGame { game_id: String },
+    GameStats { game_id: String },
+    CloseArea { game_id: String, area_id: String },
 }
 
 pub fn parse() {
@@ -46,6 +48,11 @@ pub fn parse() {
         Commands::GetArea { name } => {
             let area = get_area(connection, &name);
             dbg!(&area);
+        }
+        Commands::CloseArea { game_id: game, area_id: area } => {
+            let mut game = get_game(connection, &game).expect("Game not found");
+            let area = get_area(connection, &area);
+            game.close_area(&area);
         }
 
         // Tributes
@@ -158,6 +165,16 @@ pub fn parse() {
         Commands::EndGame { game_id } => {
             let game = get_game(connection, &game_id).expect("Game not found");
             game.end();
+        }
+        Commands::GameStats { game_id } => {
+            let game = get_game(connection, &game_id).expect("Game not found");
+            let living_tributes = get_all_living_tributes(connection, &game);
+            println!("Day {}", game.day.unwrap_or(0));
+            println!("{} tributes left", living_tributes.len());
+            for area in get_areas(connection) {
+                let tributes = living_tributes.iter().filter(|t| t.area().unwrap().id == area.id).collect::<Vec<_>>();
+                println!("{} tributes in {}", tributes.len(), area.name);
+            }
         }
     }
 }

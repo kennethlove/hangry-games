@@ -1,6 +1,7 @@
 use crate::schema::game;
 use diesel::prelude::*;
 use crate::establish_connection;
+use crate::models::Area;
 
 #[derive(Queryable, Selectable, Debug)]
 #[diesel(table_name = game)]
@@ -10,6 +11,7 @@ pub struct Game {
     pub name: String,
     pub created_at: chrono::NaiveDateTime,
     pub day: Option<i32>,
+    pub closed_areas: Vec<i32>,
 }
 
 impl Game {
@@ -45,6 +47,22 @@ impl Game {
             .set(game::day.eq(Some(day_number)))
             .execute(connection)
             .expect("Error updating game");
+    }
+
+    pub fn close_area(&mut self, area: &crate::models::Area) {
+        let connection = &mut establish_connection();
+        self.closed_areas.push(area.id);
+        diesel::update(game::table.find(self.id))
+            .set(game::closed_areas.eq(&self.closed_areas))
+            .execute(connection)
+            .expect("Error updating game");
+    }
+
+    pub fn do_day(&mut self) {
+        let connection = &mut establish_connection();
+        let day = self.day.unwrap_or(0);
+        self.set_day(day + 1);
+        self.close_area(&crate::models::Area::random());
     }
 }
 

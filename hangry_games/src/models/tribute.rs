@@ -226,7 +226,7 @@ impl Tribute {
         // Rest the tribute
         self.health = std::cmp::min(self.health + 50, 100);
         self.sanity = std::cmp::min(self.sanity + 50, 100);
-        self.movement = std::cmp::min(self.movement + 50, 100);
+        self.movement = std::cmp::min(self.movement + 25, 100);
 
         diesel::update(tribute::table.find(self.id))
             .set((
@@ -241,6 +241,11 @@ impl Tribute {
 
     // TODO: Extract from impl
     fn move_tribute(&self, connection: &mut PgConnection, mut tribute: crate::tributes::actors::Tribute) {
+        if tribute.movement < 25 {
+            println!("{} is too tired to move", tribute.name);
+            return;
+        }
+
         let current_area = tribute.area.unwrap();
         let random_neighbor = current_area.neighbors().choose(&mut rand::thread_rng()).unwrap().clone();
 

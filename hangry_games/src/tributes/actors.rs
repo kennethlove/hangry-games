@@ -62,6 +62,11 @@ impl TributeBrain {
             };
         }
 
+        if nearby_tributes.len() > 5 {
+            // too many enemies nearby, run away
+            return TributeAction::Move;
+        }
+
         // no enemies nearby
         match tribute.health {
             // health is low, rest
