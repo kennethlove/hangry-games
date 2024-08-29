@@ -121,7 +121,7 @@ pub fn parse() {
         // Games
         Commands::AddGame => {
             let game = create_game(connection);
-            dbg!(&game);
+            println!("Game created: {}", game.name);
         }
         Commands::ShowGames => {
             for _game in get_games(connection) {
