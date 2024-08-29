@@ -1,11 +1,12 @@
 use crate::establish_connection;
-use crate::models::{get_game, tribute_action, Action, Area, Game};
+use crate::models::{tribute_action, Action, Area, Game};
 use crate::schema::tribute;
 use diesel::prelude::*;
 use fake::faker::name::raw::*;
 use fake::locales::*;
 use fake::Fake;
-
+use rand::seq::SliceRandom;
+use rand::{thread_rng, Rng};
 use super::get_area_by_id;
 
 #[derive(Queryable, Selectable, Debug, Clone, Associations)]
@@ -104,7 +105,7 @@ impl Tribute {
     }
 
     pub fn do_day(&mut self) -> Self {
-        use crate::tributes::actors::Tribute as ATribute;
+        use crate::tributes::actors::Tribute as TributeActor;
         use crate::tributes::actions::TributeAction;
 
         if self.is_alive == false || self.health == 0 {
@@ -115,7 +116,7 @@ impl Tribute {
         let connection = &mut establish_connection();
 
         // Create Tribute struct
-        let mut tribute = ATribute::from(self.clone());
+        let tribute = TributeActor::from(self.clone());
 
         // Get Brain struct
         let mut brain = tribute.brain.clone();
@@ -123,108 +124,23 @@ impl Tribute {
         // Get nearby tributes
         let area_tributes = self.area().unwrap().tributes();
         let living_tributes = area_tributes.iter().filter(|t| t.is_alive && t.health > 0 && t.game_id == self.game_id);
-        let nearby_tributes: Vec<_> = living_tributes.clone().map(|t| ATribute::from(t.clone())).collect();
+        let nearby_tributes: Vec<TributeActor> = living_tributes.clone().map(|t| TributeActor::from(t.clone())).collect();
+        let nearby_targets: Vec<Tribute> = living_tributes.into_iter().cloned().collect();
 
         // Decide the next logical action
         brain.act(&tribute, nearby_tributes.clone());
 
-        use rand::seq::SliceRandom;
-
         match brain.last_action() {
             TributeAction::Move => {
-                dbg!("Moving");
-                let current_area = tribute.area.unwrap();
-                let random_neighbor = current_area.neighbors().choose(&mut rand::thread_rng()).unwrap().clone();
-
-                tribute.area = Some(random_neighbor.clone());
-                tribute.movement = tribute.movement.saturating_sub(50);
-                println!("{} moves from {} to {}", tribute.name, current_area.as_str(), &random_neighbor.as_str());
-
-                let tribute_instance = Tribute::from(tribute);
-                // save tribute_instance
-                diesel::update(tribute::table.find(self.id))
-                    .set((
-                        tribute::area_id.eq(tribute_instance.area_id),
-                        tribute::movement.eq(tribute_instance.movement),
-                    ))
-                    .execute(connection)
-                    .expect("Error moving tribute");
+                self.move_tribute(connection, tribute);
             }
             TributeAction::Rest | TributeAction::Hide | TributeAction::Idle => {
-                dbg!("Resting");
-                // Rest the tribute
-                self.health = std::cmp::min(self.health + 50, 100);
-                self.sanity = std::cmp::min(self.sanity + 50, 100);
-                self.movement = std::cmp::min(self.movement + 50, 100);
-
-                diesel::update(tribute::table.find(self.id))
-                    .set((
-                        tribute::health.eq(self.health),
-                        tribute::sanity.eq(self.sanity),
-                        tribute::movement.eq(self.movement),
-                    ))
-                    .execute(connection)
-                    .expect("Error resting tribute");
+                self.rest_tribute(connection);
             }
             TributeAction::Attack => {
-                dbg!("Attacking");
-                let mut victim;
-                let success = rand::random::<f32>() < 0.5;
-
-                // Am I alone?
-                if nearby_tributes.len() == 1 {
-                    // Am I sane?
-                    println!("{} is alone", self.name);
-                    if self.sanity > 10 {
-                        println!("Decides not to live another day");
-                        return self.clone();
-                    }
-
-                    // Suicide/self-harm
-                    println!("Can't take it, unalives themself");
-                    victim = self.clone();
-                } else {
-                    // I am NOT alone
-                    let victims = living_tributes.clone().filter(|t| {
-                            t.is_alive == true && t.health > 0 && t.id != self.id
-                        })
-                        .collect::<Vec<&Tribute>>();
-                    victim = victims[0].clone();
-                    if let Some(chosen_victim) = victims.choose(&mut rand::thread_rng()) {
-                        victim = chosen_victim.clone().clone();
-                    }
+                if let Some(target) = self.pick_target(nearby_targets) {
+                    self.attack_target(connection, target);
                 }
-
-                println!("{} attacks {}", self.name, victim.name);
-
-                // Attack another tribute
-                if success {
-                    let victim_health = victim.health.saturating_sub(50);
-                    let victim_sanity = victim.sanity.saturating_sub(30);
-                    let victim_movement = victim.movement.saturating_sub(10);
-
-                    // Injure the victim
-                    diesel::update(tribute::table.find(victim.id))
-                        .set((
-                            tribute::health.eq(victim_health),
-                            tribute::sanity.eq(victim_sanity),
-                            tribute::movement.eq(victim_movement),
-                        ))
-                        .execute(connection)
-                        .expect("Error attacking tribute");
-
-                    // Stress the attacker
-                    self.sanity = std::cmp::max(self.sanity - 20, 0);
-
-                    diesel::update(tribute::table.find(self.id))
-                        .set(tribute::sanity.eq(self.sanity))
-                        .execute(connection)
-                        .expect("Error stressing tribute");
-
-                    println!("Attack succeeds");
-                    println!("{} health {}", self.health, victim_health);
-                    println!("{} sanity {}", self.sanity, victim_sanity);
-                } else { println!("Attack fails"); }
             }
             _ => {
                 // Do nothing
@@ -237,6 +153,110 @@ impl Tribute {
         // Connect Tribute to Action
         tribute_action::take_action(&self.clone(), &last_action);
         self.clone()
+    }
+
+    // TODO: Extract from impl
+    fn pick_target(&mut self, nearby_tributes: Vec<Tribute>) -> Option<Tribute> {
+        // Am I alone?
+        if nearby_tributes.len() == 1 {
+            // Am I sane?
+            println!("{} is alone", self.name);
+            if self.sanity > 10 {
+                println!("Decides to live another day");
+                return None;
+            }
+
+            // Suicide/self-harm
+            println!("Can't take it, unalives themself");
+            Some(self.clone())
+        } else {
+            // I am NOT alone
+            let victims = nearby_tributes.clone().into_iter().filter(|t| {
+                t.is_alive == true && t.health > 0 && t.id != self.id
+            })
+                .collect::<Vec<Tribute>>();
+            let mut victim = Some(victims[0].clone());
+            if let Some(chosen_victim) = victims.choose(&mut rand::thread_rng()) {
+                victim = Some(chosen_victim.clone().clone());
+            }
+            println!("{} attacks {}", self.name, &victim.clone()?.name);
+            victim
+        }
+    }
+
+    // TODO: Extract from impl
+    fn attack_target(&mut self, connection: &mut PgConnection, victim: Tribute) -> bool {
+        let success: bool = thread_rng().gen_bool(0.5);
+        // Attack another tribute
+        if success {
+            let victim_health = victim.health.saturating_sub(50);
+            let victim_sanity = victim.sanity.saturating_sub(30);
+            let victim_movement = victim.movement.saturating_sub(10);
+
+            // Injure the victim
+            diesel::update(tribute::table.find(victim.id))
+                .set((
+                    tribute::health.eq(victim_health),
+                    tribute::sanity.eq(victim_sanity),
+                    tribute::movement.eq(victim_movement),
+                ))
+                .execute(connection)
+                .expect("Error attacking tribute");
+
+            // Stress the attacker
+            self.sanity = std::cmp::max(self.sanity - 20, 0);
+
+            diesel::update(tribute::table.find(self.id))
+                .set(tribute::sanity.eq(self.sanity))
+                .execute(connection)
+                .expect("Error stressing tribute");
+
+            println!("Attack succeeds");
+            println!("{} health {}", self.health, victim_health);
+            println!("{} sanity {}", self.sanity, victim_sanity);
+            true
+        } else {
+            println!("Attack fails");
+            false
+        }
+    }
+
+    // TODO: Extract from impl
+    fn rest_tribute(&mut self, connection: &mut PgConnection) {
+        // Rest the tribute
+        self.health = std::cmp::min(self.health + 50, 100);
+        self.sanity = std::cmp::min(self.sanity + 50, 100);
+        self.movement = std::cmp::min(self.movement + 50, 100);
+
+        diesel::update(tribute::table.find(self.id))
+            .set((
+                tribute::health.eq(self.health),
+                tribute::sanity.eq(self.sanity),
+                tribute::movement.eq(self.movement),
+            ))
+            .execute(connection)
+            .expect("Error resting tribute");
+        println!("{} rests", self.name);
+    }
+
+    // TODO: Extract from impl
+    fn move_tribute(&self, connection: &mut PgConnection, mut tribute: crate::tributes::actors::Tribute) {
+        let current_area = tribute.area.unwrap();
+        let random_neighbor = current_area.neighbors().choose(&mut rand::thread_rng()).unwrap().clone();
+
+        tribute.area = Some(random_neighbor.clone());
+        tribute.movement = tribute.movement.saturating_sub(50);
+
+        let tribute_instance = Tribute::from(tribute.clone());
+        // save tribute_instance
+        diesel::update(tribute::table.find(self.id))
+            .set((
+                tribute::area_id.eq(tribute_instance.area_id),
+                tribute::movement.eq(tribute_instance.movement),
+            ))
+            .execute(connection)
+            .expect("Error moving tribute");
+        println!("{} moves from {} to {}", tribute.name, current_area.as_str(), &random_neighbor.as_str());
     }
 }
 
