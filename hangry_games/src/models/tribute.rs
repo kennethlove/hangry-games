@@ -45,7 +45,7 @@ impl Tribute {
 
     pub fn area(&self) -> Option<Area> {
         let connection = &mut establish_connection();
-        get_area_by_id(connection, self.area_id)
+        get_area_by_id(self.area_id)
     }
 
     pub fn actions(&self) -> Vec<Action> {
@@ -262,7 +262,7 @@ impl Tribute {
         let tribute_area = tribute.area.unwrap();
         let neighbors = tribute_area.neighbors();
         let random_neighbor = neighbors.iter().filter(|a|{
-            let area = get_area(connection, a.as_str());
+            let area = get_area(a.as_str());
             game.closed_areas.is_some() && !game.closed_areas.clone().unwrap().contains(&Some(area.id))
         }).collect::<Vec<_>>().choose(&mut rand::thread_rng()).unwrap().clone();
 
@@ -287,7 +287,7 @@ impl From<crate::tributes::actors::Tribute> for Tribute {
         let connection = &mut establish_connection();
 
         let current_tribute = get_tribute(connection, &tribute.name);
-        let area = crate::models::get_area(connection, tribute.area.unwrap().as_str());
+        let area = crate::models::get_area(tribute.area.unwrap().as_str());
         let game_id = current_tribute.game_id.unwrap();
 
         let out_tribute = Tribute {

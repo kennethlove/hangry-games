@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use rand::Rng;
 
 #[derive(Clone, Default, Debug, PartialEq)]
 pub enum Area {
@@ -62,6 +63,17 @@ impl Area {
             Area::Southwest => vec![Area::Cornucopia, Area::Southeast],
         }
     }
+
+    pub fn random() -> Area {
+        let mut rng = rand::thread_rng();
+        match rng.gen_range(0..5) {
+            1 => Area::Northeast,
+            2 => Area::Northwest,
+            3 => Area::Southeast,
+            4 => Area::Southwest,
+            _ => Area::Cornucopia,
+        }
+    }
 }
 
 use super::models::area::Area as AreaModel;
@@ -75,7 +87,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_area_from_str() {
+    fn area_from_str() {
         assert_eq!(Area::from_str("The Cornucopia"), Some(Area::Cornucopia));
         assert_eq!(Area::from_str("Cornucopia"), Some(Area::Cornucopia));
         assert_eq!(Area::from_str("North East"), Some(Area::Northeast));
@@ -90,5 +102,35 @@ mod tests {
         assert_eq!(Area::from_str("South West"), Some(Area::Southwest));
         assert_eq!(Area::from_str("Southwest"), Some(Area::Southwest));
         assert_eq!(Area::from_str("SW"), Some(Area::Southwest));
+    }
+
+    #[test]
+    fn area_as_str() {
+        assert_eq!(Area::Cornucopia.as_str(), "The Cornucopia");
+        assert_eq!(Area::Northeast.as_str(), "Northeast");
+        assert_eq!(Area::Northwest.as_str(), "Northwest");
+        assert_eq!(Area::Southeast.as_str(), "Southeast");
+        assert_eq!(Area::Southwest.as_str(), "Southwest");
+    }
+
+    #[test]
+    fn random_area() {
+        let area = Area::random();
+        assert!(
+            area == Area::Cornucopia ||
+            area == Area::Northeast ||
+            area == Area::Northwest ||
+            area == Area::Southeast ||
+            area == Area::Southwest
+        );
+    }
+
+    #[test]
+    fn area_neighbors() {
+        assert_eq!(Area::Cornucopia.neighbors(), vec![Area::Northeast, Area::Northwest, Area::Southeast, Area::Southwest]);
+        assert_eq!(Area::Northeast.neighbors(), vec![Area::Cornucopia, Area::Northwest]);
+        assert_eq!(Area::Northwest.neighbors(), vec![Area::Cornucopia, Area::Northeast]);
+        assert_eq!(Area::Southeast.neighbors(), vec![Area::Cornucopia, Area::Southwest]);
+        assert_eq!(Area::Southwest.neighbors(), vec![Area::Cornucopia, Area::Southeast]);
     }
 }
