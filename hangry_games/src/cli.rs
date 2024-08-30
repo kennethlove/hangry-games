@@ -37,21 +37,21 @@ pub fn parse() {
     match cli.command {
         // Areas
         Commands::AddArea { name } => {
-            let area = create_area(connection, &name);
+            let area = create_area(&name);
             dbg!(&area);
         }
         Commands::ShowAreas => {
-            for area in get_areas(connection) {
+            for area in get_areas() {
                 println!("{}", area.name);
             }
         }
         Commands::GetArea { name } => {
-            let area = get_area(connection, &name);
+            let area = get_area(&name);
             dbg!(&area);
         }
         Commands::CloseArea { game_id: game, area_id: area } => {
             let mut game = get_game(connection, &game).expect("Game not found");
-            let area = get_area(connection, &area);
+            let area = get_area(&area);
             game.close_area(&area);
         }
 
@@ -93,7 +93,7 @@ pub fn parse() {
         } => {
             let tribute = get_tribute(connection, &name);
             let current_area = tribute.area();
-            let area = get_area(connection, &area);
+            let area = get_area(&area);
             place_tribute_in_area(connection, &tribute, &area);
             if let Some(area) = current_area {
                 println!(
@@ -171,7 +171,7 @@ pub fn parse() {
             let living_tributes = get_all_living_tributes(connection, &game);
             println!("Day {}", game.day.unwrap_or(0));
             println!("{} tributes left", living_tributes.len());
-            for area in get_areas(connection) {
+            for area in get_areas() {
                 let tributes = living_tributes.iter().filter(|t| t.area().unwrap().id == area.id).collect::<Vec<_>>();
                 println!("{} tributes in {}", tributes.len(), area.name);
             }

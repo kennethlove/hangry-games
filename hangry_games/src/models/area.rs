@@ -13,9 +13,9 @@ pub struct Area {
 impl Area {
     pub fn random() -> Area {
         let connection = &mut establish_connection();
-        let areas = get_areas(connection);
-        let random_index = rand::random::<usize>() % areas.len();
-        Area { id: areas[random_index].id, name: areas[random_index].name.clone() }
+        let chosen_area = crate::areas::Area::random();
+        let area = get_area(&chosen_area.as_str());
+        Area { id: area.id, name: area.name.clone() }
     }
 
     /// Get all the tributes in an area.
@@ -28,7 +28,7 @@ impl Area {
 
 impl From<crate::areas::Area> for Area {
     fn from(area: crate::areas::Area) -> Self {
-        let aa = get_area(&mut establish_connection(), &area.as_str());
+        let aa = get_area(&area.as_str());
         Area { id: aa.id, name: aa.name }
     }
 }
@@ -39,7 +39,8 @@ pub struct NewArea<'a> {
     pub name: &'a str,
 }
 
-pub fn create_area(conn: &mut PgConnection, name: &str) -> Area {
+pub fn create_area(name: &str) -> Area {
+    let conn = &mut establish_connection();
     let new_area = NewArea { name };
 
     diesel::insert_into(area::table)
@@ -49,11 +50,13 @@ pub fn create_area(conn: &mut PgConnection, name: &str) -> Area {
         .expect("Error saving new area")
 }
 
-pub fn get_areas(conn: &mut PgConnection) -> Vec<Area> {
+pub fn get_areas() -> Vec<Area> {
+    let conn = &mut establish_connection();
     area::table.load::<Area>(conn).expect("Error loading areas")
 }
 
-pub fn get_area(conn: &mut PgConnection, name: &str) -> Area {
+pub fn get_area(name: &str) -> Area {
+    let conn = &mut establish_connection();
     let area: Area = area::table
         .filter(area::name.ilike(name))
         .first::<Area>(conn)
@@ -62,12 +65,13 @@ pub fn get_area(conn: &mut PgConnection, name: &str) -> Area {
     area
 }
 
-pub fn get_area_by_id(conn: &mut PgConnection, id: Option<i32>) -> Option<Area> {
+pub fn get_area_by_id(id: Option<i32>) -> Option<Area> {
+    let conn = &mut establish_connection();
     if id.is_none() {
         return None;
     }
     let area: Area = area::table
-        .find(id.unwrap())
+        .find(id?)
         .first::<Area>(conn)
         .expect("Error loading area")
         .into();
