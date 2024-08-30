@@ -23,6 +23,7 @@ diesel::table! {
         name -> Text,
         created_at -> Timestamp,
         day -> Nullable<Int4>,
+        closed_areas -> Nullable<Array<Nullable<Int4>>>,
     }
 }
 

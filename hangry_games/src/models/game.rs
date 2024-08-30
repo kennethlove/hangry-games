@@ -10,6 +10,7 @@ pub struct Game {
     pub name: String,
     pub created_at: chrono::NaiveDateTime,
     pub day: Option<i32>,
+    pub closed_areas: Option<Vec<Option<i32>>>,
 }
 
 impl Game {
@@ -46,6 +47,27 @@ impl Game {
             .execute(connection)
             .expect("Error updating game");
     }
+
+    pub fn close_area(&mut self, area: &crate::models::Area) {
+        let connection = &mut establish_connection();
+
+        let mut binding: Vec<Option<i32>> = vec![];
+        let closed_areas = self.closed_areas.as_mut().unwrap_or(&mut binding);
+        closed_areas.push(Some(area.id));
+        let closed_areas = closed_areas.clone();
+
+        diesel::update(game::table.find(self.id))
+            .set(game::closed_areas.eq(closed_areas))
+            .execute(connection)
+            .expect("Error updating game");
+    }
+
+    pub fn do_day(&mut self) {
+        let connection = &mut establish_connection();
+        let day = self.day.unwrap_or(0);
+        self.set_day(day + 1);
+        self.close_area(&crate::models::Area::random());
+    }
 }
 
 #[derive(Insertable, Debug)]
@@ -69,6 +91,14 @@ pub fn create_game(connection: &mut PgConnection) -> Game {
 pub fn get_game(connection: &mut PgConnection, name: &str) -> Result<Game, std::io::Error> {
     let got_game = game::table
         .filter(game::name.ilike(name))
+        .first(connection)
+        .expect("Error loading game");
+    Ok(got_game)
+}
+
+pub fn get_game_by_id(connection: &mut PgConnection, id: i32) -> Result<Game, std::io::Error> {
+    let got_game = game::table
+        .filter(game::id.eq(id))
         .first(connection)
         .expect("Error loading game");
     Ok(got_game)

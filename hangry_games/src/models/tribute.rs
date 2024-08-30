@@ -1,5 +1,5 @@
 use crate::establish_connection;
-use crate::models::{tribute_action, Action, Area, Game};
+use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::schema::tribute;
 use diesel::prelude::*;
 use fake::faker::name::raw::*;
@@ -114,6 +114,7 @@ impl Tribute {
         }
 
         let connection = &mut establish_connection();
+        let area = self.area().unwrap();
 
         // Create Tribute struct
         let tribute = TributeActor::from(self.clone());
@@ -122,10 +123,19 @@ impl Tribute {
         let mut brain = tribute.brain.clone();
 
         // Get nearby tributes
-        let area_tributes = self.area().unwrap().tributes();
+        let area_tributes = area.tributes();
         let living_tributes = area_tributes.iter().filter(|t| t.is_alive && t.health > 0 && t.game_id == self.game_id);
         let nearby_tributes: Vec<TributeActor> = living_tributes.clone().map(|t| TributeActor::from(t.clone())).collect();
         let nearby_targets: Vec<Tribute> = living_tributes.into_iter().cloned().collect();
+
+        // If the tribute is in a closed area, move them.
+        let game = get_game_by_id(connection, self.game_id.unwrap());
+        if let Ok(game) = game {
+            if game.closed_areas.expect("Couldn't get closed areas").contains(&Some(area.id)) {
+                self.move_tribute(connection, tribute.clone());
+                return self.clone()
+            }
+        }
 
         // Decide the next logical action
         brain.act(&tribute, nearby_tributes.clone());
@@ -226,7 +236,7 @@ impl Tribute {
         // Rest the tribute
         self.health = std::cmp::min(self.health + 50, 100);
         self.sanity = std::cmp::min(self.sanity + 50, 100);
-        self.movement = std::cmp::min(self.movement + 50, 100);
+        self.movement = std::cmp::min(self.movement + 25, 100);
 
         diesel::update(tribute::table.find(self.id))
             .set((
@@ -241,8 +251,20 @@ impl Tribute {
 
     // TODO: Extract from impl
     fn move_tribute(&self, connection: &mut PgConnection, mut tribute: crate::tributes::actors::Tribute) {
-        let current_area = tribute.area.unwrap();
-        let random_neighbor = current_area.neighbors().choose(&mut rand::thread_rng()).unwrap().clone();
+        if tribute.movement < 25 {
+            println!("{} is too tired to move", tribute.name);
+            // TODO: Add a rest action
+            return;
+        }
+
+        // This next chunk feels gross but I don't know a better way
+        let game = get_game_by_id(connection, self.game_id.unwrap()).unwrap();
+        let tribute_area = tribute.area.unwrap();
+        let neighbors = tribute_area.neighbors();
+        let random_neighbor = neighbors.iter().filter(|a|{
+            let area = get_area(connection, a.as_str());
+            game.closed_areas.is_some() && !game.closed_areas.clone().unwrap().contains(&Some(area.id))
+        }).collect::<Vec<_>>().choose(&mut rand::thread_rng()).unwrap().clone();
 
         tribute.area = Some(random_neighbor.clone());
         tribute.movement = tribute.movement.saturating_sub(50);
@@ -256,7 +278,7 @@ impl Tribute {
             ))
             .execute(connection)
             .expect("Error moving tribute");
-        println!("{} moves from {} to {}", tribute.name, current_area.as_str(), &random_neighbor.as_str());
+        println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &random_neighbor.as_str());
     }
 }
 
