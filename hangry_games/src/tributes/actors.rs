@@ -1,4 +1,6 @@
 use crate::areas::Area;
+use rand::Rng;
+use rand::thread_rng;
 
 use super::actions::TributeAction;
 
@@ -46,6 +48,9 @@ impl TributeBrain {
         // If the tribute isn't in the area, they do nothing
         if tribute.area.is_none() {
             return TributeAction::Idle;
+        }
+        if tribute.movement < 25 {
+            return TributeAction::Rest;
         }
 
         let _area = tribute.area.as_ref().unwrap();
@@ -144,6 +149,53 @@ impl Tribute {
     pub fn leaves_area(&mut self) {
         self.area = None;
     }
+
+    pub fn attacks(&mut self, target: &mut Tribute) {
+        match attack_contest() {
+            AttackResult::AttackerWins => {
+                println!("{} attacks {}", self.name, target.name);
+                target.takes_physical_damage(50);
+                apply_violence_stress(self);
+            },
+            AttackResult::DefenderWins => {
+                println!("{} attacks {}", target.name, self.name);
+                self.takes_physical_damage(50);
+                apply_violence_stress(target);
+            },
+            AttackResult::Tie => {
+                println!("{} and {} attack each other", self.name, target.name);
+                self.takes_physical_damage(25);
+                target.takes_physical_damage(25);
+            }
+        }
+    }
+}
+
+fn apply_violence_stress(tribute: &mut Tribute) {
+    tribute.takes_mental_damage(10);
+}
+
+fn attack_contest() -> AttackResult {
+    let tribute1_roll = thread_rng().gen_range(1..=20);
+    let tribute2_roll = thread_rng().gen_range(1..=20);
+
+    if tribute1_roll > tribute2_roll {
+        AttackResult::AttackerWins
+    } else if tribute2_roll > tribute1_roll {
+        AttackResult::DefenderWins
+    } else {
+        AttackResult::Tie
+    }
+}
+
+pub fn do_combat(tribute1: &mut Tribute, tribute2: &mut Tribute) {
+    tribute1.attacks(tribute2);
+}
+
+enum AttackResult {
+    AttackerWins,
+    DefenderWins,
+    Tie,
 }
 
 impl Default for Tribute {
@@ -152,7 +204,7 @@ impl Default for Tribute {
     }
 }
 
-use crate::models::Tribute as TributeModel;
+use crate::models::{get_area, Tribute as TributeModel};
 impl From<TributeModel> for Tribute {
     fn from(tribute: crate::models::tribute::Tribute) -> Self {
         use crate::areas::Area;
@@ -177,6 +229,25 @@ impl From<TributeModel> for Tribute {
             district: tribute.district as u32,
             brain,
             area: Some(area),
+        }
+    }
+}
+
+use crate::models::tribute::UpdateTribute;
+impl Into<UpdateTribute> for Tribute {
+    fn into(self) -> UpdateTribute {
+        let area = self.area.as_ref().unwrap();
+        let area: i32 = get_area(&area.as_str()).id;
+        let name = self.name.clone();
+
+        UpdateTribute {
+            name,
+            health: self.health as i32,
+            sanity: self.sanity as i32,
+            movement: self.movement as i32,
+            is_alive: self.is_alive,
+            district: self.district as i32,
+            area_id: Some(area),
         }
     }
 }

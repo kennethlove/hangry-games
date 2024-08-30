@@ -7,6 +7,7 @@ use fake::locales::*;
 use fake::Fake;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
+use crate::schema::tribute::is_alive;
 use super::get_area_by_id;
 
 #[derive(Queryable, Selectable, Debug, Clone, Associations)]
@@ -148,7 +149,7 @@ impl Tribute {
             }
             TributeAction::Attack => {
                 if let Some(target) = self.pick_target(nearby_targets) {
-                    self.attack_target(connection, target);
+                    self.attack_target(target);
                 }
             }
             _ => {
@@ -194,40 +195,37 @@ impl Tribute {
     }
 
     // TODO: Extract from impl
-    fn attack_target(&mut self, connection: &mut PgConnection, victim: Tribute) -> bool {
-        let success: bool = thread_rng().gen_bool(0.5);
-        // Attack another tribute
-        if success {
-            let victim_health = victim.health.saturating_sub(50);
-            let victim_sanity = victim.sanity.saturating_sub(30);
-            let victim_movement = victim.movement.saturating_sub(10);
+    fn attack_target(&mut self, victim: Tribute) {
+        use crate::tributes::actors::Tribute as TributeActor;
+        use crate::tributes::actors::do_combat;
 
-            // Injure the victim
-            diesel::update(tribute::table.find(victim.id))
-                .set((
-                    tribute::health.eq(victim_health),
-                    tribute::sanity.eq(victim_sanity),
-                    tribute::movement.eq(victim_movement),
-                ))
-                .execute(connection)
-                .expect("Error attacking tribute");
+        let connection = &mut establish_connection();
+        let mut tribute = TributeActor::from(self.clone());
+        let mut target = TributeActor::from(victim.clone());
 
-            // Stress the attacker
-            self.sanity = std::cmp::max(self.sanity - 20, 0);
+        // Mutates tribute and target
+        do_combat(&mut tribute, &mut target);
 
-            diesel::update(tribute::table.find(self.id))
-                .set(tribute::sanity.eq(self.sanity))
-                .execute(connection)
-                .expect("Error stressing tribute");
+        let tribute = Tribute::from(tribute);
+        let victim = Tribute::from(target);
 
-            println!("Attack succeeds");
-            println!("{} health {}", self.health, victim_health);
-            println!("{} sanity {}", self.sanity, victim_sanity);
-            true
-        } else {
-            println!("Attack fails");
-            false
-        }
+        diesel::update(tribute::table.find(victim.id))
+            .set((
+                tribute::health.eq(victim.health),
+                tribute::sanity.eq(victim.sanity),
+                tribute::movement.eq(victim.movement),
+            ))
+            .execute(connection)
+            .expect("Error updating attack target");
+
+        diesel::update(tribute::table.find(tribute.id))
+            .set((
+                tribute::health.eq(tribute.health),
+                tribute::sanity.eq(tribute.sanity),
+                tribute::movement.eq(tribute.movement),
+            ))
+            .execute(connection)
+            .expect("Error updating attacker");
     }
 
     // TODO: Extract from impl
@@ -314,6 +312,18 @@ impl From<crate::tributes::actors::Tribute> for Tribute {
 pub struct NewTribute<'a> {
     pub name: &'a str,
     pub district: i32,
+}
+
+#[derive(Insertable, Debug)]
+#[diesel(table_name = tribute)]
+pub struct UpdateTribute {
+    pub name: String,
+    pub district: i32,
+    pub health: i32,
+    pub sanity: i32,
+    pub movement: i32,
+    pub is_alive: bool,
+    pub area_id: Option<i32>,
 }
 
 pub fn create_tribute(name: &str) -> Tribute {
