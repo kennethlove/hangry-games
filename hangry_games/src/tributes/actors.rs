@@ -76,7 +76,7 @@ impl TributeBrain {
             _ => {
                 // If the tribute has movement, move
                 match tribute.movement {
-                    0 => TributeAction::Idle,
+                    0 => TributeAction::Rest,
                     _ => TributeAction::Move,
                 }
             }
@@ -225,22 +225,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "No way to find nearby enemies yet"]
-    fn no_nearby_enemies() {
-        let mut tribute = Tribute::new("Katniss".to_string());
-        let _area = Area::default();
-        assert!(true);
-    }
-
-    #[test]
-    #[ignore = "No way to find nearby enemies yet"]
-    fn nearby_enemies() {
-        let mut tribute = Tribute::new("Katniss".to_string());
-        let mut tribute = Tribute::new("Peeta".to_string());
-        assert!(tribute.area.is_some());
-    }
-
-    #[test]
     fn decide_on_action_default() {
         // If there are no enemies nearby, the tribute should move
         let mut tribute = Tribute::new("Katniss".to_string());
@@ -263,28 +247,26 @@ mod tests {
         let mut tribute = Tribute::new("Katniss".to_string());
         tribute.moves(100);
         let action = tribute.brain.act(&tribute.clone(), vec![]);
-        assert_eq!(action, TributeAction::Idle);
+        assert_eq!(action, TributeAction::Rest);
     }
 
     #[test]
-    #[ignore = "No way to find nearby enemies yet"]
     fn decide_on_action_enemies() {
         // If there are enemies nearby, the tribute should attack
         let mut tribute = Tribute::new("Katniss".to_string());
-        let _ = Tribute::new("Peeta".to_string());
-        let action = tribute.brain.act(&tribute.clone(), vec![]);
+        let tribute2 = Tribute::new("Peeta".to_string());
+        let action = tribute.brain.act(&tribute.clone(), vec![tribute.clone(), tribute2]);
         assert_eq!(action, TributeAction::Attack);
     }
 
     #[test]
-    #[ignore = "nearby_enemies is not implemented"]
     fn decide_on_action_enemies_low_health() {
         // If there are enemies nearby, but the tribute is low on health
-        // the tribute should attack
+        // the tribute should hide
         let mut tribute = Tribute::new("Katniss".to_string());
         tribute.takes_physical_damage(90);
-        let _ = Tribute::new("Peeta".to_string());
-        let action = tribute.brain.act(&tribute.clone(),vec![]);
+        let tribute2 = Tribute::new("Peeta".to_string());
+        let action = tribute.brain.act(&tribute.clone(),vec![tribute.clone(), tribute2]);
         assert_eq!(action, TributeAction::Hide);
     }
 }

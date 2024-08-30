@@ -71,7 +71,6 @@ impl From<AreaModel> for Area {
     }
 }
 
-#[cfg(tests)]
 mod tests {
     use super::*;
 
