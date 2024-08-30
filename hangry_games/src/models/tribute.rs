@@ -6,8 +6,6 @@ use fake::faker::name::raw::*;
 use fake::locales::*;
 use fake::Fake;
 use rand::seq::SliceRandom;
-use rand::{thread_rng, Rng};
-use crate::schema::tribute::is_alive;
 use super::get_area_by_id;
 
 #[derive(Queryable, Selectable, Debug, Clone, Associations)]
@@ -149,7 +147,7 @@ impl Tribute {
             }
             TributeAction::Attack => {
                 if let Some(target) = self.pick_target(nearby_targets) {
-                    self.attack_target(target);
+                    attack_target(self.clone(), target.clone());
                 }
             }
             _ => {
@@ -192,40 +190,6 @@ impl Tribute {
             println!("{} attacks {}", self.name, &victim.clone()?.name);
             victim
         }
-    }
-
-    // TODO: Extract from impl
-    fn attack_target(&mut self, victim: Tribute) {
-        use crate::tributes::actors::Tribute as TributeActor;
-        use crate::tributes::actors::do_combat;
-
-        let connection = &mut establish_connection();
-        let mut tribute = TributeActor::from(self.clone());
-        let mut target = TributeActor::from(victim.clone());
-
-        // Mutates tribute and target
-        do_combat(&mut tribute, &mut target);
-
-        let tribute = Tribute::from(tribute);
-        let victim = Tribute::from(target);
-
-        diesel::update(tribute::table.find(victim.id))
-            .set((
-                tribute::health.eq(victim.health),
-                tribute::sanity.eq(victim.sanity),
-                tribute::movement.eq(victim.movement),
-            ))
-            .execute(connection)
-            .expect("Error updating attack target");
-
-        diesel::update(tribute::table.find(tribute.id))
-            .set((
-                tribute::health.eq(tribute.health),
-                tribute::sanity.eq(tribute.sanity),
-                tribute::movement.eq(tribute.movement),
-            ))
-            .execute(connection)
-            .expect("Error updating attacker");
     }
 
     // TODO: Extract from impl
@@ -314,7 +278,7 @@ pub struct NewTribute<'a> {
     pub district: i32,
 }
 
-#[derive(Insertable, Debug)]
+#[derive(Insertable, Debug, AsChangeset)]
 #[diesel(table_name = tribute)]
 pub struct UpdateTribute {
     pub name: String,
@@ -409,4 +373,36 @@ pub fn get_tribute(name: &str) -> Tribute {
         .first::<Tribute>(conn)
         .expect("Error loading tribute");
     tribute
+}
+fn attack_target(attacker: Tribute, victim: Tribute) {
+    use crate::tributes::actors::Tribute as TributeActor;
+    use crate::tributes::actors::do_combat;
+
+    let mut tribute = TributeActor::from(attacker.clone());
+    let mut target = TributeActor::from(victim.clone());
+
+    // Mutates tribute and target
+    do_combat(&mut tribute, &mut target);
+
+    let tribute = Tribute::from(tribute);
+    let target = Tribute::from(target);
+    update_tribute(attacker.id, tribute);
+    update_tribute(victim.id, target);
+}
+
+fn update_tribute(tribute_id: i32, tribute: Tribute) {
+    let conn = &mut establish_connection();
+    let update_tribute = UpdateTribute {
+        name: tribute.name,
+        district: tribute.district,
+        health: tribute.health,
+        sanity: tribute.sanity,
+        movement: tribute.movement,
+        is_alive: tribute.is_alive,
+        area_id: tribute.area_id,
+    };
+    diesel::update(tribute::table.find(tribute_id))
+        .set(&update_tribute)
+        .execute(conn)
+        .expect("Error updating tribute");
 }

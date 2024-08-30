@@ -62,9 +62,17 @@ impl Game {
     }
 
     pub fn do_day(&mut self) {
+        // Update the day
         let day = self.day.unwrap_or(0);
         self.set_day(day + 1);
-        // self.close_area(&crate::models::Area::random());
+        // Trigger any daytime events
+    }
+
+    pub fn do_night(&mut self) {
+        // Find the tributes that died
+        // Announce them
+        // Activate any nighttime events
+        todo!()
     }
 }
 
