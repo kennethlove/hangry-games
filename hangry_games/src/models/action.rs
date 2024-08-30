@@ -1,4 +1,5 @@
 use crate::schema::action;
+use crate::establish_connection;
 use diesel::prelude::*;
 
 #[derive(Queryable, Selectable, Debug)]
@@ -15,7 +16,8 @@ pub struct NewAction<'a> {
     pub description: &'a str,
 }
 
-pub fn get_action(connection: &mut PgConnection, name: &str) -> Action {
+pub fn get_action(name: &str) -> Action {
+    let connection = &mut establish_connection();
     action::table
         .filter(action::name.ilike(name))
         .first(connection)

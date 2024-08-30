@@ -24,7 +24,6 @@ impl Game {
     }
 
     pub fn start(&self) {
-        let connection = &mut establish_connection();
         let cornucopia = crate::models::get_area("The Cornucopia");
 
         let tributes = self.tributes();
@@ -63,10 +62,9 @@ impl Game {
     }
 
     pub fn do_day(&mut self) {
-        let connection = &mut establish_connection();
         let day = self.day.unwrap_or(0);
         self.set_day(day + 1);
-        self.close_area(&crate::models::Area::random());
+        // self.close_area(&crate::models::Area::random());
     }
 }
 
@@ -77,7 +75,8 @@ pub struct NewGame<'a> {
     pub day: i32,
 }
 
-pub fn create_game(connection: &mut PgConnection) -> Game {
+pub fn create_game() -> Game {
+    let connection = &mut establish_connection();
     let name = generate_random_name();
     let new_game = NewGame { name: &name, day: 0 };
 
@@ -88,7 +87,8 @@ pub fn create_game(connection: &mut PgConnection) -> Game {
         .expect("Error saving new area")
 }
 
-pub fn get_game(connection: &mut PgConnection, name: &str) -> Result<Game, std::io::Error> {
+pub fn get_game(name: &str) -> Result<Game, std::io::Error> {
+    let connection = &mut establish_connection();
     let got_game = game::table
         .filter(game::name.ilike(name))
         .first(connection)
@@ -96,7 +96,8 @@ pub fn get_game(connection: &mut PgConnection, name: &str) -> Result<Game, std::
     Ok(got_game)
 }
 
-pub fn get_game_by_id(connection: &mut PgConnection, id: i32) -> Result<Game, std::io::Error> {
+pub fn get_game_by_id(id: i32) -> Result<Game, std::io::Error> {
+    let connection = &mut establish_connection();
     let got_game = game::table
         .filter(game::id.eq(id))
         .first(connection)
@@ -104,7 +105,8 @@ pub fn get_game_by_id(connection: &mut PgConnection, id: i32) -> Result<Game, st
     Ok(got_game)
 }
 
-pub fn get_games(connection: &mut PgConnection) -> Vec<Game> {
+pub fn get_games() -> Vec<Game> {
+    let connection = &mut establish_connection();
     game::table
         .select(game::all_columns)
         .load::<Game>(connection)

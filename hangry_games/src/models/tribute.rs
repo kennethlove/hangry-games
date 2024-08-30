@@ -44,7 +44,6 @@ impl Tribute {
     }
 
     pub fn area(&self) -> Option<Area> {
-        let connection = &mut establish_connection();
         get_area_by_id(self.area_id)
     }
 
@@ -129,7 +128,7 @@ impl Tribute {
         let nearby_targets: Vec<Tribute> = living_tributes.into_iter().cloned().collect();
 
         // If the tribute is in a closed area, move them.
-        let game = get_game_by_id(connection, self.game_id.unwrap());
+        let game = get_game_by_id(self.game_id.unwrap());
         if let Ok(game) = game {
             if game.closed_areas.expect("Couldn't get closed areas").contains(&Some(area.id)) {
                 self.move_tribute(connection, tribute.clone());
@@ -158,7 +157,7 @@ impl Tribute {
         }
 
         // Find the action model instance
-        let last_action = crate::models::action::get_action(connection, brain.last_action().as_str());
+        let last_action = crate::models::action::get_action(brain.last_action().as_str());
 
         // Connect Tribute to Action
         tribute_action::take_action(&self.clone(), &last_action);
@@ -258,7 +257,7 @@ impl Tribute {
         }
 
         // This next chunk feels gross but I don't know a better way
-        let game = get_game_by_id(connection, self.game_id.unwrap()).unwrap();
+        let game = get_game_by_id(self.game_id.unwrap()).unwrap();
         let tribute_area = tribute.area.unwrap();
         let neighbors = tribute_area.neighbors();
         let random_neighbor = neighbors.iter().filter(|a|{
@@ -284,9 +283,8 @@ impl Tribute {
 
 impl From<crate::tributes::actors::Tribute> for Tribute {
     fn from(tribute: crate::tributes::actors::Tribute) -> Self {
-        let connection = &mut establish_connection();
 
-        let current_tribute = get_tribute(connection, &tribute.name);
+        let current_tribute = get_tribute(&tribute.name);
         let area = crate::models::get_area(tribute.area.unwrap().as_str());
         let game_id = current_tribute.game_id.unwrap();
 
@@ -312,8 +310,9 @@ pub struct NewTribute<'a> {
     pub district: i32,
 }
 
-pub fn create_tribute(conn: &mut PgConnection, name: &str) -> Tribute {
+pub fn create_tribute(name: &str) -> Tribute {
     use crate::schema::tribute;
+    let conn = &mut establish_connection();
 
     let district = tribute::table
         .select(diesel::dsl::count_star())
@@ -333,7 +332,8 @@ pub fn create_tribute(conn: &mut PgConnection, name: &str) -> Tribute {
         .expect("Error saving new tribute")
 }
 
-pub fn get_all_tributes(conn: &mut PgConnection) -> Vec<Tribute> {
+pub fn get_all_tributes() -> Vec<Tribute> {
+    let conn = &mut establish_connection();
     use crate::schema::tribute;
     tribute::table
         .select(tribute::all_columns)
@@ -341,7 +341,8 @@ pub fn get_all_tributes(conn: &mut PgConnection) -> Vec<Tribute> {
         .expect("Error loading tributes")
 }
 
-pub fn get_all_living_tributes(conn: &mut PgConnection, game: &Game) -> Vec<Tribute> {
+pub fn get_all_living_tributes(game: &Game) -> Vec<Tribute> {
+    let conn = &mut establish_connection();
     use crate::schema::tribute;
     tribute::table
         .select(tribute::all_columns)
@@ -351,8 +352,9 @@ pub fn get_all_living_tributes(conn: &mut PgConnection, game: &Game) -> Vec<Trib
         .expect("Error loading tributes")
 }
 
-pub fn get_game_tributes(conn: &mut PgConnection, game: &Game) -> Vec<Tribute> {
+pub fn get_game_tributes(game: &Game) -> Vec<Tribute> {
     use crate::schema::tribute;
+    let conn = &mut establish_connection();
     tribute::table
         .select(tribute::all_columns)
         .filter(tribute::game_id.eq(game.id))
@@ -362,28 +364,30 @@ pub fn get_game_tributes(conn: &mut PgConnection, game: &Game) -> Vec<Tribute> {
 
 /// Fill the tribute table with up to 24 tributes.
 /// Return the number of tributes created.
-pub fn fill_tributes(conn: &mut PgConnection, game: Game) -> usize {
-    let tributes = get_game_tributes(conn, &game);
+pub fn fill_tributes(game: Game) -> usize {
+    let tributes = get_game_tributes(&game);
     let count = tributes.len();
     if count < 24 {
         for _ in count..24 {
             let name: String = Name(EN).fake();
-            let mut tribute = create_tribute(conn, &name);
+            let mut tribute = create_tribute(&name);
             tribute.set_game(&game)
         }
     }
     24 - count
 }
 
-pub fn place_tribute_in_area(conn: &mut PgConnection, tribute: &Tribute, area: &Area) {
+pub fn place_tribute_in_area(tribute: &Tribute, area: &Area) {
+    let conn = &mut establish_connection();
     diesel::update(tribute::table.find(tribute.id))
         .set(tribute::area_id.eq(Some(area.id)))
         .execute(conn)
         .expect("Error updating tribute");
 }
 
-pub fn get_tribute(conn: &mut PgConnection, name: &str) -> Tribute {
+pub fn get_tribute(name: &str) -> Tribute {
     use crate::schema::tribute;
+    let conn = &mut establish_connection();
     let tribute: Tribute = tribute::table
         .filter(tribute::name.ilike(name))
         .first::<Tribute>(conn)

@@ -83,8 +83,9 @@ impl From<AreaModel> for Area {
     }
 }
 
+#[cfg(test)]
 mod tests {
-    use super::*;
+    use super::Area;
 
     #[test]
     fn area_from_str() {

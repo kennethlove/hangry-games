@@ -12,7 +12,6 @@ pub struct Area {
 
 impl Area {
     pub fn random() -> Area {
-        let connection = &mut establish_connection();
         let chosen_area = crate::areas::Area::random();
         let area = get_area(&chosen_area.as_str());
         Area { id: area.id, name: area.name.clone() }
@@ -20,8 +19,7 @@ impl Area {
 
     /// Get all the tributes in an area.
     pub fn tributes(&self) -> Vec<crate::models::Tribute> {
-        let connection = &mut establish_connection();
-        let tributes = crate::models::get_all_tributes(connection);
+        let tributes = crate::models::get_all_tributes();
         tributes.into_iter().filter(|t| t.area_id == Some(self.id)).collect()
     }
 }
