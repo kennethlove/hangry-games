@@ -1,4 +1,3 @@
-use crate::establish_connection;
 use crate::models::{create_area, create_game, create_tribute, fill_tributes, get_action, get_all_tributes, get_area, get_areas, get_tribute, place_tribute_in_area, get_game, get_game_tributes, get_games, Tribute, get_all_living_tributes};
 use clap::{Parser, Subcommand};
 

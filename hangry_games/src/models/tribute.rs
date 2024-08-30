@@ -122,7 +122,7 @@ impl Tribute {
         let mut brain = tribute.brain.clone();
 
         // Get nearby tributes
-        let area_tributes = area.tributes();
+        let area_tributes = area.tributes(self.game_id.unwrap());
         let living_tributes = area_tributes.iter().filter(|t| t.is_alive && t.health > 0 && t.game_id == self.game_id);
         let nearby_tributes: Vec<TributeActor> = living_tributes.clone().map(|t| TributeActor::from(t.clone())).collect();
         let nearby_targets: Vec<Tribute> = living_tributes.into_iter().cloned().collect();
@@ -130,7 +130,7 @@ impl Tribute {
         // If the tribute is in a closed area, move them.
         let game = get_game_by_id(self.game_id.unwrap());
         if let Ok(game) = game {
-            if game.closed_areas.expect("Couldn't get closed areas").contains(&Some(area.id)) {
+            if game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).contains(&Some(area.id)) {
                 self.move_tribute(connection, tribute.clone());
                 return self.clone()
             }
@@ -262,8 +262,14 @@ impl Tribute {
         let neighbors = tribute_area.neighbors();
         let random_neighbor = neighbors.iter().filter(|a|{
             let area = get_area(a.as_str());
-            game.closed_areas.is_some() && !game.closed_areas.clone().unwrap().contains(&Some(area.id))
-        }).collect::<Vec<_>>().choose(&mut rand::thread_rng()).unwrap().clone();
+            !game.closed_areas.clone()
+                .unwrap_or(Vec::<Option<i32>>::new())
+                .contains(&Some(area.id))
+        }).collect::<Vec<_>>()
+            .choose(&mut rand::thread_rng())
+            .cloned()
+            .unwrap()
+            .clone();
 
         tribute.area = Some(random_neighbor.clone());
         tribute.movement = tribute.movement.saturating_sub(50);

@@ -18,9 +18,12 @@ impl Area {
     }
 
     /// Get all the tributes in an area.
-    pub fn tributes(&self) -> Vec<crate::models::Tribute> {
+    pub fn tributes(&self, game_id: i32) -> Vec<crate::models::Tribute> {
         let tributes = crate::models::get_all_tributes();
-        tributes.into_iter().filter(|t| t.area_id == Some(self.id)).collect()
+        tributes.into_iter()
+            .filter(|t| t.game_id == Some(game_id))
+            .filter(|t| t.area_id == Some(self.id))
+            .collect()
     }
 }
 
