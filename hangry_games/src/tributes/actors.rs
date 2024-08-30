@@ -244,7 +244,7 @@ mod tests {
     fn decide_on_action_default() {
         // If there are no enemies nearby, the tribute should move
         let mut tribute = Tribute::new("Katniss".to_string());
-        let action = tribute.brain.act(&tribute.clone());
+        let action = tribute.brain.act(&tribute.clone(), vec![]);
         assert_eq!(action, TributeAction::Move);
     }
 
@@ -253,7 +253,7 @@ mod tests {
         // If the tribute has low health, they should hide
         let mut tribute = Tribute::new("Katniss".to_string());
         tribute.takes_physical_damage(90);
-        let action = tribute.brain.act(&tribute.clone());
+        let action = tribute.brain.act(&tribute.clone(), vec![]);
         assert_eq!(action, TributeAction::Hide);
     }
 
@@ -262,8 +262,8 @@ mod tests {
         // If the tribute has no movement, they should rest
         let mut tribute = Tribute::new("Katniss".to_string());
         tribute.moves(100);
-        let action = tribute.brain.act(&tribute.clone());
-        assert_eq!(action, TributeAction::Rest);
+        let action = tribute.brain.act(&tribute.clone(), vec![]);
+        assert_eq!(action, TributeAction::Idle);
     }
 
     #[test]
@@ -271,8 +271,8 @@ mod tests {
     fn decide_on_action_enemies() {
         // If there are enemies nearby, the tribute should attack
         let mut tribute = Tribute::new("Katniss".to_string());
-        let _ = Tribute::new();
-        let action = tribute.brain.act(&tribute.clone());
+        let _ = Tribute::new("Peeta".to_string());
+        let action = tribute.brain.act(&tribute.clone(), vec![]);
         assert_eq!(action, TributeAction::Attack);
     }
 
@@ -283,8 +283,8 @@ mod tests {
         // the tribute should attack
         let mut tribute = Tribute::new("Katniss".to_string());
         tribute.takes_physical_damage(90);
-        let _ = Tribute::new();
-        let action = tribute.brain.act(&tribute.clone());
+        let _ = Tribute::new("Peeta".to_string());
+        let action = tribute.brain.act(&tribute.clone(),vec![]);
         assert_eq!(action, TributeAction::Hide);
     }
 }

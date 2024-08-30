@@ -70,3 +70,26 @@ impl From<AreaModel> for Area {
         Self::from_str(area.name.as_str()).unwrap_or(Area::Cornucopia)
     }
 }
+
+#[cfg(tests)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_area_from_str() {
+        assert_eq!(Area::from_str("The Cornucopia"), Some(Area::Cornucopia));
+        assert_eq!(Area::from_str("Cornucopia"), Some(Area::Cornucopia));
+        assert_eq!(Area::from_str("North East"), Some(Area::Northeast));
+        assert_eq!(Area::from_str("Northeast"), Some(Area::Northeast));
+        assert_eq!(Area::from_str("NE"), Some(Area::Northeast));
+        assert_eq!(Area::from_str("North West"), Some(Area::Northwest));
+        assert_eq!(Area::from_str("Northwest"), Some(Area::Northwest));
+        assert_eq!(Area::from_str("NW"), Some(Area::Northwest));
+        assert_eq!(Area::from_str("South East"), Some(Area::Southeast));
+        assert_eq!(Area::from_str("Southeast"), Some(Area::Southeast));
+        assert_eq!(Area::from_str("SE"), Some(Area::Southeast));
+        assert_eq!(Area::from_str("South West"), Some(Area::Southwest));
+        assert_eq!(Area::from_str("Southwest"), Some(Area::Southwest));
+        assert_eq!(Area::from_str("SW"), Some(Area::Southwest));
+    }
+}
