@@ -168,6 +168,11 @@ impl Tribute {
                 target.takes_physical_damage(25);
             }
         }
+        if !self.is_alive {
+            println!("{} dies", self.name);
+        } else if !target.is_alive {
+            println!("{} dies", target.name);
+        }
     }
 }
 

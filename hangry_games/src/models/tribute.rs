@@ -107,7 +107,7 @@ impl Tribute {
         use crate::tributes::actions::TributeAction;
 
         if self.is_alive == false || self.health == 0 {
-            dbg!("Tribute is dead");
+            println!("Tribute is dead");
             return self.clone();
         }
 

@@ -162,7 +162,7 @@ pub fn parse() {
             // Kill tributes
             for tribute in &deaths {
                 tribute.dies();
-                println!("{} dies", tribute.name);
+                println!("💀 {} dies", tribute.name);
             }
             println!("{} left alive", get_all_living_tributes(&game).len());
         }
