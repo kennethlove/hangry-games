@@ -61,6 +61,19 @@ impl Game {
             .expect("Error updating game");
     }
 
+    pub fn open_area(&mut self, area: &crate::models::Area) {
+        let connection = &mut establish_connection();
+
+        let mut closed_areas = vec![];
+        let closed_areas = self.closed_areas.as_mut().unwrap_or(&mut closed_areas);
+        let closed_areas = closed_areas.iter().filter(|a| a.unwrap() != area.id).collect::<Vec<_>>();
+
+        diesel::update(game::table.find(self.id))
+            .set(game::closed_areas.eq(closed_areas))
+            .execute(connection)
+            .expect("Error updating game");
+    }
+
     pub fn do_day(&mut self) {
         // Update the day
         let day = self.day.unwrap_or(0);

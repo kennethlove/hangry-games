@@ -28,6 +28,7 @@ enum Commands {
     EndGame { game_id: String },
     GameStats { game_id: String },
     CloseArea { game_id: String, area_id: String },
+    OpenArea { game_id: String, area_id: String },
 }
 
 pub fn parse() {
@@ -51,6 +52,11 @@ pub fn parse() {
             let mut game = get_game(&game).expect("Game not found");
             let area = get_area(&area);
             game.close_area(&area);
+        }
+        Commands::OpenArea { game_id: game, area_id: area } => {
+            let mut game = get_game(&game).expect("Game not found");
+            let area = get_area(&area);
+            game.open_area(&area);
         }
 
         // Tributes
