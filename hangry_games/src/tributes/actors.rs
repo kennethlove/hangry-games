@@ -1,5 +1,4 @@
 use crate::areas::Area;
-use crate::tributes::statuses::Status;
 use rand::Rng;
 use rand::thread_rng;
 
@@ -15,14 +14,14 @@ enum AttackResult {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
     pub name: String,
-    pub health: u32,
-    pub sanity: u32,
-    pub movement: u32,
+    pub health: i32,
+    pub sanity: i32,
+    pub movement: i32,
     pub is_alive: bool,
-    pub district: u32,
+    pub district: i32,
     pub brain: TributeBrain,
     pub area: Option<Area>,
-    pub status: Status,
+    pub day_killed: Option<i32>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -112,13 +111,13 @@ impl Tribute {
             district: 0,
             area: Some(Area::default()),
             brain,
-            status: Status::Alive,
+            day_killed: None,
         }
     }
 
     /// Reduces health
-    pub fn takes_physical_damage(&mut self, damage: u32) {
-        self.health = self.health.saturating_sub(damage);
+    pub fn takes_physical_damage(&mut self, damage: i32) {
+        self.health = std::cmp::max(0, self.health - damage);
 
         if self.health == 0 {
             self.dies();
@@ -126,22 +125,22 @@ impl Tribute {
     }
 
     /// Reduces mental health
-    pub fn takes_mental_damage(&mut self, damage: u32) {
-        self.sanity = self.sanity.saturating_sub(damage);
+    pub fn takes_mental_damage(&mut self, damage: i32) {
+        self.sanity = std::cmp::max(0, self.sanity - damage);
     }
 
     /// Restores health
-    pub fn heals(&mut self, health: u32) {
-        self.health = self.health.saturating_add(health);
+    pub fn heals(&mut self, health: i32) {
+        self.health = std::cmp::min(100, self.health + health);
     }
 
     /// Restores mental health
-    pub fn heals_mental_damage(&mut self, health: u32) {
-        self.sanity = self.sanity.saturating_add(health);
+    pub fn heals_mental_damage(&mut self, health: i32) {
+        self.sanity = std::cmp::min(100, self.sanity + health);
     }
 
-    pub fn moves(&mut self, distance: u32) {
-        self.movement = self.movement.saturating_sub(distance);
+    pub fn moves(&mut self, distance: i32) {
+        self.movement = std::cmp::max(0, self.movement - distance);
     }
 
     pub fn rests(&mut self) {
@@ -150,7 +149,6 @@ impl Tribute {
 
     pub fn dies(&mut self) {
         self.is_alive = false;
-        self.status = Status::FreshlyDead;
     }
 
     pub fn changes_area(&mut self, area: Area) {
@@ -213,7 +211,7 @@ pub fn pick_target(tribute: TributeModel, targets: Vec<Tribute>) -> Option<Tribu
         },
         _ => {
             let enemy_targets: Vec<Tribute> = targets.iter().cloned()
-                .filter(|t| t.district != tribute.district as u32)
+                .filter(|t| t.district != tribute.district)
                 .collect();
             match enemy_targets.len() {
                 0 => Some(targets.first()?.clone()), // Sorry, buddy, time to die
@@ -256,18 +254,16 @@ impl From<TributeModel> for Tribute {
             previous_actions: actions,
         };
 
-        let status = Status::from(tribute.status.unwrap());
-
         Self {
             name: tribute.name.clone(),
-            health: tribute.health as u32,
-            sanity: tribute.sanity as u32,
-            movement: tribute.movement as u32,
+            health: tribute.health,
+            sanity: tribute.sanity,
+            movement: tribute.movement,
             is_alive: tribute.is_alive,
-            district: tribute.district as u32,
+            district: tribute.district,
             brain,
             area: Some(area),
-            status,
+            day_killed: tribute.day_killed,
         }
     }
 }
@@ -281,13 +277,13 @@ impl Into<UpdateTribute> for Tribute {
 
         UpdateTribute {
             name,
-            health: self.health as i32,
-            sanity: self.sanity as i32,
-            movement: self.movement as i32,
+            health: self.health,
+            sanity: self.sanity,
+            movement: self.movement,
             is_alive: self.is_alive,
-            district: self.district as i32,
+            district: self.district,
             area_id: Some(area),
-            status: Some(self.status.to_string()),
+            day_killed: self.day_killed,
         }
     }
 }

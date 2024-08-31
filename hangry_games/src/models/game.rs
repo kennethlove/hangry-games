@@ -104,17 +104,10 @@ impl Game {
 
     pub fn do_night(&mut self) {
         // Find the tributes that have no health and kill them
-        let living_tributes = get_all_living_tributes(&self);
         let dead_tributes = self.tributes().into_iter()
-            .filter(|t| t.status == Some("FreshlyDead".to_string()))
+            .filter(|t| t.is_alive == false && t.day_killed.is_none())
             .collect::<Vec<_>>();
-        let mut deaths: Vec<crate::models::Tribute> = vec![];
 
-        for tribute in living_tributes {
-            if tribute.health <= 0 {
-                deaths.push(tribute.clone());
-            }
-        }
         for tribute in &dead_tributes {
             tribute.dies();
         }
@@ -122,7 +115,7 @@ impl Game {
         // Announce them
         println!("💀 {} tribute{} died today", dead_tributes.len(), if dead_tributes.len() == 1 { "" } else { "s" });
         for tribute in dead_tributes {
-            println!("💀 {:?}", tribute);
+            println!("💀 {}", tribute.name);
         }
         // Activate any nighttime events
     }

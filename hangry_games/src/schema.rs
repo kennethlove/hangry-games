@@ -39,8 +39,7 @@ diesel::table! {
         district -> Int4,
         area_id -> Nullable<Int4>,
         game_id -> Nullable<Int4>,
-        #[max_length = 12]
-        status -> Nullable<Varchar>,
+        day_killed -> Nullable<Int4>,
     }
 }
 

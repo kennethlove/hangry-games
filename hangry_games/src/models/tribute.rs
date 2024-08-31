@@ -25,7 +25,7 @@ pub struct Tribute {
     pub district: i32,
     pub area_id: Option<i32>,
     pub game_id: Option<i32>,
-    pub status: Option<String>,
+    pub day_killed: Option<i32>,
 }
 
 impl Tribute {
@@ -96,11 +96,13 @@ impl Tribute {
 
     pub fn dies(&self) {
         let connection = &mut establish_connection();
+        let game = get_game_by_id(self.game_id.unwrap()).unwrap();
+        let game_day = game.day.unwrap();
         diesel::update(tribute::table.find(self.id))
             .set((
                 tribute::is_alive.eq(false),
                 tribute::health.eq(0),
-                tribute::status.eq(Some("Dead".to_string())),
+                tribute::day_killed.eq(game_day),
             ))
             .execute(connection)
             .expect("Error killing tribute");
@@ -170,6 +172,7 @@ impl Tribute {
 
         // Connect Tribute to Action
         tribute_action::take_action(&self.clone(), &last_action);
+
         self.clone()
     }
 
@@ -200,7 +203,6 @@ impl Tribute {
         }
         let connection = &mut establish_connection();
 
-        // This next chunk feels gross but I don't know a better way
         let game = get_game_by_id(self.game_id.unwrap()).unwrap();
         let tribute_area = tribute.area.unwrap();
         let neighbors = tribute_area.neighbors();
@@ -241,20 +243,20 @@ impl From<crate::tributes::actors::Tribute> for Tribute {
     fn from(tribute: crate::tributes::actors::Tribute) -> Self {
 
         let current_tribute = get_tribute(&tribute.name);
-        let area = crate::models::get_area(tribute.area.unwrap().as_str());
+        let area = get_area(tribute.area.unwrap().as_str());
         let game_id = current_tribute.game_id.unwrap();
 
         let out_tribute = Tribute {
             id: current_tribute.id,
             name: tribute.name,
-            health: tribute.health as i32,
-            sanity: tribute.sanity as i32,
-            movement: tribute.movement as i32,
+            health: tribute.health,
+            sanity: tribute.sanity,
+            movement: tribute.movement,
             is_alive: tribute.is_alive,
-            district: tribute.district as i32,
+            district: tribute.district,
             area_id: Some(area.id),
             game_id: Some(game_id),
-            status: Some(tribute.status.to_string()),
+            day_killed: tribute.day_killed,
         };
         out_tribute
     }
@@ -277,7 +279,7 @@ pub struct UpdateTribute {
     pub movement: i32,
     pub is_alive: bool,
     pub area_id: Option<i32>,
-    pub status: Option<String>,
+    pub day_killed: Option<i32>,
 }
 
 pub fn create_tribute(name: &str) -> Tribute {
@@ -391,7 +393,7 @@ fn update_tribute(tribute_id: i32, tribute: Tribute) {
         movement: tribute.movement,
         is_alive: tribute.is_alive,
         area_id: tribute.area_id,
-        status: Some(tribute.status.unwrap().to_string()),
+        day_killed: tribute.day_killed,
     };
     diesel::update(tribute::table.find(tribute_id))
         .set(&update_tribute)

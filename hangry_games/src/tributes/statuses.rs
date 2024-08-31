@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+// TODO: Reconsider this whole approach. What if you just stored the day they died?
+
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub enum Status {
     #[default]
