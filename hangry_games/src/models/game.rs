@@ -1,6 +1,8 @@
 use crate::schema::game;
 use diesel::prelude::*;
 use crate::establish_connection;
+use crate::models::get_all_living_tributes;
+use rand::seq::SliceRandom;
 
 #[derive(Queryable, Selectable, Debug)]
 #[diesel(table_name = game)]
@@ -75,17 +77,54 @@ impl Game {
     }
 
     pub fn do_day(&mut self) {
+        let mut rng = rand::thread_rng();
+
         // Update the day
         let day = self.day.unwrap_or(0);
         self.set_day(day + 1);
+        println!("📅 Day {} begins.", day + 1);
+
+        // Check for winner
+        let mut living_tributes = get_all_living_tributes(&self);
+        if living_tributes.len() == 1 {
+            println!("🏆 The winner is {}", living_tributes[0].name);
+            return;
+        }
+
+        println!("{} tributes remain", living_tributes.len());
+
         // Trigger any daytime events
+
+        // Run the tribute AI
+        living_tributes.shuffle(&mut rng);
+        for mut tribute in living_tributes {
+            tribute.do_day();
+        }
     }
 
     pub fn do_night(&mut self) {
-        // Find the tributes that died
+        // Find the tributes that have no health and kill them
+        let living_tributes = get_all_living_tributes(&self);
+        let dead_tributes = self.tributes().into_iter()
+            .filter(|t| t.status == Some("FreshlyDead".to_string()))
+            .collect::<Vec<_>>();
+        let mut deaths: Vec<crate::models::Tribute> = vec![];
+
+        for tribute in living_tributes {
+            if tribute.health <= 0 {
+                deaths.push(tribute.clone());
+            }
+        }
+        for tribute in &dead_tributes {
+            tribute.dies();
+        }
+
         // Announce them
+        println!("💀 {} tribute{} died today", dead_tributes.len(), if dead_tributes.len() == 1 { "" } else { "s" });
+        for tribute in dead_tributes {
+            println!("💀 {:?}", tribute);
+        }
         // Activate any nighttime events
-        todo!()
     }
 }
 

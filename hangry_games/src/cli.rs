@@ -1,4 +1,19 @@
-use crate::models::{create_area, create_game, create_tribute, fill_tributes, get_action, get_all_tributes, get_area, get_areas, get_tribute, place_tribute_in_area, get_game, get_game_tributes, get_games, Tribute, get_all_living_tributes};
+use crate::models::{
+    create_area,
+    create_game,
+    create_tribute,
+    fill_tributes,
+    get_action,
+    get_all_tributes,
+    get_area,
+    get_areas,
+    get_tribute,
+    place_tribute_in_area,
+    get_game,
+    get_game_tributes,
+    get_games,
+    get_all_living_tributes
+};
 use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
@@ -29,6 +44,7 @@ enum Commands {
     GameStats { game_id: String },
     CloseArea { game_id: String, area_id: String },
     OpenArea { game_id: String, area_id: String },
+    QuickStart,
 }
 
 pub fn parse() {
@@ -88,7 +104,7 @@ pub fn parse() {
         }
         Commands::FillTributes { game_id: game } => {
             let game = get_game(&game).expect("Game not found");
-            let count = fill_tributes(game);
+            let count = fill_tributes(&game);
             println!("{} tributes created", count);
         }
         Commands::PlaceTribute {
@@ -137,34 +153,10 @@ pub fn parse() {
             game.start();
         }
         Commands::RunNextDay { game_id } => {
-            let game = get_game(&game_id).expect("Game not found");
-            let living_tributes = get_all_living_tributes(&game);
+            let mut game = get_game(&game_id).expect("Game not found");
+            game.do_day();
 
-            if living_tributes.len() == 1 {
-                println!("{} wins!", living_tributes[0].name);
-                return;
-            }
-
-            game.set_day(game.day.unwrap_or(0) + 1);
-
-            println!("Day {}", game.day.unwrap_or(0));
-            println!("{} tributes left", living_tributes.len());
-
-            let mut deaths: Vec<Tribute> = vec![];
-            for mut tribute in get_all_living_tributes(&game) {
-                println!("-----------------------------------");
-                println!("{}, District {}, in {}", tribute.name, tribute.district, tribute.area().unwrap().name);
-                tribute = tribute.do_day();
-                if tribute.health <= 0 {
-                    deaths.push(tribute.clone());
-                }
-            }
-            // Kill tributes
-            for tribute in &deaths {
-                tribute.dies();
-                println!("💀 {} dies", tribute.name);
-            }
-            println!("{} left alive", get_all_living_tributes(&game).len());
+            game.do_night();
         }
         Commands::EndGame { game_id } => {
             let game = get_game(&game_id).expect("Game not found");
@@ -179,6 +171,13 @@ pub fn parse() {
                 let tributes = living_tributes.iter().filter(|t| t.area().unwrap().id == area.id).collect::<Vec<_>>();
                 println!("{} tributes in {}", tributes.len(), area.name);
             }
+        }
+        Commands::QuickStart => {
+            let game = create_game();
+            println!("Game created: {}", game.name);
+            let count = fill_tributes(&game);
+            println!("{} tributes created", count);
+            game.start();
         }
     }
 }

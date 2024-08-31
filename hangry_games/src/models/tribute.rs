@@ -25,6 +25,7 @@ pub struct Tribute {
     pub district: i32,
     pub area_id: Option<i32>,
     pub game_id: Option<i32>,
+    pub status: Option<String>,
 }
 
 impl Tribute {
@@ -99,6 +100,7 @@ impl Tribute {
             .set((
                 tribute::is_alive.eq(false),
                 tribute::health.eq(0),
+                tribute::status.eq(Some("Dead".to_string())),
             ))
             .execute(connection)
             .expect("Error killing tribute");
@@ -252,6 +254,7 @@ impl From<crate::tributes::actors::Tribute> for Tribute {
             district: tribute.district as i32,
             area_id: Some(area.id),
             game_id: Some(game_id),
+            status: Some(tribute.status.to_string()),
         };
         out_tribute
     }
@@ -274,6 +277,7 @@ pub struct UpdateTribute {
     pub movement: i32,
     pub is_alive: bool,
     pub area_id: Option<i32>,
+    pub status: Option<String>,
 }
 
 pub fn create_tribute(name: &str) -> Tribute {
@@ -330,8 +334,8 @@ pub fn get_game_tributes(game: &Game) -> Vec<Tribute> {
 
 /// Fill the tribute table with up to 24 tributes.
 /// Return the number of tributes created.
-pub fn fill_tributes(game: Game) -> usize {
-    let tributes = get_game_tributes(&game);
+pub fn fill_tributes(game: &Game) -> usize {
+    let tributes = get_game_tributes(game);
     let count = tributes.len();
     if count < 24 {
         for _ in count..24 {
@@ -387,6 +391,7 @@ fn update_tribute(tribute_id: i32, tribute: Tribute) {
         movement: tribute.movement,
         is_alive: tribute.is_alive,
         area_id: tribute.area_id,
+        status: Some(tribute.status.unwrap().to_string()),
     };
     diesel::update(tribute::table.find(tribute_id))
         .set(&update_tribute)

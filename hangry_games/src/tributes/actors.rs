@@ -1,4 +1,5 @@
 use crate::areas::Area;
+use crate::tributes::statuses::Status;
 use rand::Rng;
 use rand::thread_rng;
 
@@ -21,6 +22,7 @@ pub struct Tribute {
     pub district: u32,
     pub brain: TributeBrain,
     pub area: Option<Area>,
+    pub status: Status,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -82,7 +84,7 @@ impl TributeBrain {
         // no enemies nearby
         match tribute.health {
             // health is low, rest
-            0..=10 => TributeAction::Hide,
+            1..=10 => TributeAction::Hide,
             11..=20 => TributeAction::Rest,
             // health is good, move
             _ => {
@@ -110,6 +112,7 @@ impl Tribute {
             district: 0,
             area: Some(Area::default()),
             brain,
+            status: Status::Alive,
         }
     }
 
@@ -147,6 +150,7 @@ impl Tribute {
 
     pub fn dies(&mut self) {
         self.is_alive = false;
+        self.status = Status::FreshlyDead;
     }
 
     pub fn changes_area(&mut self, area: Area) {
@@ -174,11 +178,6 @@ impl Tribute {
                 self.takes_physical_damage(25);
                 target.takes_physical_damage(25);
             }
-        }
-        if !self.is_alive {
-            println!("{} dies", self.name);
-        } else if !target.is_alive {
-            println!("{} dies", target.name);
         }
     }
 }
@@ -257,6 +256,8 @@ impl From<TributeModel> for Tribute {
             previous_actions: actions,
         };
 
+        let status = Status::from(tribute.status.unwrap());
+
         Self {
             name: tribute.name.clone(),
             health: tribute.health as u32,
@@ -266,6 +267,7 @@ impl From<TributeModel> for Tribute {
             district: tribute.district as u32,
             brain,
             area: Some(area),
+            status,
         }
     }
 }
@@ -285,6 +287,7 @@ impl Into<UpdateTribute> for Tribute {
             is_alive: self.is_alive,
             district: self.district as i32,
             area_id: Some(area),
+            status: Some(self.status.to_string()),
         }
     }
 }
