@@ -1,5 +1,5 @@
 use crate::establish_connection;
-use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
+use crate::models::{game, get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::schema::tribute;
 use crate::tributes::actors::pick_target;
 use crate::areas::Area as AreaStruct;
@@ -26,6 +26,8 @@ pub struct Tribute {
     pub area_id: Option<i32>,
     pub game_id: Option<i32>,
     pub day_killed: Option<i32>,
+    // TODO: Add a killed_by field, which is a tribute_id or maybe a string?
+    // String would let disasters/hunger/etc kill tributes
 }
 
 impl Tribute {
@@ -117,7 +119,6 @@ impl Tribute {
             return self.clone();
         }
 
-        let connection = &mut establish_connection();
         let area = self.area().unwrap();
 
         // Create Tribute struct
@@ -149,7 +150,7 @@ impl Tribute {
                 self.move_tribute(tribute);
             }
             TributeAction::Rest | TributeAction::Hide | TributeAction::Idle => {
-                self.rest_tribute(connection);
+                self.rest_tribute();
             }
             TributeAction::Attack => {
                 let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
@@ -177,7 +178,8 @@ impl Tribute {
     }
 
     // TODO: Extract from impl
-    fn rest_tribute(&mut self, connection: &mut PgConnection) {
+    fn rest_tribute(&mut self) {
+        let connection = &mut establish_connection();
         // Rest the tribute
         self.health = std::cmp::min(self.health + 50, 100);
         self.sanity = std::cmp::min(self.sanity + 50, 100);
@@ -313,31 +315,10 @@ pub fn get_all_tributes() -> Vec<Tribute> {
         .expect("Error loading tributes")
 }
 
-pub fn get_all_living_tributes(game: &Game) -> Vec<Tribute> {
-    let conn = &mut establish_connection();
-    use crate::schema::tribute;
-    tribute::table
-        .select(tribute::all_columns)
-        .filter(tribute::game_id.eq(game.id))
-        .filter(tribute::is_alive.eq(true))
-        .load::<Tribute>(conn)
-        .expect("Error loading tributes")
-}
-
-pub fn get_game_tributes(game: &Game) -> Vec<Tribute> {
-    use crate::schema::tribute;
-    let conn = &mut establish_connection();
-    tribute::table
-        .select(tribute::all_columns)
-        .filter(tribute::game_id.eq(game.id))
-        .load::<Tribute>(conn)
-        .expect("Error loading tributes")
-}
-
 /// Fill the tribute table with up to 24 tributes.
 /// Return the number of tributes created.
 pub fn fill_tributes(game: &Game) -> usize {
-    let tributes = get_game_tributes(game);
+    let tributes = game::get_game_tributes(game);
     let count = tributes.len();
     if count < 24 {
         for _ in count..24 {

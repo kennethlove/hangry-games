@@ -7,14 +7,13 @@ use crate::models::{
     get_all_tributes,
     get_area,
     get_areas,
-    get_tribute,
-    place_tribute_in_area,
     get_game,
-    get_game_tributes,
     get_games,
-    get_all_living_tributes
+    get_tribute,
+    place_tribute_in_area
 };
 use clap::{Parser, Subcommand};
+use crate::models::game::{get_all_living_tributes, get_game_tributes, get_dead_tributes};
 
 #[derive(Debug, Parser)]
 #[command(version, about, long_about = None)]
@@ -165,11 +164,16 @@ pub fn parse() {
         Commands::GameStats { game_id } => {
             let game = get_game(&game_id).expect("Game not found");
             let living_tributes = get_all_living_tributes(&game);
+            let dead_tributes = get_dead_tributes(&game).into_iter().filter(|t| t.day_killed.is_some()).collect::<Vec<_>>();
             println!("Day {}", game.day.unwrap_or(0));
             println!("{} tributes left", living_tributes.len());
             for area in get_areas() {
                 let tributes = living_tributes.iter().filter(|t| t.area().unwrap().id == area.id).collect::<Vec<_>>();
                 println!("{} tributes in {}", tributes.len(), area.name);
+            }
+            println!("Deaths");
+            for tribute in dead_tributes {
+                println!("{} died on day {}", tribute.name, tribute.day_killed.unwrap());
             }
         }
         Commands::QuickStart => {

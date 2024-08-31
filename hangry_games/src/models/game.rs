@@ -1,7 +1,7 @@
 use crate::schema::game;
 use diesel::prelude::*;
 use crate::establish_connection;
-use crate::models::get_all_living_tributes;
+use crate::models::Tribute;
 use rand::seq::SliceRandom;
 
 #[derive(Queryable, Selectable, Debug)]
@@ -104,8 +104,8 @@ impl Game {
 
     pub fn do_night(&mut self) {
         // Find the tributes that have no health and kill them
-        let dead_tributes = self.tributes().into_iter()
-            .filter(|t| t.is_alive == false && t.day_killed.is_none())
+        let dead_tributes = get_dead_tributes(&self).into_iter()
+            .filter(|t| t.day_killed.is_none())
             .collect::<Vec<_>>();
 
         for tribute in &dead_tributes {
@@ -171,4 +171,36 @@ fn generate_random_name() -> String {
     let name = wp_gen.generic(3, 1, Some(5), Some(25), None).expect("Couldn't generate name");
     let name = name[0].join("-");
     name.to_string()
+}
+
+pub fn get_all_living_tributes(game: &Game) -> Vec<Tribute> {
+    let conn = &mut establish_connection();
+    use crate::schema::tribute;
+    tribute::table
+        .select(tribute::all_columns)
+        .filter(tribute::game_id.eq(game.id))
+        .filter(tribute::is_alive.eq(true))
+        .load::<Tribute>(conn)
+        .expect("Error loading tributes")
+}
+
+pub fn get_game_tributes(game: &Game) -> Vec<Tribute> {
+    use crate::schema::tribute;
+    let conn = &mut establish_connection();
+    tribute::table
+        .select(tribute::all_columns)
+        .filter(tribute::game_id.eq(game.id))
+        .load::<Tribute>(conn)
+        .expect("Error loading tributes")
+}
+
+pub fn get_dead_tributes(game: &Game) -> Vec<Tribute> {
+    use crate::schema::tribute;
+    let conn = &mut establish_connection();
+    tribute::table
+        .select(tribute::all_columns)
+        .filter(tribute::game_id.eq(game.id))
+        .filter(tribute::is_alive.eq(false))
+        .load::<Tribute>(conn)
+        .expect("Error loading dead tributes")
 }
