@@ -144,7 +144,11 @@ pub fn parse() {
         }
         Commands::ShowGames => {
             for _game in get_games() {
-                println!("{}", _game.name);
+                println!("{}, Day {}, Tributes {}/24",
+                    _game.name,
+                    _game.day.unwrap_or(0),
+                    get_all_living_tributes(&_game).len()
+                );
             }
         }
         Commands::StartGame { game_id } => {
