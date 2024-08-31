@@ -1,6 +1,8 @@
 use crate::establish_connection;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::schema::tribute;
+use crate::tributes::actors::pick_target;
+use crate::areas::Area as AreaStruct;
 use diesel::prelude::*;
 use fake::faker::name::raw::*;
 use fake::locales::*;
@@ -130,7 +132,7 @@ impl Tribute {
         let game = get_game_by_id(self.game_id.unwrap());
         if let Ok(game) = game {
             if game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).contains(&Some(area.id)) {
-                self.move_tribute(connection, tribute.clone());
+                self.move_tribute(tribute.clone());
                 return self.clone()
             }
         }
@@ -140,13 +142,19 @@ impl Tribute {
 
         match brain.last_action() {
             TributeAction::Move => {
-                self.move_tribute(connection, tribute);
+                self.move_tribute(tribute);
             }
             TributeAction::Rest | TributeAction::Hide | TributeAction::Idle => {
                 self.rest_tribute(connection);
             }
             TributeAction::Attack => {
-                if let Some(target) = self.pick_target(nearby_targets) {
+                let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
+                    .filter(|t| t.id != self.id)
+                    .map(
+                        |t| TributeActor::from(t.clone())
+                    ).collect();
+                if let Some(target) = pick_target(self.clone(), nearby_targets) {
+                    let target = Tribute::from(target);
                     attack_target(self.clone(), target.clone());
                 }
             }
@@ -161,35 +169,6 @@ impl Tribute {
         // Connect Tribute to Action
         tribute_action::take_action(&self.clone(), &last_action);
         self.clone()
-    }
-
-    // TODO: Extract from impl
-    fn pick_target(&mut self, nearby_tributes: Vec<Tribute>) -> Option<Tribute> {
-        // Am I alone?
-        if nearby_tributes.len() == 1 {
-            // Am I sane?
-            println!("{} is alone", self.name);
-            if self.sanity > 10 {
-                println!("Decides to live another day");
-                return None;
-            }
-
-            // Suicide/self-harm
-            println!("Can't take it, unalives themself");
-            Some(self.clone())
-        } else {
-            // I am NOT alone
-            let victims = nearby_tributes.clone().into_iter().filter(|t| {
-                t.is_alive == true && t.health > 0 && t.id != self.id
-            })
-                .collect::<Vec<Tribute>>();
-            let mut victim = Some(victims[0].clone());
-            if let Some(chosen_victim) = victims.choose(&mut rand::thread_rng()) {
-                victim = Some(chosen_victim.clone().clone());
-            }
-            println!("{} attacks {}", self.name, &victim.clone()?.name);
-            victim
-        }
     }
 
     // TODO: Extract from impl
@@ -211,30 +190,37 @@ impl Tribute {
     }
 
     // TODO: Extract from impl
-    fn move_tribute(&self, connection: &mut PgConnection, mut tribute: crate::tributes::actors::Tribute) {
+    fn move_tribute(&self, mut tribute: crate::tributes::actors::Tribute) {
         if tribute.movement < 25 {
             println!("{} is too tired to move", tribute.name);
             // TODO: Add a rest action
             return;
         }
+        let connection = &mut establish_connection();
 
         // This next chunk feels gross but I don't know a better way
         let game = get_game_by_id(self.game_id.unwrap()).unwrap();
         let tribute_area = tribute.area.unwrap();
         let neighbors = tribute_area.neighbors();
-        let random_neighbor = neighbors.iter().filter(|a|{
-            let area = get_area(a.as_str());
-            !game.closed_areas.clone()
-                .unwrap_or(Vec::<Option<i32>>::new())
-                .contains(&Some(area.id))
-        }).collect::<Vec<_>>()
-            .choose(&mut rand::thread_rng())
-            .cloned()
-            .unwrap()
-            .clone();
 
-        tribute.area = Some(random_neighbor.clone());
-        tribute.movement = tribute.movement.saturating_sub(50);
+        // Get a random neighbor that isn't the tribute's current area
+        let random_neighbor = loop {
+            let area = neighbors.choose(&mut rand::thread_rng()).unwrap();
+            let area = get_area(area.as_str());
+
+            // Same area check
+            if area.name == tribute_area.as_str() {
+                continue;
+            }
+            // Closed area check
+            if game.closed_areas.clone().unwrap_or(vec![]).contains(&Some(area.id)) {
+                continue;
+            }
+            break area;
+        };
+
+        tribute.area = Some(AreaStruct::from(random_neighbor.clone()));
+        tribute.moves(50);
 
         let tribute_instance = Tribute::from(tribute.clone());
         // save tribute_instance
@@ -245,7 +231,7 @@ impl Tribute {
             ))
             .execute(connection)
             .expect("Error moving tribute");
-        println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &random_neighbor.as_str());
+        println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &random_neighbor.name.as_str());
     }
 }
 
@@ -374,6 +360,7 @@ pub fn get_tribute(name: &str) -> Tribute {
         .expect("Error loading tribute");
     tribute
 }
+
 fn attack_target(attacker: Tribute, victim: Tribute) {
     use crate::tributes::actors::Tribute as TributeActor;
     use crate::tributes::actors::do_combat;

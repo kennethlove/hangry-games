@@ -4,6 +4,13 @@ use rand::thread_rng;
 
 use super::actions::TributeAction;
 
+#[derive(Debug)]
+enum AttackResult {
+    AttackerWins,
+    DefenderWins,
+    Tie,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
     pub name: String,
@@ -193,14 +200,39 @@ fn attack_contest() -> AttackResult {
     }
 }
 
-pub fn do_combat(tribute1: &mut Tribute, tribute2: &mut Tribute) {
-    tribute1.attacks(tribute2);
+pub fn pick_target(tribute: TributeModel, targets: Vec<Tribute>) -> Option<Tribute> {
+    match targets.len() {
+        0 => { // there are no other targets
+            match tribute.sanity {
+                0..=9 => Some(targets.first()?.clone()), // attempt suicide
+                10..=19 => match rand::thread_rng().gen_bool(0.2) {
+                    true => Some(targets.first()?.clone()), // attempt suicide
+                    false => None, // Attack no one
+                },
+                _ => None, // Attack no one
+            }
+        },
+        _ => {
+            let enemy_targets: Vec<Tribute> = targets.iter().cloned()
+                .filter(|t| t.district != tribute.district as u32)
+                .collect();
+            match enemy_targets.len() {
+                0 => Some(targets.first()?.clone()), // Sorry, buddy, time to die
+                1 => Some(enemy_targets.first()?.clone()), // Easy choice
+                _ => {
+                    use rand::seq::SliceRandom;
+                    use rand::thread_rng;
+
+                    let mut rng = thread_rng();
+                    Some(enemy_targets.choose(&mut rng)?.clone()) // Get a random person
+                }
+            }
+        }
+    }
 }
 
-enum AttackResult {
-    AttackerWins,
-    DefenderWins,
-    Tie,
+pub fn do_combat(tribute1: &mut Tribute, tribute2: &mut Tribute) {
+    tribute1.attacks(tribute2);
 }
 
 impl Default for Tribute {

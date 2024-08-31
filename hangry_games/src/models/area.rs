@@ -2,7 +2,7 @@ use crate::schema::area;
 use diesel::prelude::*;
 use crate::establish_connection;
 
-#[derive(Queryable, Selectable, Debug)]
+#[derive(Queryable, Selectable, Debug, Clone)]
 #[diesel(table_name = area)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Area {
