@@ -22,6 +22,18 @@ pub struct Tribute {
     pub brain: TributeBrain,
     pub area: Option<Area>,
     pub day_killed: Option<i32>,
+    pub killed_by: Option<String>,
+    pub kills: Option<i32>,
+    pub wins: Option<i32>,
+    pub defeats: Option<i32>,
+    pub draws: Option<i32>,
+    pub games: Option<i32>,
+    pub bravery: Option<i32>,
+    pub loyalty: Option<i32>,
+    pub speed: Option<i32>,
+    pub intelligence: Option<i32>,
+    pub persuasion: Option<i32>,
+    pub luck: Option<i32>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -110,18 +122,32 @@ impl TributeBrain {
 
 impl Tribute {
     /// Creates a new Tribute with full health, sanity, and movement
-    pub fn new(name: String) -> Self {
+    pub fn new(name: String, district: Option<i32>) -> Self {
         let brain = TributeBrain::new();
+        let mut rng = thread_rng();
+        let district = district.unwrap_or(0);
         Self {
             name: name.clone(),
             health: 100,
             sanity: 100,
             movement: 100,
             is_alive: true,
-            district: 0,
+            district,
             area: Some(Area::default()),
             brain,
             day_killed: None,
+            killed_by: None,
+            kills: Some(0),
+            wins: Some(0),
+            defeats: Some(0),
+            draws: Some(0),
+            games: Some(0),
+            bravery: Some(rng.gen_range(1..=100)),
+            loyalty: Some(rng.gen_range(1..=100)),
+            speed: Some(rng.gen_range(1..=100)),
+            intelligence: Some(rng.gen_range(1..=100)),
+            persuasion: Some(rng.gen_range(1..=100)),
+            luck: Some(rng.gen_range(1..=100)),
         }
     }
 
@@ -149,8 +175,8 @@ impl Tribute {
         self.sanity = std::cmp::min(100, self.sanity + health);
     }
 
-    pub fn moves(&mut self, distance: i32) {
-        self.movement = std::cmp::max(0, self.movement - distance);
+    pub fn moves(&mut self) {
+        self.movement = std::cmp::max(0, self.movement - self.speed.unwrap());
     }
 
     pub fn rests(&mut self) {
@@ -212,7 +238,7 @@ pub fn pick_target(tribute: TributeModel, targets: Vec<Tribute>) -> Option<Tribu
         0 => { // there are no other targets
             match tribute.sanity {
                 0..=9 => Some(targets.first()?.clone()), // attempt suicide
-                10..=19 => match rand::thread_rng().gen_bool(0.2) {
+                10..=19 => match thread_rng().gen_bool(0.2) {
                     true => Some(targets.first()?.clone()), // attempt suicide
                     false => None, // Attack no one
                 },
@@ -245,7 +271,7 @@ pub fn do_combat(tribute1: &mut Tribute, tribute2: &mut Tribute) {
 
 impl Default for Tribute {
     fn default() -> Self {
-        Self::new("Tribute".to_string())
+        Self::new("Tribute".to_string(), None)
     }
 }
 
@@ -275,6 +301,18 @@ impl From<TributeModel> for Tribute {
             brain,
             area: Some(area),
             day_killed: tribute.day_killed,
+            killed_by: tribute.killed_by.clone(),
+            kills: tribute.kills,
+            wins: tribute.wins,
+            defeats: tribute.defeats,
+            draws: tribute.draws,
+            games: tribute.games,
+            bravery: tribute.bravery,
+            loyalty: tribute.loyalty,
+            speed: tribute.speed,
+            intelligence: tribute.intelligence,
+            persuasion: tribute.persuasion,
+            luck: tribute.luck,
         }
     }
 }
@@ -295,6 +333,12 @@ impl Into<UpdateTribute> for Tribute {
             district: self.district,
             area_id: Some(area),
             day_killed: self.day_killed,
+            killed_by: self.killed_by.clone(),
+            kills: self.kills,
+            wins: self.wins,
+            defeats: self.defeats,
+            draws: self.draws,
+            games: self.games,
         }
     }
 }
@@ -305,7 +349,7 @@ mod tests {
 
     #[test]
     fn new() {
-        let tribute = Tribute::new("Katniss".to_string());
+        let tribute = Tribute::new("Katniss".to_string(), None);
         assert_eq!(tribute.health, 100);
         assert_eq!(tribute.sanity, 100);
         assert_eq!(tribute.movement, 100);
@@ -314,22 +358,23 @@ mod tests {
 
     #[test]
     fn takes_physical_damage() {
-        let mut tribute = Tribute::new("Katniss".to_string());
+        let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.takes_physical_damage(10);
         assert_eq!(tribute.health, 90);
     }
 
     #[test]
     fn takes_mental_damage() {
-        let mut tribute = Tribute::new("Katniss".to_string());
+        let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.takes_mental_damage(10);
         assert_eq!(tribute.sanity, 90);
     }
 
     #[test]
     fn moves_and_rests() {
-        let mut tribute = Tribute::new("Katniss".to_string());
-        tribute.moves(10);
+        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        tribute.speed = Some(10);
+        tribute.moves();
         assert_eq!(tribute.movement, 90);
         tribute.rests();
         assert_eq!(tribute.movement, 100);
@@ -337,7 +382,7 @@ mod tests {
 
     #[test]
     fn takes_damage_and_dies() {
-        let mut tribute = Tribute::new("Katniss".to_string());
+        let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.takes_physical_damage(100);
         assert!(!tribute.is_alive);
     }
@@ -345,7 +390,7 @@ mod tests {
     #[test]
     fn decide_on_action_default() {
         // If there are no enemies nearby, the tribute should move
-        let mut tribute = Tribute::new("Katniss".to_string());
+        let mut tribute = Tribute::new("Katniss".to_string(), None);
         let action = tribute.brain.act(&tribute.clone(), vec![]);
         assert_eq!(action, TributeAction::Move);
     }
@@ -353,7 +398,7 @@ mod tests {
     #[test]
     fn decide_on_action_low_health() {
         // If the tribute has low health, they should hide
-        let mut tribute = Tribute::new("Katniss".to_string());
+        let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.takes_physical_damage(90);
         let action = tribute.brain.act(&tribute.clone(), vec![]);
         assert_eq!(action, TributeAction::Hide);
@@ -362,8 +407,9 @@ mod tests {
     #[test]
     fn decide_on_action_no_movement() {
         // If the tribute has no movement, they should rest
-        let mut tribute = Tribute::new("Katniss".to_string());
-        tribute.moves(100);
+        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        tribute.speed = Some(100);
+        tribute.moves();
         let action = tribute.brain.act(&tribute.clone(), vec![]);
         assert_eq!(action, TributeAction::Rest);
     }
@@ -371,8 +417,8 @@ mod tests {
     #[test]
     fn decide_on_action_enemies() {
         // If there are enemies nearby, the tribute should attack
-        let mut tribute = Tribute::new("Katniss".to_string());
-        let tribute2 = Tribute::new("Peeta".to_string());
+        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        let tribute2 = Tribute::new("Peeta".to_string(), None);
         let action = tribute.brain.act(&tribute.clone(), vec![tribute.clone(), tribute2]);
         assert_eq!(action, TributeAction::Attack);
     }
@@ -381,9 +427,9 @@ mod tests {
     fn decide_on_action_enemies_low_health() {
         // If there are enemies nearby, but the tribute is low on health
         // the tribute should hide
-        let mut tribute = Tribute::new("Katniss".to_string());
+        let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.takes_physical_damage(90);
-        let tribute2 = Tribute::new("Peeta".to_string());
+        let tribute2 = Tribute::new("Peeta".to_string(), None);
         let action = tribute.brain.act(&tribute.clone(),vec![tribute.clone(), tribute2]);
         assert_eq!(action, TributeAction::Hide);
     }

@@ -114,7 +114,7 @@ impl Game {
         }
 
         // Announce them
-        println!("📯 {} tribute{} died today", dead_tributes.len(), if dead_tributes.len() == 1 { "" } else { "s" });
+        println!("📯 {} tribute{} died since yesterday", dead_tributes.len(), if dead_tributes.len() == 1 { "" } else { "s" });
         for tribute in dead_tributes {
             println!("💀 {}", tribute.name);
         }

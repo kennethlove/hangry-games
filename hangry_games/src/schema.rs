@@ -40,6 +40,19 @@ diesel::table! {
         area_id -> Nullable<Int4>,
         game_id -> Nullable<Int4>,
         day_killed -> Nullable<Int4>,
+        kills -> Nullable<Int4>,
+        wins -> Nullable<Int4>,
+        defeats -> Nullable<Int4>,
+        draws -> Nullable<Int4>,
+        games -> Nullable<Int4>,
+        bravery -> Nullable<Int4>,
+        loyalty -> Nullable<Int4>,
+        speed -> Nullable<Int4>,
+        intelligence -> Nullable<Int4>,
+        persuasion -> Nullable<Int4>,
+        luck -> Nullable<Int4>,
+        #[max_length = 255]
+        killed_by -> Nullable<Varchar>,
     }
 }
 
