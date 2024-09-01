@@ -201,16 +201,31 @@ impl Tribute {
                 println!("{} attacks {} and wins", self.name, target.name);
                 target.takes_physical_damage(50);
                 apply_violence_stress(self);
-            },
+
+                if !target.is_alive {
+                    self.kills = Some(self.kills.unwrap() + 1);
+                    self.wins = Some(self.wins.unwrap() + 1);
+                    target.killed_by = Some(self.name.clone());
+                    target.defeats = Some(target.defeats.unwrap() + 1);
+                }
+            }
             AttackResult::DefenderWins => {
                 println!("{} attacks {} and loses", self.name, target.name);
                 self.takes_physical_damage(50);
                 apply_violence_stress(target);
-            },
+                if !self.is_alive {
+                    target.kills = Some(target.kills.unwrap() + 1);
+                    target.wins = Some(target.wins.unwrap() + 1);
+                    self.killed_by = Some(target.name.clone());
+                    self.defeats = Some(self.defeats.unwrap() + 1);
+                }
+            }
             AttackResult::Tie => {
                 println!("{} and {} attack and harm each other", self.name, target.name);
                 self.takes_physical_damage(25);
                 target.takes_physical_damage(25);
+                self.draws = Some(self.draws.unwrap() + 1);
+                target.draws = Some(target.draws.unwrap() + 1);
             }
         }
     }
