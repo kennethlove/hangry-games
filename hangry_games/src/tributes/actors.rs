@@ -38,14 +38,24 @@ impl TributeBrain {
 
     pub fn act(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
         if tribute.health == 0 { return TributeAction::Idle; }
-        let action = TributeBrain::decide_on_action(tribute, nearby_tributes);
+        let action = TributeBrain::decide_on_action(tribute, nearby_tributes.clone());
+
+        // Try to get a different action?
+
         self.previous_actions.push(action.clone());
         action
     }
 
-    pub fn last_action(&self) -> TributeAction {
-        if let Some(last) = self.previous_actions.last() {
-            last.clone()
+    /// Get the last action taken by the tribute
+    /// Negative indexes are counted from the end of the list
+    pub fn last_action(&self, index: i32) -> TributeAction {
+        let index = if index < 0 {
+            self.previous_actions.len() as i32 + index
+        } else {
+            index
+        };
+        if let Some(previous_action) = self.previous_actions.get(index as usize) {
+            previous_action.clone()
         } else {
             TributeAction::Idle
         }
@@ -162,17 +172,17 @@ impl Tribute {
     pub fn attacks(&mut self, target: &mut Tribute) {
         match attack_contest() {
             AttackResult::AttackerWins => {
-                println!("{} attacks {}", self.name, target.name);
+                println!("{} attacks {} and wins", self.name, target.name);
                 target.takes_physical_damage(50);
                 apply_violence_stress(self);
             },
             AttackResult::DefenderWins => {
-                println!("{} attacks {}", target.name, self.name);
+                println!("{} attacks {} and loses", self.name, target.name);
                 self.takes_physical_damage(50);
                 apply_violence_stress(target);
             },
             AttackResult::Tie => {
-                println!("{} and {} attack each other", self.name, target.name);
+                println!("{} and {} attack and harm each other", self.name, target.name);
                 self.takes_physical_damage(25);
                 target.takes_physical_damage(25);
             }
@@ -229,6 +239,7 @@ pub fn pick_target(tribute: TributeModel, targets: Vec<Tribute>) -> Option<Tribu
 }
 
 pub fn do_combat(tribute1: &mut Tribute, tribute2: &mut Tribute) {
+    // TODO: Add in some sort of bravery/option-weighing here?
     tribute1.attacks(tribute2);
 }
 

@@ -145,7 +145,7 @@ impl Tribute {
         // Decide the next logical action
         brain.act(&tribute, nearby_tributes.clone());
 
-        match brain.last_action() {
+        match brain.last_action(0) {
             TributeAction::Move => {
                 self.move_tribute(tribute);
             }
@@ -169,7 +169,38 @@ impl Tribute {
         }
 
         // Find the action model instance
-        let last_action = crate::models::action::get_action(brain.last_action().as_str());
+        let last_action = crate::models::action::get_action(brain.last_action(0).as_str());
+
+        // Connect Tribute to Action
+        tribute_action::take_action(&self.clone(), &last_action);
+
+        self.clone()
+    }
+
+    pub fn do_night(&mut self) -> Self {
+        use crate::tributes::actors::Tribute as TributeActor;
+        use crate::tributes::actions::TributeAction;
+
+        // Create Tribute struct
+        let tribute = TributeActor::from(self.clone());
+
+        // Get Brain struct
+        let mut brain = tribute.brain.clone();
+
+        // Decide the next logical action
+        brain.act(&tribute, vec![]);
+
+        match brain.last_action(0) {
+            TributeAction::Move => {
+                self.move_tribute(tribute);
+            }
+            _ => {
+                self.rest_tribute();
+            }
+        }
+
+        // Find the action model instance
+        let last_action = crate::models::action::get_action(brain.last_action(0).as_str());
 
         // Connect Tribute to Action
         tribute_action::take_action(&self.clone(), &last_action);
