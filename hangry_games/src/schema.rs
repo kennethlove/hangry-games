@@ -53,6 +53,8 @@ diesel::table! {
         luck -> Nullable<Int4>,
         #[max_length = 255]
         killed_by -> Nullable<Varchar>,
+        strength -> Nullable<Int4>,
+        defense -> Nullable<Int4>,
     }
 }
 

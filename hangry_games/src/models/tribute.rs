@@ -41,6 +41,8 @@ pub struct Tribute {
     pub persuasion: Option<i32>,
     pub luck: Option<i32>,
     pub killed_by: Option<String>,
+    pub strength: Option<i32>,
+    pub defense: Option<i32>,
 }
 
 impl Tribute {
@@ -342,6 +344,8 @@ impl From<crate::tributes::actors::Tribute> for Tribute {
             persuasion: tribute.persuasion,
             luck: tribute.luck,
             killed_by: tribute.killed_by,
+            strength: tribute.strength,
+            defense: tribute.defense,
         };
         out_tribute
     }
@@ -358,6 +362,8 @@ pub struct NewTribute {
     pub intelligence: Option<i32>,
     pub persuasion: Option<i32>,
     pub luck: Option<i32>,
+    pub strength: Option<i32>,
+    pub defense: Option<i32>,
 }
 
 impl From<crate::tributes::actors::Tribute> for NewTribute {
@@ -372,6 +378,8 @@ impl From<crate::tributes::actors::Tribute> for NewTribute {
             intelligence: tribute.intelligence,
             persuasion: tribute.persuasion,
             luck: tribute.luck,
+            strength: tribute.strength,
+            defense: tribute.defense,
         };
         out_tribute
     }

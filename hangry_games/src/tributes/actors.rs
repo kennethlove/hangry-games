@@ -34,6 +34,8 @@ pub struct Tribute {
     pub intelligence: Option<i32>,
     pub persuasion: Option<i32>,
     pub luck: Option<i32>,
+    pub strength: Option<i32>,
+    pub defense: Option<i32>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -148,6 +150,8 @@ impl Tribute {
             intelligence: Some(rng.gen_range(1..=100)),
             persuasion: Some(rng.gen_range(1..=100)),
             luck: Some(rng.gen_range(1..=100)),
+            strength: Some(rng.gen_range(1..=50)),
+            defense: Some(rng.gen_range(1..=50)),
         }
     }
 
@@ -199,7 +203,7 @@ impl Tribute {
         match attack_contest() {
             AttackResult::AttackerWins => {
                 println!("{} attacks {} and wins", self.name, target.name);
-                target.takes_physical_damage(50);
+                target.takes_physical_damage(self.strength.unwrap());
                 apply_violence_stress(self);
 
                 if !target.is_alive {
@@ -211,7 +215,7 @@ impl Tribute {
             }
             AttackResult::DefenderWins => {
                 println!("{} attacks {} and loses", self.name, target.name);
-                self.takes_physical_damage(50);
+                self.takes_physical_damage(target.strength.unwrap());
                 apply_violence_stress(target);
                 if !self.is_alive {
                     target.kills = Some(target.kills.unwrap() + 1);
@@ -222,8 +226,8 @@ impl Tribute {
             }
             AttackResult::Tie => {
                 println!("{} and {} attack and harm each other", self.name, target.name);
-                self.takes_physical_damage(25);
-                target.takes_physical_damage(25);
+                self.takes_physical_damage(target.strength.unwrap() / 2);
+                target.takes_physical_damage(self.strength.unwrap() / 2);
                 self.draws = Some(self.draws.unwrap() + 1);
                 target.draws = Some(target.draws.unwrap() + 1);
             }
@@ -328,6 +332,8 @@ impl From<TributeModel> for Tribute {
             intelligence: tribute.intelligence,
             persuasion: tribute.persuasion,
             luck: tribute.luck,
+            strength: tribute.strength,
+            defense: tribute.defense,
         }
     }
 }
