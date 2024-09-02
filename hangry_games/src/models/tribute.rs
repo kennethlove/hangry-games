@@ -162,7 +162,7 @@ impl Tribute {
                 move_tribute(self.game_id.unwrap(), self.id , tribute);
             }
             TributeAction::Rest | TributeAction::Hide | TributeAction::Idle => {
-                self.rest_tribute();
+                rest_tribute(self.id, tribute);
             }
             TributeAction::Attack => {
                 let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
@@ -236,7 +236,7 @@ impl Tribute {
                 }
             }
             _ => {
-                self.rest_tribute();
+                rest_tribute(self.id, tribute);
             }
         }
 
@@ -249,25 +249,25 @@ impl Tribute {
         self.clone()
     }
 
-    // TODO: Extract from impl
-    fn rest_tribute(&mut self) {
-        let connection = &mut establish_connection();
-        // Rest the tribute
-        self.health = std::cmp::min(self.health + 50, 100);
-        self.sanity = std::cmp::min(self.sanity + 50, 100);
-        self.movement = std::cmp::min(self.movement + 25, 100);
+}
 
-        diesel::update(tribute::table.find(self.id))
-            .set((
-                tribute::health.eq(self.health),
-                tribute::sanity.eq(self.sanity),
-                tribute::movement.eq(self.movement),
-            ))
-            .execute(connection)
-            .expect("Error resting tribute");
-        println!("{} rests", self.name);
-    }
+fn rest_tribute(tribute_id: i32, mut tribute: crate::tributes::actors::Tribute) {
+    let connection = &mut establish_connection();
+    // Rest the tribute
+    tribute.rests();
+    // tribute.health = std::cmp::min(tribute.health + 50, 100);
+    // tribute.sanity = std::cmp::min(tribute.sanity + 50, 100);
+    // tribute.movement = std::cmp::min(tribute.movement + 25, 100);
 
+    diesel::update(tribute::table.find(tribute_id))
+        .set((
+            tribute::health.eq(tribute.health),
+            tribute::sanity.eq(tribute.sanity),
+            tribute::movement.eq(tribute.movement),
+        ))
+        .execute(connection)
+        .expect("Error resting tribute");
+    println!("{} rests", tribute.name);
 }
 
 fn move_tribute(game_id: i32, tribute_id: i32, mut tribute: crate::tributes::actors::Tribute) {
