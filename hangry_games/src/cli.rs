@@ -2,7 +2,6 @@ use crate::models::{
     create_area,
     create_game,
     create_tribute,
-    fill_tributes,
     get_action,
     get_all_tributes,
     get_area,
@@ -13,7 +12,7 @@ use crate::models::{
     place_tribute_in_area
 };
 use clap::{Parser, Subcommand};
-use crate::models::game::{get_all_living_tributes, get_game_tributes, get_dead_tributes};
+use crate::models::game::{fill_tributes, get_all_living_tributes, get_dead_tributes, get_game_tributes};
 
 #[derive(Debug, Parser)]
 #[command(version, about, long_about = None)]

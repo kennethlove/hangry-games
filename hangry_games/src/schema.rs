@@ -55,6 +55,7 @@ diesel::table! {
         killed_by -> Nullable<Varchar>,
         strength -> Nullable<Int4>,
         defense -> Nullable<Int4>,
+        is_hidden -> Nullable<Bool>,
     }
 }
 
