@@ -114,14 +114,14 @@ impl Game {
         }
 
         // Announce them
-        println!("📯 {} tribute{} died today", dead_tributes.len(), if dead_tributes.len() == 1 { "" } else { "s" });
+        println!("📯 {} tribute{} died since yesterday", dead_tributes.len(), if dead_tributes.len() == 1 { "" } else { "s" });
         for tribute in dead_tributes {
             println!("💀 {}", tribute.name);
         }
 
         // Trigger any nighttime events
 
-        println!("🌕 Night {} begins", self.day.unwrap_or(0));
+        println!("🌕 Night {} begins", self.day.unwrap_or(0) + 1);
         // Run the tribute AI
         for mut tribute in living_tributes {
             tribute.do_night();
