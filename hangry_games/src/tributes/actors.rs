@@ -36,6 +36,7 @@ pub struct Tribute {
     pub luck: Option<i32>,
     pub strength: Option<i32>,
     pub defense: Option<i32>,
+    pub is_hidden: Option<bool>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -61,14 +62,8 @@ impl TributeBrain {
     }
 
     /// Get the last action taken by the tribute
-    /// Negative indexes are counted from the end of the list
-    pub fn last_action(&self, index: i32) -> TributeAction {
-        let index = if index < 0 {
-            self.previous_actions.len() as i32 + index
-        } else {
-            index
-        };
-        if let Some(previous_action) = self.previous_actions.get(index as usize) {
+    pub fn last_action(&self) -> TributeAction {
+        if let Some(previous_action) = self.previous_actions.last() {
             previous_action.clone()
         } else {
             TributeAction::Idle
@@ -87,7 +82,7 @@ impl TributeBrain {
 
         let _area = tribute.area.as_ref().unwrap();
 
-        if nearby_tributes.len() > 1 {
+        if nearby_tributes.len() > 1 && nearby_tributes.len() < 6 {
             // enemies are nearby
             return match tribute.health {
                 // health is low, hide
@@ -152,6 +147,7 @@ impl Tribute {
             luck: Some(rng.gen_range(1..=100)),
             strength: Some(rng.gen_range(1..=50)),
             defense: Some(rng.gen_range(1..=50)),
+            is_hidden: Some(false),
         }
     }
 
@@ -180,7 +176,7 @@ impl Tribute {
     }
 
     pub fn moves(&mut self) {
-        self.movement = std::cmp::max(0, self.movement - self.speed.unwrap());
+        self.movement = std::cmp::max(0, self.movement - 50);
     }
 
     pub fn rests(&mut self) {
@@ -197,6 +193,10 @@ impl Tribute {
 
     pub fn leaves_area(&mut self) {
         self.area = None;
+    }
+
+    pub fn hides(&mut self) {
+        self.is_hidden = Some(true);
     }
 
     pub fn attacks(&mut self, target: &mut Tribute) {
@@ -231,6 +231,16 @@ impl Tribute {
                 self.draws = Some(self.draws.unwrap() + 1);
                 target.draws = Some(target.draws.unwrap() + 1);
             }
+        }
+    }
+
+    pub fn is_visible(&self) -> bool {
+        let is_hidden = self.is_hidden.unwrap_or(false);
+        if is_hidden {
+            let mut rng = thread_rng();
+            rng.gen_bool(self.intelligence.unwrap() as f64 / 100.0)
+        } else {
+            true
         }
     }
 }
@@ -334,6 +344,7 @@ impl From<TributeModel> for Tribute {
             luck: tribute.luck,
             strength: tribute.strength,
             defense: tribute.defense,
+            is_hidden: tribute.is_hidden,
         }
     }
 }
@@ -360,6 +371,7 @@ impl Into<UpdateTribute> for Tribute {
             defeats: self.defeats,
             draws: self.draws,
             games: self.games,
+            is_hidden: self.is_hidden,
         }
     }
 }

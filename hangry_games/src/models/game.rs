@@ -1,8 +1,11 @@
 use crate::schema::game;
 use diesel::prelude::*;
-use crate::establish_connection;
+use crate::{establish_connection, models};
 use crate::models::Tribute;
 use rand::seq::SliceRandom;
+use fake::faker::name::raw::Name;
+use fake::locales::EN;
+use fake::Fake;
 
 #[derive(Queryable, Selectable, Debug)]
 #[diesel(table_name = game)]
@@ -211,4 +214,19 @@ pub fn get_dead_tributes(game: &Game) -> Vec<Tribute> {
         .filter(tribute::is_alive.eq(false))
         .load::<Tribute>(conn)
         .expect("Error loading dead tributes")
+}
+
+/// Fill the tribute table with up to 24 tributes.
+/// Return the number of tributes created.
+pub fn fill_tributes(game: &Game) -> usize {
+    let tributes = get_game_tributes(game);
+    let count = tributes.len();
+    if count < 24 {
+        for _ in count..24 {
+            let name: String = Name(EN).fake();
+            let mut tribute = models::create_tribute(&name);
+            tribute.set_game(&game)
+        }
+    }
+    24 - count
 }

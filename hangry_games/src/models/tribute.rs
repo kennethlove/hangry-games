@@ -1,14 +1,11 @@
 use crate::establish_connection;
-use crate::models::{game, get_area, get_game_by_id, tribute_action, Action, Area, Game};
+use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::tributes::actors::Tribute as TributeActor;
 use crate::tributes::actions::TributeAction;
 use crate::schema::tribute;
 use crate::tributes::actors::pick_target;
 use crate::areas::Area as AreaStruct;
 use diesel::prelude::*;
-use fake::faker::name::raw::*;
-use fake::locales::*;
-use fake::Fake;
 use rand::Rng;
 use rand::seq::SliceRandom;
 use super::get_area_by_id;
@@ -43,6 +40,7 @@ pub struct Tribute {
     pub killed_by: Option<String>,
     pub strength: Option<i32>,
     pub defense: Option<i32>,
+    pub is_hidden: Option<bool>,
 }
 
 impl Tribute {
@@ -115,6 +113,7 @@ impl Tribute {
         let connection = &mut establish_connection();
         let game = get_game_by_id(self.game_id.unwrap()).unwrap();
         let game_day = game.day.unwrap();
+
         diesel::update(tribute::table.find(self.id))
             .set((
                 tribute::is_alive.eq(false),
@@ -127,7 +126,7 @@ impl Tribute {
 
     pub fn do_day(&mut self) -> Self {
         if self.is_alive == false || self.health == 0 {
-            println!("Tribute is dead");
+            println!("{} is dead", self.name);
             return self.clone();
         }
 
@@ -140,10 +139,8 @@ impl Tribute {
         let mut brain = tribute.brain.clone();
 
         // Get nearby tributes
-        let area_tributes = area.tributes(self.game_id.unwrap());
-        let living_tributes = area_tributes.iter().filter(|t| t.is_alive && t.health > 0 && t.game_id == self.game_id);
-        let nearby_tributes: Vec<TributeActor> = living_tributes.clone().map(|t| TributeActor::from(t.clone())).collect();
-        let nearby_targets: Vec<Tribute> = living_tributes.into_iter().cloned().collect();
+        let nearby_tributes = Self::get_nearby_tributes(area.clone(), self.game_id.unwrap());
+        let nearby_targets = Self::get_nearby_targets(area.clone(), self.game_id.unwrap());
 
         // If the tribute is in a closed area, move them.
         let game = get_game_by_id(self.game_id.unwrap());
@@ -157,7 +154,7 @@ impl Tribute {
         // Decide the next logical action
         brain.act(&tribute, nearby_tributes.clone());
 
-        match brain.last_action(0) {
+        match brain.last_action() {
             TributeAction::Move => {
                 move_tribute(self.game_id.unwrap(), self.id , tribute);
             }
@@ -181,7 +178,7 @@ impl Tribute {
         }
 
         // Find the action model instance
-        let last_action = crate::models::action::get_action(brain.last_action(0).as_str());
+        let last_action = crate::models::action::get_action(brain.last_action().as_str());
 
         // Connect Tribute to Action
         tribute_action::take_action(&self.clone(), &last_action);
@@ -204,10 +201,8 @@ impl Tribute {
         }
 
         // Get nearby tributes
-        let area_tributes = area.tributes(self.game_id.unwrap());
-        let living_tributes = area_tributes.iter().filter(|t| t.is_alive && t.health > 0 && t.game_id == self.game_id);
-        let nearby_tributes: Vec<TributeActor> = living_tributes.clone().map(|t| TributeActor::from(t.clone())).collect();
-        let nearby_targets: Vec<Tribute> = living_tributes.into_iter().cloned().collect();
+        let nearby_tributes = Self::get_nearby_tributes(area.clone(), self.game_id.unwrap());
+        let nearby_targets = Self::get_nearby_targets(area.clone(), self.game_id.unwrap());
 
         // Get Brain struct
         let mut brain = tribute.brain.clone();
@@ -215,7 +210,7 @@ impl Tribute {
         // Decide the next logical action
         brain.act(&tribute, nearby_tributes.clone());
 
-        match brain.last_action(0) {
+        match brain.last_action() {
             TributeAction::Move => {
                 move_tribute(self.game_id.unwrap(), self.id, tribute);
             }
@@ -232,6 +227,8 @@ impl Tribute {
                     let target = Tribute::from(target);
                     if bravery == true {
                         attack_target(self.clone(), target.clone());
+                    } else {
+                        println!("{} is too scared to attack {}", self.name, target.name);
                     }
                 }
             }
@@ -241,7 +238,7 @@ impl Tribute {
         }
 
         // Find the action model instance
-        let last_action = crate::models::action::get_action(brain.last_action(0).as_str());
+        let last_action = crate::models::action::get_action(brain.last_action().as_str());
 
         // Connect Tribute to Action
         tribute_action::take_action(&self.clone(), &last_action);
@@ -249,12 +246,32 @@ impl Tribute {
         self.clone()
     }
 
+    fn get_nearby_tributes(area: Area, game_id: i32) -> Vec<TributeActor> {
+        // Get nearby tributes
+        let area_tributes = area.tributes(game_id);
+        let living_tributes = area_tributes.iter()
+            .filter(|t| t.is_alive && t.health > 0 && t.game_id == Some(game_id));
+        let nearby_tributes: Vec<TributeActor> = living_tributes.clone()
+            .map(|t| TributeActor::from(t.clone()))
+            .filter(|t| t.is_visible())
+            .collect();
+        nearby_tributes
+    }
+
+    fn get_nearby_targets(area: Area, game_id: i32) -> Vec<Tribute> {
+        let nearby_tributes = Self::get_nearby_tributes(area, game_id);
+        let nearby_targets: Vec<Tribute> = nearby_tributes.clone().into_iter().map(|t| Tribute::from(t) ).collect();
+        nearby_targets
+    }
 }
 
 fn rest_tribute(tribute_id: i32, mut tribute: crate::tributes::actors::Tribute) {
     let connection = &mut establish_connection();
     // Rest the tribute
+    tribute.heals(50);
+    tribute.heals_mental_damage(50);
     tribute.rests();
+
     // tribute.health = std::cmp::min(tribute.health + 50, 100);
     // tribute.sanity = std::cmp::min(tribute.sanity + 50, 100);
     // tribute.movement = std::cmp::min(tribute.movement + 25, 100);
@@ -271,12 +288,12 @@ fn rest_tribute(tribute_id: i32, mut tribute: crate::tributes::actors::Tribute) 
 }
 
 fn move_tribute(game_id: i32, tribute_id: i32, mut tribute: crate::tributes::actors::Tribute) {
-    if tribute.movement <= 0 {
+    if tribute.movement < 0 {
         println!("{} is too tired to move", tribute.name);
-        // TODO: Add a rest action
+        tribute.rests();
+        update_tribute(tribute_id, Tribute::from(tribute.clone()));
         return;
     }
-    let connection = &mut establish_connection();
 
     let game = get_game_by_id(game_id).unwrap();
     let tribute_area = tribute.clone().area.unwrap();
@@ -299,19 +316,14 @@ fn move_tribute(game_id: i32, tribute_id: i32, mut tribute: crate::tributes::act
     };
 
     tribute.moves();
-    if tribute.movement <= 50 {
+    if tribute.movement > 0 {
         tribute.changes_area(AreaStruct::from(random_neighbor.clone()));
     }
 
     let tribute_instance = Tribute::from(tribute.clone());
     // save tribute_instance
-    diesel::update(tribute::table.find(tribute_id))
-        .set((
-            tribute::area_id.eq(tribute_instance.area_id),
-            tribute::movement.eq(tribute_instance.movement),
-        ))
-        .execute(connection)
-        .expect("Error moving tribute");
+    update_tribute(tribute_id, tribute_instance.clone());
+
     println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &random_neighbor.name.as_str());
 }
 
@@ -346,6 +358,7 @@ impl From<crate::tributes::actors::Tribute> for Tribute {
             killed_by: tribute.killed_by,
             strength: tribute.strength,
             defense: tribute.defense,
+            is_hidden: tribute.is_hidden,
         };
         out_tribute
     }
@@ -402,6 +415,7 @@ pub struct UpdateTribute {
     pub draws: Option<i32>,
     pub games: Option<i32>,
     pub killed_by: Option<String>,
+    pub is_hidden: Option<bool>,
 }
 
 pub fn create_tribute(name: &str) -> Tribute {
@@ -434,21 +448,6 @@ pub fn get_all_tributes() -> Vec<Tribute> {
         .select(tribute::all_columns)
         .load::<Tribute>(conn)
         .expect("Error loading tributes")
-}
-
-/// Fill the tribute table with up to 24 tributes.
-/// Return the number of tributes created.
-pub fn fill_tributes(game: &Game) -> usize {
-    let tributes = game::get_game_tributes(game);
-    let count = tributes.len();
-    if count < 24 {
-        for _ in count..24 {
-            let name: String = Name(EN).fake();
-            let mut tribute = create_tribute(&name);
-            tribute.set_game(&game)
-        }
-    }
-    24 - count
 }
 
 pub fn place_tribute_in_area(tribute: &Tribute, area: &Area) {
@@ -502,6 +501,7 @@ fn update_tribute(tribute_id: i32, tribute: Tribute) {
         defeats: tribute.defeats,
         draws: tribute.draws,
         games: tribute.games,
+        is_hidden: tribute.is_hidden,
     };
     diesel::update(tribute::table.find(tribute_id))
         .set(&update_tribute)
