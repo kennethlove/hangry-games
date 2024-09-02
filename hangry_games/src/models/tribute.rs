@@ -149,7 +149,7 @@ impl Tribute {
         let game = get_game_by_id(self.game_id.unwrap());
         if let Ok(game) = game {
             if game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).contains(&Some(area.id)) {
-                self.move_tribute(tribute.clone());
+                move_tribute(self.game_id.unwrap(), self.id, tribute.clone());
                 return self.clone();
             }
         }
@@ -159,7 +159,7 @@ impl Tribute {
 
         match brain.last_action(0) {
             TributeAction::Move => {
-                self.move_tribute(tribute);
+                move_tribute(self.game_id.unwrap(), self.id , tribute);
             }
             TributeAction::Rest | TributeAction::Hide | TributeAction::Idle => {
                 self.rest_tribute();
@@ -217,7 +217,7 @@ impl Tribute {
 
         match brain.last_action(0) {
             TributeAction::Move => {
-                self.move_tribute(tribute);
+                move_tribute(self.game_id.unwrap(), self.id, tribute);
             }
             TributeAction::Attack => {
                 // How brave does the tribute feel at night?
@@ -268,51 +268,51 @@ impl Tribute {
         println!("{} rests", self.name);
     }
 
-    // TODO: Extract from impl
-    fn move_tribute(&self, mut tribute: crate::tributes::actors::Tribute) {
-        if tribute.movement <= 0 {
-            println!("{} is too tired to move", tribute.name);
-            // TODO: Add a rest action
-            return;
-        }
-        let connection = &mut establish_connection();
+}
 
-        let game = get_game_by_id(self.game_id.unwrap()).unwrap();
-        let tribute_area = tribute.clone().area.unwrap();
-        let neighbors = tribute_area.neighbors();
-
-        // Get a random neighbor that isn't the tribute's current area
-        let random_neighbor = loop {
-            let area = neighbors.choose(&mut rand::thread_rng()).unwrap();
-            let area = get_area(area.as_str());
-
-            // Same area check
-            if area.name == tribute_area.as_str() {
-                continue;
-            }
-            // Closed area check
-            if game.closed_areas.clone().unwrap_or(vec![]).contains(&Some(area.id)) {
-                continue;
-            }
-            break area;
-        };
-
-        tribute.moves();
-        if tribute.movement <= 50 {
-            tribute.changes_area(AreaStruct::from(random_neighbor.clone()));
-        }
-
-        let tribute_instance = Tribute::from(tribute.clone());
-        // save tribute_instance
-        diesel::update(tribute::table.find(self.id))
-            .set((
-                tribute::area_id.eq(tribute_instance.area_id),
-                tribute::movement.eq(tribute_instance.movement),
-            ))
-            .execute(connection)
-            .expect("Error moving tribute");
-        println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &random_neighbor.name.as_str());
+fn move_tribute(game_id: i32, tribute_id: i32, mut tribute: crate::tributes::actors::Tribute) {
+    if tribute.movement <= 0 {
+        println!("{} is too tired to move", tribute.name);
+        // TODO: Add a rest action
+        return;
     }
+    let connection = &mut establish_connection();
+
+    let game = get_game_by_id(game_id).unwrap();
+    let tribute_area = tribute.clone().area.unwrap();
+    let neighbors = tribute_area.neighbors();
+
+    // Get a random neighbor that isn't the tribute's current area
+    let random_neighbor = loop {
+        let area = neighbors.choose(&mut rand::thread_rng()).unwrap();
+        let area = get_area(area.as_str());
+
+        // Same area check
+        if area.name == tribute_area.as_str() {
+            continue;
+        }
+        // Closed area check
+        if game.closed_areas.clone().unwrap_or(vec![]).contains(&Some(area.id)) {
+            continue;
+        }
+        break area;
+    };
+
+    tribute.moves();
+    if tribute.movement <= 50 {
+        tribute.changes_area(AreaStruct::from(random_neighbor.clone()));
+    }
+
+    let tribute_instance = Tribute::from(tribute.clone());
+    // save tribute_instance
+    diesel::update(tribute::table.find(tribute_id))
+        .set((
+            tribute::area_id.eq(tribute_instance.area_id),
+            tribute::movement.eq(tribute_instance.movement),
+        ))
+        .execute(connection)
+        .expect("Error moving tribute");
+    println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &random_neighbor.name.as_str());
 }
 
 impl From<crate::tributes::actors::Tribute> for Tribute {
