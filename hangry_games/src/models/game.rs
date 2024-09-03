@@ -124,7 +124,7 @@ impl Game {
 
         // Trigger any nighttime events
 
-        println!("🌕 Night {} begins", self.day.unwrap_or(0) + 1);
+        println!("🌙 Night {} begins", self.day.unwrap_or(0) + 1);
         // Run the tribute AI
         for mut tribute in living_tributes {
             tribute.do_night();

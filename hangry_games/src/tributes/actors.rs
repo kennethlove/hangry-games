@@ -76,7 +76,7 @@ impl TributeBrain {
         if tribute.area.is_none() {
             return TributeAction::Idle;
         }
-        if tribute.movement < 25 {
+        if tribute.movement < 10 {
             return TributeAction::Rest;
         }
 
@@ -95,15 +95,22 @@ impl TributeBrain {
         }
 
         if nearby_tributes.len() > 5 {
-            // too many enemies nearby, run away
-            return TributeAction::Move;
+            return match tribute.intelligence {
+                // Too dumb to know better, attacks
+                Some(0..26) => TributeAction::Attack,
+                // Smart enough to know better, hides
+                Some(75..101) => TributeAction::Hide,
+                // Average intelligence, moves
+                _ => TributeAction::Move,
+            }
         }
 
         // no enemies nearby
         match tribute.health {
             // health is low, rest
-            1..=10 => TributeAction::Hide,
-            11..=20 => TributeAction::Rest,
+            1..=10 => TributeAction::Rest,
+            // health isn't great, hide
+            11..=25 => TributeAction::Hide,
             // health is good, move
             _ => {
                 // If the tribute has movement, move
