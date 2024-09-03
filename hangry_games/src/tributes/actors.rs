@@ -36,6 +36,7 @@ pub struct Tribute {
     pub strength: Option<i32>,
     pub defense: Option<i32>,
     pub is_hidden: Option<bool>,
+    pub dexterity: Option<i32>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -154,6 +155,7 @@ impl Tribute {
             strength: Some(rng.gen_range(1..=50)),
             defense: Some(rng.gen_range(1..=50)),
             is_hidden: Some(false),
+            dexterity: Some(rng.gen_range(1..=100)),
         }
     }
 
@@ -206,7 +208,7 @@ impl Tribute {
     }
 
     pub fn attacks(&mut self, target: &mut Tribute) {
-        match attack_contest() {
+        match attack_contest(self.clone(), target.clone()) {
             AttackResult::AttackerWins => {
                 println!("{} attacks {} and wins", self.name, target.name);
                 target.takes_physical_damage(self.strength.unwrap());
@@ -255,9 +257,12 @@ fn apply_violence_stress(tribute: &mut Tribute) {
     tribute.takes_mental_damage(10);
 }
 
-fn attack_contest() -> AttackResult {
-    let tribute1_roll = thread_rng().gen_range(1..=20);
-    let tribute2_roll = thread_rng().gen_range(1..=20);
+fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
+    let mut tribute1_roll = thread_rng().gen_range(1..=20); // Base roll
+    tribute1_roll += tribute.strength.unwrap(); // Add strength
+
+    let mut tribute2_roll = thread_rng().gen_range(1..=20); // Base roll
+    tribute2_roll += target.dexterity.unwrap(); // Add luck
 
     if tribute1_roll > tribute2_roll {
         AttackResult::AttackerWins
@@ -352,6 +357,7 @@ impl From<TributeModel> for Tribute {
             strength: tribute.strength,
             defense: tribute.defense,
             is_hidden: tribute.is_hidden,
+            dexterity: tribute.dexterity,
         }
     }
 }
@@ -379,6 +385,7 @@ impl Into<UpdateTribute> for Tribute {
             draws: self.draws,
             games: self.games,
             is_hidden: self.is_hidden,
+            dexterity: self.dexterity,
         }
     }
 }

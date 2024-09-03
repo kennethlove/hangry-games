@@ -7,8 +7,6 @@ use crate::tributes::actors::pick_target;
 use crate::areas::Area as AreaStruct;
 use diesel::prelude::*;
 use rand::prelude::*;
-use rand::Rng;
-use rand::seq::SliceRandom;
 use super::get_area_by_id;
 
 #[derive(Queryable, Selectable, Debug, Clone, Associations)]
@@ -42,6 +40,7 @@ pub struct Tribute {
     pub strength: Option<i32>,
     pub defense: Option<i32>,
     pub is_hidden: Option<bool>,
+    pub dexterity: Option<i32>,
 }
 
 impl Tribute {
@@ -226,7 +225,7 @@ impl Tribute {
             }
             TributeAction::Attack => {
                 // How brave does the tribute feel at night?
-                let mut rng = rand::thread_rng();
+                let mut rng = thread_rng();
                 let bravery = self.bravery.unwrap();
                 let bravado: u32 = rng.gen_range(0..=100);
                 let brave_enough = bravado + bravery as u32 > 50;
@@ -318,7 +317,7 @@ fn move_tribute(game_id: i32, tribute_id: i32, mut tribute: crate::tributes::act
 
     // Get a random neighbor that isn't the tribute's current area
     let random_neighbor = loop {
-        let area = neighbors.choose(&mut rand::thread_rng()).unwrap();
+        let area = neighbors.choose(&mut thread_rng()).unwrap();
         let area = get_area(area.as_str());
 
         // Same area check
@@ -384,6 +383,7 @@ impl From<crate::tributes::actors::Tribute> for Tribute {
             strength: tribute.strength,
             defense: tribute.defense,
             is_hidden: tribute.is_hidden,
+            dexterity: tribute.dexterity,
         };
         out_tribute
     }
@@ -402,6 +402,7 @@ pub struct NewTribute {
     pub luck: Option<i32>,
     pub strength: Option<i32>,
     pub defense: Option<i32>,
+    pub dexterity: Option<i32>,
 }
 
 impl From<crate::tributes::actors::Tribute> for NewTribute {
@@ -418,6 +419,7 @@ impl From<crate::tributes::actors::Tribute> for NewTribute {
             luck: tribute.luck,
             strength: tribute.strength,
             defense: tribute.defense,
+            dexterity: tribute.dexterity,
         };
         out_tribute
     }
@@ -441,6 +443,7 @@ pub struct UpdateTribute {
     pub games: Option<i32>,
     pub killed_by: Option<String>,
     pub is_hidden: Option<bool>,
+    pub dexterity: Option<i32>,
 }
 
 pub fn create_tribute(name: &str) -> Tribute {
@@ -527,6 +530,7 @@ fn update_tribute(tribute_id: i32, tribute: Tribute) {
         draws: tribute.draws,
         games: tribute.games,
         is_hidden: tribute.is_hidden,
+        dexterity: tribute.dexterity,
     };
     diesel::update(tribute::table.find(tribute_id))
         .set(&update_tribute)
