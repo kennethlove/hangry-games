@@ -1,6 +1,5 @@
 use crate::areas::Area;
-use rand::Rng;
-use rand::thread_rng;
+use rand::prelude::*;
 
 use super::actions::TributeAction;
 
@@ -245,7 +244,7 @@ impl Tribute {
         let is_hidden = self.is_hidden.unwrap_or(false);
         if is_hidden {
             let mut rng = thread_rng();
-            rng.gen_bool(self.intelligence.unwrap() as f64 / 100.0)
+            !rng.gen_bool(self.intelligence.unwrap() as f64 / 100.0)
         } else {
             true
         }
@@ -284,6 +283,7 @@ pub fn pick_target(tribute: TributeModel, targets: Vec<Tribute>) -> Option<Tribu
         _ => {
             let enemy_targets: Vec<Tribute> = targets.iter().cloned()
                 .filter(|t| t.district != tribute.district)
+                .filter(|t| !t.is_hidden.unwrap())
                 .collect();
             match enemy_targets.len() {
                 0 => Some(targets.first()?.clone()), // Sorry, buddy, time to die
@@ -472,5 +472,13 @@ mod tests {
         let tribute2 = Tribute::new("Peeta".to_string(), None);
         let action = tribute.brain.act(&tribute.clone(),vec![tribute.clone(), tribute2]);
         assert_eq!(action, TributeAction::Hide);
+    }
+
+    #[test]
+    fn is_hidden_true() {
+        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        tribute.intelligence = Some(100);
+        tribute.is_hidden = Some(true);
+        assert!(!tribute.is_visible());
     }
 }
