@@ -176,7 +176,7 @@ impl Tribute {
     }
 
     pub fn moves(&mut self) {
-        self.movement = std::cmp::max(0, self.movement - 50);
+        self.movement = std::cmp::max(0, self.movement - self.speed.unwrap());
     }
 
     pub fn rests(&mut self) {
@@ -430,11 +430,11 @@ mod tests {
 
     #[test]
     fn decide_on_action_low_health() {
-        // If the tribute has low health, they should hide
+        // If the tribute has low health, they should rest
         let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.takes_physical_damage(90);
         let action = tribute.brain.act(&tribute.clone(), vec![]);
-        assert_eq!(action, TributeAction::Hide);
+        assert_eq!(action, TributeAction::Rest);
     }
 
     #[test]

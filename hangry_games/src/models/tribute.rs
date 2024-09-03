@@ -272,10 +272,6 @@ fn rest_tribute(tribute_id: i32, mut tribute: crate::tributes::actors::Tribute) 
     tribute.heals_mental_damage(50);
     tribute.rests();
 
-    // tribute.health = std::cmp::min(tribute.health + 50, 100);
-    // tribute.sanity = std::cmp::min(tribute.sanity + 50, 100);
-    // tribute.movement = std::cmp::min(tribute.movement + 25, 100);
-
     diesel::update(tribute::table.find(tribute_id))
         .set((
             tribute::health.eq(tribute.health),
@@ -316,15 +312,17 @@ fn move_tribute(game_id: i32, tribute_id: i32, mut tribute: crate::tributes::act
     };
 
     tribute.moves();
-    if tribute.movement > 0 {
-        tribute.changes_area(AreaStruct::from(random_neighbor.clone()));
+    let new_area = AreaStruct::from(random_neighbor.clone());
+    if tribute.movement == 0 {
+        tribute.changes_area(new_area);
+        println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &new_area.as_str());
+    } else {
+        println!("{} moves towards {}", tribute.name, &new_area.as_str());
     }
 
     let tribute_instance = Tribute::from(tribute.clone());
     // save tribute_instance
     update_tribute(tribute_id, tribute_instance.clone());
-
-    println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &random_neighbor.name.as_str());
 }
 
 impl From<crate::tributes::actors::Tribute> for Tribute {
