@@ -7,6 +7,7 @@ use crate::tributes::actors::pick_target;
 use crate::areas::Area as AreaStruct;
 use diesel::prelude::*;
 use rand::prelude::*;
+
 use super::get_area_by_id;
 
 #[derive(Queryable, Selectable, Debug, Clone, Associations)]
