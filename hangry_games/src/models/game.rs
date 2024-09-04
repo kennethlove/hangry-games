@@ -122,6 +122,8 @@ impl Game {
             println!("💀 {}", tribute.name);
         }
 
+        // Trigger any nighttime events
+
         println!("🌙 Night {} begins", self.day.unwrap_or(0) + 1);
         // Trigger any nighttime events
 
