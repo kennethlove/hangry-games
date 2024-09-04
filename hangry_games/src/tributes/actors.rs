@@ -1,6 +1,5 @@
 use crate::areas::Area;
-use rand::Rng;
-use rand::thread_rng;
+use rand::prelude::*;
 
 use super::actions::TributeAction;
 
@@ -76,7 +75,7 @@ impl TributeBrain {
         if tribute.area.is_none() {
             return TributeAction::Idle;
         }
-        if tribute.movement < 25 {
+        if tribute.movement < 10 {
             return TributeAction::Rest;
         }
 
@@ -95,15 +94,22 @@ impl TributeBrain {
         }
 
         if nearby_tributes.len() > 5 {
-            // too many enemies nearby, run away
-            return TributeAction::Move;
+            return match tribute.intelligence {
+                // Too dumb to know better, attacks
+                Some(0..26) => TributeAction::Attack,
+                // Smart enough to know better, hides
+                Some(75..101) => TributeAction::Hide,
+                // Average intelligence, moves
+                _ => TributeAction::Move,
+            }
         }
 
         // no enemies nearby
         match tribute.health {
             // health is low, rest
-            1..=10 => TributeAction::Hide,
-            11..=20 => TributeAction::Rest,
+            1..=10 => TributeAction::Rest,
+            // health isn't great, hide
+            11..=25 => TributeAction::Hide,
             // health is good, move
             _ => {
                 // If the tribute has movement, move
@@ -238,7 +244,7 @@ impl Tribute {
         let is_hidden = self.is_hidden.unwrap_or(false);
         if is_hidden {
             let mut rng = thread_rng();
-            rng.gen_bool(self.intelligence.unwrap() as f64 / 100.0)
+            !rng.gen_bool(self.intelligence.unwrap() as f64 / 100.0)
         } else {
             true
         }
@@ -277,6 +283,7 @@ pub fn pick_target(tribute: TributeModel, targets: Vec<Tribute>) -> Option<Tribu
         _ => {
             let enemy_targets: Vec<Tribute> = targets.iter().cloned()
                 .filter(|t| t.district != tribute.district)
+                .filter(|t| !t.is_hidden.unwrap())
                 .collect();
             match enemy_targets.len() {
                 0 => Some(targets.first()?.clone()), // Sorry, buddy, time to die
@@ -465,5 +472,13 @@ mod tests {
         let tribute2 = Tribute::new("Peeta".to_string(), None);
         let action = tribute.brain.act(&tribute.clone(),vec![tribute.clone(), tribute2]);
         assert_eq!(action, TributeAction::Hide);
+    }
+
+    #[test]
+    fn is_hidden_true() {
+        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        tribute.intelligence = Some(100);
+        tribute.is_hidden = Some(true);
+        assert!(!tribute.is_visible());
     }
 }
