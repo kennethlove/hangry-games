@@ -56,6 +56,7 @@ diesel::table! {
         strength -> Nullable<Int4>,
         defense -> Nullable<Int4>,
         is_hidden -> Nullable<Bool>,
+        dexterity -> Nullable<Int4>,
     }
 }
 
