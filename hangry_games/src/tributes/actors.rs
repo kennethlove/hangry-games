@@ -1,6 +1,5 @@
 use crate::areas::Area;
-use rand::Rng;
-use rand::thread_rng;
+use rand::prelude::*;
 
 use super::actions::TributeAction;
 
@@ -37,6 +36,7 @@ pub struct Tribute {
     pub strength: Option<i32>,
     pub defense: Option<i32>,
     pub is_hidden: Option<bool>,
+    pub dexterity: Option<i32>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -95,15 +95,22 @@ impl TributeBrain {
         }
 
         if nearby_tributes.len() > 5 {
-            // too many enemies nearby, run away
-            return TributeAction::Move;
+            return match tribute.intelligence {
+                // Too dumb to know better, attacks
+                Some(0..26) => TributeAction::Attack,
+                // Smart enough to know better, hides
+                Some(75..101) => TributeAction::Hide,
+                // Average intelligence, moves
+                _ => TributeAction::Move,
+            }
         }
 
         // no enemies nearby
         match tribute.health {
             // health is low, rest
-            1..=10 => TributeAction::Hide,
-            11..=20 => TributeAction::Rest,
+            1..=10 => TributeAction::Rest,
+            // health isn't great, hide
+            11..=25 => TributeAction::Hide,
             // health is good, move
             _ => {
                 // If the tribute has movement, move
@@ -148,6 +155,7 @@ impl Tribute {
             strength: Some(rng.gen_range(1..=50)),
             defense: Some(rng.gen_range(1..=50)),
             is_hidden: Some(false),
+            dexterity: Some(rng.gen_range(1..=100)),
         }
     }
 
@@ -200,7 +208,7 @@ impl Tribute {
     }
 
     pub fn attacks(&mut self, target: &mut Tribute) {
-        match attack_contest() {
+        match attack_contest(self.clone(), target.clone()) {
             AttackResult::AttackerWins => {
                 println!("{} attacks {} and wins", self.name, target.name);
                 target.takes_physical_damage(self.strength.unwrap());
@@ -238,7 +246,7 @@ impl Tribute {
         let is_hidden = self.is_hidden.unwrap_or(false);
         if is_hidden {
             let mut rng = thread_rng();
-            rng.gen_bool(self.intelligence.unwrap() as f64 / 100.0)
+            !rng.gen_bool(self.intelligence.unwrap() as f64 / 100.0)
         } else {
             true
         }
@@ -249,9 +257,12 @@ fn apply_violence_stress(tribute: &mut Tribute) {
     tribute.takes_mental_damage(10);
 }
 
-fn attack_contest() -> AttackResult {
-    let tribute1_roll = thread_rng().gen_range(1..=20);
-    let tribute2_roll = thread_rng().gen_range(1..=20);
+fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
+    let mut tribute1_roll = thread_rng().gen_range(1..=20); // Base roll
+    tribute1_roll += tribute.strength.unwrap(); // Add strength
+
+    let mut tribute2_roll = thread_rng().gen_range(1..=20); // Base roll
+    tribute2_roll += target.dexterity.unwrap(); // Add luck
 
     if tribute1_roll > tribute2_roll {
         AttackResult::AttackerWins
@@ -277,6 +288,7 @@ pub fn pick_target(tribute: TributeModel, targets: Vec<Tribute>) -> Option<Tribu
         _ => {
             let enemy_targets: Vec<Tribute> = targets.iter().cloned()
                 .filter(|t| t.district != tribute.district)
+                .filter(|t| !t.is_hidden.unwrap())
                 .collect();
             match enemy_targets.len() {
                 0 => Some(targets.first()?.clone()), // Sorry, buddy, time to die
@@ -345,6 +357,7 @@ impl From<TributeModel> for Tribute {
             strength: tribute.strength,
             defense: tribute.defense,
             is_hidden: tribute.is_hidden,
+            dexterity: tribute.dexterity,
         }
     }
 }
@@ -372,6 +385,7 @@ impl Into<UpdateTribute> for Tribute {
             draws: self.draws,
             games: self.games,
             is_hidden: self.is_hidden,
+            dexterity: self.dexterity,
         }
     }
 }
@@ -465,5 +479,13 @@ mod tests {
         let tribute2 = Tribute::new("Peeta".to_string(), None);
         let action = tribute.brain.act(&tribute.clone(),vec![tribute.clone(), tribute2]);
         assert_eq!(action, TributeAction::Hide);
+    }
+
+    #[test]
+    fn is_hidden_true() {
+        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        tribute.intelligence = Some(100);
+        tribute.is_hidden = Some(true);
+        assert!(!tribute.is_visible());
     }
 }

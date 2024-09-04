@@ -6,8 +6,8 @@ use crate::schema::tribute;
 use crate::tributes::actors::pick_target;
 use crate::areas::Area as AreaStruct;
 use diesel::prelude::*;
-use rand::Rng;
-use rand::seq::SliceRandom;
+use rand::prelude::*;
+
 use super::get_area_by_id;
 
 #[derive(Queryable, Selectable, Debug, Clone, Associations)]
@@ -41,6 +41,7 @@ pub struct Tribute {
     pub strength: Option<i32>,
     pub defense: Option<i32>,
     pub is_hidden: Option<bool>,
+    pub dexterity: Option<i32>,
 }
 
 impl Tribute {
@@ -147,6 +148,7 @@ impl Tribute {
         if let Ok(game) = game {
             if game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).contains(&Some(area.id)) {
                 move_tribute(self.game_id.unwrap(), self.id, tribute.clone());
+                println!("{}", format!("{} leaves the closed area", tribute.name));
                 return self.clone();
             }
         }
@@ -156,9 +158,12 @@ impl Tribute {
 
         match brain.last_action() {
             TributeAction::Move => {
-                move_tribute(self.game_id.unwrap(), self.id , tribute);
+                move_tribute(self.game_id.unwrap(), self.id, tribute);
             }
-            TributeAction::Rest | TributeAction::Hide | TributeAction::Idle => {
+            TributeAction::Hide => {
+                hide_tribute(Tribute::from(tribute));
+            }
+            TributeAction::Rest | TributeAction::Idle => {
                 rest_tribute(self.id, tribute);
             }
             TributeAction::Attack => {
@@ -195,12 +200,14 @@ impl Tribute {
 
         if let Ok(game) = game {
             if game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).contains(&Some(area.id)) {
+                tribute.takes_physical_damage(100);
                 tribute.dies();
+                tribute.killed_by = Some(format!("{} waited too long in a closed area", tribute.name));
                 return Tribute::from(tribute);
             }
         }
 
-        // Get nearby tributes
+        // Get nearby tributes and targets
         let nearby_tributes = Self::get_nearby_tributes(area.clone(), self.game_id.unwrap());
         let nearby_targets = Self::get_nearby_targets(area.clone(), self.game_id.unwrap());
 
@@ -208,7 +215,10 @@ impl Tribute {
         let mut brain = tribute.brain.clone();
 
         // Decide the next logical action
-        brain.act(&tribute, nearby_tributes.clone());
+        brain.act(
+            &tribute,
+            nearby_tributes.clone()
+        );
 
         match brain.last_action() {
             TributeAction::Move => {
@@ -216,7 +226,11 @@ impl Tribute {
             }
             TributeAction::Attack => {
                 // How brave does the tribute feel at night?
-                let bravery = rand::thread_rng().gen_bool(0.66);
+                let mut rng = thread_rng();
+                let bravery = self.bravery.unwrap();
+                let bravado: u32 = rng.gen_range(0..=100);
+                let brave_enough = bravado + bravery as u32 > 50;
+
                 let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
                     .filter(|t| t.id != self.id)
                     .filter(|t| t.district != self.district)
@@ -225,12 +239,15 @@ impl Tribute {
                     ).collect();
                 if let Some(target) = pick_target(self.clone(), nearby_targets) {
                     let target = Tribute::from(target);
-                    if bravery == true {
+                    if brave_enough == true {
                         attack_target(self.clone(), target.clone());
                     } else {
                         println!("{} is too scared to attack {}", self.name, target.name);
                     }
                 }
+            }
+            TributeAction::Hide => {
+                hide_tribute(Tribute::from(tribute));
             }
             _ => {
                 rest_tribute(self.id, tribute);
@@ -297,7 +314,7 @@ fn move_tribute(game_id: i32, tribute_id: i32, mut tribute: crate::tributes::act
 
     // Get a random neighbor that isn't the tribute's current area
     let random_neighbor = loop {
-        let area = neighbors.choose(&mut rand::thread_rng()).unwrap();
+        let area = neighbors.choose(&mut thread_rng()).unwrap();
         let area = get_area(area.as_str());
 
         // Same area check
@@ -323,6 +340,14 @@ fn move_tribute(game_id: i32, tribute_id: i32, mut tribute: crate::tributes::act
     let tribute_instance = Tribute::from(tribute.clone());
     // save tribute_instance
     update_tribute(tribute_id, tribute_instance.clone());
+}
+
+fn hide_tribute(tribute: Tribute) {
+    let mut hidden_tribute = TributeActor::from(tribute.clone());
+    hidden_tribute.hides();
+
+    update_tribute(tribute.id, Tribute::from(hidden_tribute));
+    println!("{} tries to hide", tribute.name);
 }
 
 impl From<crate::tributes::actors::Tribute> for Tribute {
@@ -357,6 +382,7 @@ impl From<crate::tributes::actors::Tribute> for Tribute {
             strength: tribute.strength,
             defense: tribute.defense,
             is_hidden: tribute.is_hidden,
+            dexterity: tribute.dexterity,
         };
         out_tribute
     }
@@ -375,6 +401,7 @@ pub struct NewTribute {
     pub luck: Option<i32>,
     pub strength: Option<i32>,
     pub defense: Option<i32>,
+    pub dexterity: Option<i32>,
 }
 
 impl From<crate::tributes::actors::Tribute> for NewTribute {
@@ -391,6 +418,7 @@ impl From<crate::tributes::actors::Tribute> for NewTribute {
             luck: tribute.luck,
             strength: tribute.strength,
             defense: tribute.defense,
+            dexterity: tribute.dexterity,
         };
         out_tribute
     }
@@ -414,6 +442,7 @@ pub struct UpdateTribute {
     pub games: Option<i32>,
     pub killed_by: Option<String>,
     pub is_hidden: Option<bool>,
+    pub dexterity: Option<i32>,
 }
 
 pub fn create_tribute(name: &str) -> Tribute {
@@ -500,6 +529,7 @@ fn update_tribute(tribute_id: i32, tribute: Tribute) {
         draws: tribute.draws,
         games: tribute.games,
         is_hidden: tribute.is_hidden,
+        dexterity: tribute.dexterity,
     };
     diesel::update(tribute::table.find(tribute_id))
         .set(&update_tribute)
