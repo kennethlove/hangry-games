@@ -42,20 +42,40 @@ pub struct Tribute {
 #[derive(Clone, Debug, PartialEq)]
 pub struct TributeBrain {
     previous_actions: Vec<TributeAction>,
+    preferred_action: Option<TributeAction>,
+    preferred_action_percentage: f64,
 }
 
 impl TributeBrain {
     fn new() -> Self {
         Self {
             previous_actions: Vec::new(),
+            preferred_action: None,
+            preferred_action_percentage: 0.0,
         }
+    }
+
+    pub fn set_preferred_action(&mut self, action: TributeAction, percentage: f64) {
+        self.preferred_action = Some(action);
+        self.preferred_action_percentage = percentage;
+    }
+
+    pub fn clear_preferred_action(&mut self) {
+        self.preferred_action = None;
+        self.preferred_action_percentage = 0.0;
     }
 
     pub fn act(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
         if tribute.health == 0 { return TributeAction::Idle; }
-        let action = TributeBrain::decide_on_action(tribute, nearby_tributes.clone());
 
-        // Try to get a different action?
+        if let Some(preferred_action) = self.clone().preferred_action {
+            if thread_rng().gen_bool(self.preferred_action_percentage) {
+                self.previous_actions.push(preferred_action.clone());
+                return preferred_action;
+            }
+        }
+
+        let action = TributeBrain::decide_on_action(tribute, nearby_tributes.clone());
 
         self.previous_actions.push(action.clone());
         action
@@ -115,7 +135,7 @@ impl TributeBrain {
             _ => {
                 // If the tribute has movement, move
                 match tribute.movement {
-                    0 => TributeAction::Rest,
+                    0..=20 => TributeAction::Rest,
                     _ => TributeAction::Move,
                 }
             }
@@ -330,6 +350,8 @@ impl From<TributeModel> for Tribute {
 
         let brain = TributeBrain {
             previous_actions: actions,
+            preferred_action: None,
+            preferred_action_percentage: 0.0,
         };
 
         Self {

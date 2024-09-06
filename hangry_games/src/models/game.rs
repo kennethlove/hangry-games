@@ -82,19 +82,19 @@ impl Game {
     pub fn do_day(&mut self) {
         let mut rng = rand::thread_rng();
 
-        // Update the day
-        let day = self.day.unwrap_or(0);
-        self.set_day(day + 1);
-        println!("☀️ Day {} begins.", day + 1);
-
         // Check for winner
         let mut living_tributes = get_all_living_tributes(&self);
         if living_tributes.len() == 1 {
-            println!("🏆 The winner is {}", living_tributes[0].name);
+            println!("=== 🏆 The winner is {} ===", living_tributes[0].name);
             return;
         }
 
-        println!("{} tributes remain", living_tributes.len());
+        println!("=== {} tributes remain ===", living_tributes.len());
+
+        // Update the day
+        let day = self.day.unwrap_or(0);
+        self.set_day(day + 1);
+        println!("=== ☀️ Day {} begins. ===", day + 1);
 
         // Trigger any daytime events
 
@@ -117,14 +117,14 @@ impl Game {
         }
 
         // Announce them
-        println!("📯 {} tribute{} died since yesterday", dead_tributes.len(), if dead_tributes.len() == 1 { "" } else { "s" });
+        println!("=== 📯 {} tribute{} died ===", dead_tributes.len(), if dead_tributes.len() == 1 { "" } else { "s" });
         for tribute in dead_tributes {
-            println!("💀 {}", tribute.name);
+            println!("- 💀 {}", tribute.name);
         }
 
         // Trigger any nighttime events
 
-        println!("🌙 Night {} begins", self.day.unwrap_or(0) + 1);
+        println!("=== 🌙 Night {} begins ===", self.day.unwrap_or(0) + 1);
         // Run the tribute AI
         for mut tribute in living_tributes {
             tribute.do_night();
