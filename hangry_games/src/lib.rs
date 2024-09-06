@@ -1,8 +1,8 @@
-pub mod tributes;
 pub mod areas;
-pub mod db;
 pub mod cli;
+pub mod db;
 pub mod models;
 pub mod schema;
+pub mod tributes;
 
 pub use db::establish_connection;

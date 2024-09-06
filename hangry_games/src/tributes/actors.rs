@@ -1,7 +1,7 @@
 use crate::areas::Area;
 use rand::prelude::*;
 
-use super::actions::TributeAction;
+use super::actions::{TributeAction, AttackResult, AttackOutcome};
 
 #[derive(Debug)]
 enum AttackResult {
@@ -229,10 +229,9 @@ impl Tribute {
         self.is_hidden = Some(true);
     }
 
-    pub fn attacks(&mut self, target: &mut Tribute) {
+    pub fn attacks(&mut self, target: &mut Tribute) -> AttackOutcome {
         match attack_contest(self.clone(), target.clone()) {
             AttackResult::AttackerWins => {
-                println!("{} attacks {} and wins", self.name, target.name);
                 target.takes_physical_damage(self.strength.unwrap());
                 apply_violence_stress(self);
 
@@ -241,10 +240,11 @@ impl Tribute {
                     self.wins = Some(self.wins.unwrap() + 1);
                     target.killed_by = Some(self.name.clone());
                     target.defeats = Some(target.defeats.unwrap() + 1);
+                    return AttackOutcome::Kill(self.clone(), target.clone());
                 }
+                AttackOutcome::Wound(self.clone(), target.clone())
             }
             AttackResult::DefenderWins => {
-                println!("{} attacks {} and loses", self.name, target.name);
                 self.takes_physical_damage(target.strength.unwrap());
                 apply_violence_stress(target);
                 if !self.is_alive {
@@ -252,14 +252,15 @@ impl Tribute {
                     target.wins = Some(target.wins.unwrap() + 1);
                     self.killed_by = Some(target.name.clone());
                     self.defeats = Some(self.defeats.unwrap() + 1);
+                    return AttackOutcome::Kill(target.clone(), self.clone());
                 }
+                AttackOutcome::Wound(target.clone(), self.clone())
             }
-            AttackResult::Tie => {
-                println!("{} and {} attack and harm each other", self.name, target.name);
-                self.takes_physical_damage(target.strength.unwrap() / 2);
-                target.takes_physical_damage(self.strength.unwrap() / 2);
+            AttackResult::Miss => {
                 self.draws = Some(self.draws.unwrap() + 1);
                 target.draws = Some(target.draws.unwrap() + 1);
+
+                AttackOutcome::Miss(self.clone(), target.clone())
             }
         }
     }
@@ -291,7 +292,7 @@ fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
     } else if tribute2_roll > tribute1_roll {
         AttackResult::DefenderWins
     } else {
-        AttackResult::Tie
+        AttackResult::Miss
     }
 }
 
@@ -327,9 +328,9 @@ pub fn pick_target(tribute: TributeModel, targets: Vec<Tribute>) -> Option<Tribu
     }
 }
 
-pub fn do_combat(tribute1: &mut Tribute, tribute2: &mut Tribute) {
+pub fn do_combat(tribute1: &mut Tribute, tribute2: &mut Tribute) -> AttackOutcome {
     // TODO: Add in some sort of bravery/option-weighing here?
-    tribute1.attacks(tribute2);
+    tribute1.attacks(tribute2)
 }
 
 impl Default for Tribute {

@@ -1,7 +1,7 @@
 use crate::establish_connection;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::tributes::actors::Tribute as TributeActor;
-use crate::tributes::actions::TributeAction;
+use crate::tributes::actions::{AttackOutcome, TributeAction};
 use crate::schema::tribute;
 use crate::tributes::actors::pick_target;
 use crate::areas::Area as AreaStruct;
@@ -509,7 +509,17 @@ fn attack_target(attacker: Tribute, victim: Tribute) {
     let mut target = TributeActor::from(victim.clone());
 
     // Mutates tribute and target
-    do_combat(&mut tribute, &mut target);
+    match do_combat(&mut tribute, &mut target) {
+        AttackOutcome::Kill(attacker, victim) => {
+            println!("{} kills {}", attacker.name, victim.name);
+        }
+        AttackOutcome::Wound(attacker, victim) => {
+            println!("{} wounds {}", attacker.name, victim.name);
+        }
+        AttackOutcome::Miss(attacker, victim) => {
+            println!("{} misses {}", attacker.name, victim.name);
+        }
+    }
 
     let tribute = Tribute::from(tribute);
     let target = Tribute::from(target);

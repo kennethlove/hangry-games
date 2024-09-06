@@ -50,6 +50,8 @@ impl FromStr for TributeAction {
 }
 
 use crate::models::Action as ActionModel;
+use crate::tributes::actors::Tribute;
+
 impl From<&ActionModel> for TributeAction {
     fn from(value: &ActionModel) -> Self {
         let name = value.name.as_str();
@@ -58,3 +60,16 @@ impl From<&ActionModel> for TributeAction {
     }
 }
 
+#[derive(Debug)]
+pub enum AttackResult {
+    AttackerWins,
+    DefenderWins,
+    Miss,
+}
+
+#[derive(Debug)]
+pub enum AttackOutcome {
+    Kill(Tribute, Tribute),
+    Wound(Tribute, Tribute),
+    Miss(Tribute, Tribute),
+}

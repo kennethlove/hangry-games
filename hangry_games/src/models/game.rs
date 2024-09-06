@@ -19,17 +19,17 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn tributes(&self) -> Vec<crate::models::Tribute> {
+    pub fn tributes(&self) -> Vec<Tribute> {
         use crate::schema::tribute;
         let connection = &mut establish_connection();
         tribute::table
             .filter(tribute::game_id.eq(self.id))
-            .load::<crate::models::Tribute>(connection)
+            .load::<Tribute>(connection)
             .expect("Error loading tributes")
     }
 
     pub fn start(&self) {
-        let cornucopia = crate::models::get_area("The Cornucopia");
+        let cornucopia = models::get_area("The Cornucopia");
 
         let tributes = self.tributes();
         for mut tribute in tributes {
@@ -52,7 +52,7 @@ impl Game {
             .expect("Error updating game");
     }
 
-    pub fn close_area(&mut self, area: &crate::models::Area) {
+    pub fn close_area(&mut self, area: &models::Area) {
         let connection = &mut establish_connection();
 
         let mut binding: Vec<Option<i32>> = vec![];
@@ -66,7 +66,7 @@ impl Game {
             .expect("Error updating game");
     }
 
-    pub fn open_area(&mut self, area: &crate::models::Area) {
+    pub fn open_area(&mut self, area: &models::Area) {
         let connection = &mut establish_connection();
 
         let mut closed_areas = vec![];
@@ -122,9 +122,8 @@ impl Game {
             println!("- 💀 {}", tribute.name);
         }
 
-        // Trigger any nighttime events
-
         println!("=== 🌙 Night {} begins ===", self.day.unwrap_or(0) + 1);
+        // Trigger any nighttime events
         // Run the tribute AI
         for mut tribute in living_tributes {
             tribute.do_night();
