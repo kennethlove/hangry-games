@@ -65,6 +65,8 @@ impl TributeBrain {
         self.preferred_action_percentage = 0.0;
     }
 
+    /// Decide on an action for the tribute to take
+    /// First weighs any preferred actions, then decides based on current state
     pub fn act(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
         if tribute.health == 0 { return TributeAction::Idle; }
 
