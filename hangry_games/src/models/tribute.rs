@@ -1,7 +1,7 @@
 use crate::establish_connection;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::tributes::actors::Tribute as TributeActor;
-use crate::tributes::actions::TributeAction;
+use crate::tributes::actions::{AttackOutcome, TributeAction};
 use crate::schema::tribute;
 use crate::tributes::actors::pick_target;
 use crate::areas::Area as AreaStruct;
@@ -289,10 +289,6 @@ fn rest_tribute(tribute_id: i32, mut tribute: crate::tributes::actors::Tribute) 
     tribute.heals_mental_damage(50);
     tribute.rests();
 
-    // tribute.health = std::cmp::min(tribute.health + 50, 100);
-    // tribute.sanity = std::cmp::min(tribute.sanity + 50, 100);
-    // tribute.movement = std::cmp::min(tribute.movement + 25, 100);
-
     diesel::update(tribute::table.find(tribute_id))
         .set((
             tribute::health.eq(tribute.health),
@@ -505,7 +501,17 @@ fn attack_target(attacker: Tribute, victim: Tribute) {
     let mut target = TributeActor::from(victim.clone());
 
     // Mutates tribute and target
-    do_combat(&mut tribute, &mut target);
+    match do_combat(&mut tribute, &mut target) {
+        AttackOutcome::Kill(attacker, victim) => {
+            println!("{} kills {}", attacker.name, victim.name);
+        }
+        AttackOutcome::Wound(attacker, victim) => {
+            println!("{} wounds {}", attacker.name, victim.name);
+        }
+        AttackOutcome::Miss(attacker, victim) => {
+            println!("{} misses {}", attacker.name, victim.name);
+        }
+    }
 
     let tribute = Tribute::from(tribute);
     let target = Tribute::from(target);
