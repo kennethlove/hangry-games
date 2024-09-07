@@ -346,6 +346,8 @@ fn move_tribute(game_id: i32, tribute_id: i32, mut tribute: crate::tributes::act
     let tribute_instance = Tribute::from(tribute.clone());
     // save tribute_instance
     update_tribute(tribute_id, tribute_instance.clone());
+
+    println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &random_neighbor.name.as_str());
 }
 
 fn hide_tribute(tribute: Tribute) {

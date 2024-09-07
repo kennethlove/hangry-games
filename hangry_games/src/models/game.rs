@@ -82,6 +82,11 @@ impl Game {
     pub fn do_day(&mut self) {
         let mut rng = rand::thread_rng();
 
+        // Update the day
+        let day = self.day.unwrap_or(0);
+        self.set_day(day + 1);
+        println!("☀️ Day {} begins.", day + 1);
+
         // Check for winner
         let mut living_tributes = get_all_living_tributes(&self);
         if living_tributes.len() == 1 {

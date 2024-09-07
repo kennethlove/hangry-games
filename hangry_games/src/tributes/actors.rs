@@ -79,6 +79,8 @@ impl TributeBrain {
 
         let action = TributeBrain::decide_on_action(tribute, nearby_tributes.clone());
 
+        // Try to get a different action?
+
         self.previous_actions.push(action.clone());
         action
     }
