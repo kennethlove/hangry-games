@@ -136,8 +136,14 @@ impl Tribute {
         // Create Tribute struct
         let tribute = TributeActor::from(self.clone());
 
+        // Get game
+        let game = get_game_by_id(self.game_id.unwrap()).unwrap();
+
         // Get Brain struct
         let mut brain = tribute.brain.clone();
+        if game.day == Some(1) {
+            brain.set_preferred_action(TributeAction::Move, 0.5);
+        }
 
         // Get nearby tributes
         let nearby_tributes = Self::get_nearby_tributes(area.clone(), self.game_id.unwrap());
@@ -301,7 +307,7 @@ fn rest_tribute(tribute_id: i32, mut tribute: crate::tributes::actors::Tribute) 
 }
 
 fn move_tribute(game_id: i32, tribute_id: i32, mut tribute: crate::tributes::actors::Tribute) {
-    if tribute.movement < 0 {
+    if tribute.movement < 20 {
         println!("{} is too tired to move", tribute.name);
         tribute.rests();
         update_tribute(tribute_id, Tribute::from(tribute.clone()));
@@ -329,15 +335,17 @@ fn move_tribute(game_id: i32, tribute_id: i32, mut tribute: crate::tributes::act
     };
 
     tribute.moves();
-    if tribute.movement > 0 {
-        tribute.changes_area(AreaStruct::from(random_neighbor.clone()));
+    let new_area = AreaStruct::from(random_neighbor.clone());
+    if tribute.movement == 0 {
+        tribute.changes_area(new_area.clone());
+        println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &new_area.as_str());
+    } else {
+        println!("{} moves towards {}", tribute.name, &new_area.as_str());
     }
 
     let tribute_instance = Tribute::from(tribute.clone());
     // save tribute_instance
     update_tribute(tribute_id, tribute_instance.clone());
-
-    println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &random_neighbor.name.as_str());
 }
 
 fn hide_tribute(tribute: Tribute) {
