@@ -1,6 +1,6 @@
 use crate::establish_connection;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
-use crate::tributes::actors::Tribute as TributeActor;
+use crate::tributes::actors::{TravelResult, Tribute as TributeActor};
 use crate::tributes::actions::{AttackOutcome, TributeAction};
 use crate::schema::tribute;
 use crate::tributes::actors::pick_target;
@@ -307,7 +307,7 @@ fn rest_tribute(tribute_id: i32, mut tribute: crate::tributes::actors::Tribute) 
 }
 
 fn move_tribute(game_id: i32, tribute_id: i32, mut tribute: crate::tributes::actors::Tribute) {
-    if tribute.movement < 20 {
+    if tribute.movement <= 0 {
         println!("{} is too tired to move", tribute.name);
         tribute.rests();
         update_tribute(tribute_id, Tribute::from(tribute.clone()));
@@ -316,38 +316,26 @@ fn move_tribute(game_id: i32, tribute_id: i32, mut tribute: crate::tributes::act
 
     let game = get_game_by_id(game_id).unwrap();
     let tribute_area = tribute.clone().area.unwrap();
-    let neighbors = tribute_area.neighbors();
-
-    // Get a random neighbor that isn't the tribute's current area
-    let random_neighbor = loop {
-        let area = neighbors.choose(&mut thread_rng()).unwrap();
-        let area = get_area(area.as_str());
-
-        // Same area check
-        if area.name == tribute_area.as_str() {
-            continue;
-        }
-        // Closed area check
-        if game.closed_areas.clone().unwrap_or(vec![]).contains(&Some(area.id)) {
-            continue;
-        }
-        break area;
-    };
 
     tribute.moves();
-    let new_area = AreaStruct::from(random_neighbor.clone());
-    if tribute.movement == 0 {
-        tribute.changes_area(new_area.clone());
-        println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &new_area.as_str());
-    } else {
-        println!("{} moves towards {}", tribute.name, &new_area.as_str());
+    let closed_areas: Vec<crate::areas::Area> = game.closed_areas.clone().unwrap_or(vec![]).iter()
+        .map(|id| get_area_by_id(*id))
+        .map(|a| a.unwrap())
+        .map(crate::areas::Area::from)
+        .collect();
+    match &tribute.travels(closed_areas.clone()) {
+        TravelResult::Success(area) => {
+            tribute.changes_area(area.clone());
+            println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &area.as_str());
+        }
+        TravelResult::Failure => {
+            println!("{} fails to move from {}", tribute.name, tribute_area.as_str());
+        }
     }
 
     let tribute_instance = Tribute::from(tribute.clone());
     // save tribute_instance
     update_tribute(tribute_id, tribute_instance.clone());
-
-    println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &random_neighbor.name.as_str());
 }
 
 fn hide_tribute(tribute: Tribute) {
@@ -511,7 +499,7 @@ fn attack_target(attacker: Tribute, victim: Tribute) {
     let mut target = TributeActor::from(victim.clone());
 
     // Mutates tribute and target
-    match do_combat(&mut tribute, &mut target) {
+    match TributeActor::attacks(&mut tribute, &mut target) {
         AttackOutcome::Kill(attacker, victim) => {
             println!("{} kills {}", attacker.name, victim.name);
         }
