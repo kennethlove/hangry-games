@@ -208,7 +208,7 @@ impl Tribute {
     }
 
     pub fn moves(&mut self) {
-        self.movement = std::cmp::max(0, self.movement - self.speed.unwrap());
+        self.movement = std::cmp::max(0, self.movement - 50);
     }
 
     pub fn rests(&mut self) {
@@ -276,6 +276,34 @@ impl Tribute {
             true
         }
     }
+
+    pub fn travels(&self, closed_areas: Vec<Area>) -> TravelResult {
+        let mut rng = thread_rng();
+        let area = self.clone().area.unwrap();
+
+        if self.movement > 0 {
+            let neighbors = area.neighbors();
+            let new_area = loop {
+                let new_area = neighbors.choose(&mut rng).unwrap();
+                if new_area == &area {
+                    continue;
+                }
+                if closed_areas.contains(new_area) {
+                    continue;
+                }
+                break new_area.clone();
+            };
+            TravelResult::Success(new_area.clone())
+        } else {
+            TravelResult::Failure
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum TravelResult {
+    Success(Area),
+    Failure,
 }
 
 fn apply_violence_stress(tribute: &mut Tribute) {
