@@ -279,15 +279,12 @@ impl Tribute {
             let neighbors = area.neighbors();
             let new_area = loop {
                 let new_area = neighbors.choose(&mut rng).unwrap();
-                if new_area == &area {
-                    continue;
-                }
-                if closed_areas.contains(new_area) {
+                if new_area == &area || closed_areas.contains(new_area) {
                     continue;
                 }
                 break new_area.clone();
             };
-            TravelResult::Success(new_area.clone())
+            TravelResult::Success(new_area)
         } else {
             TravelResult::Failure
         }
@@ -335,15 +332,12 @@ pub fn pick_target(tribute: TributeModel, targets: Vec<Tribute>) -> Option<Tribu
         _ => {
             let enemy_targets: Vec<Tribute> = targets.iter().cloned()
                 .filter(|t| t.district != tribute.district)
-                .filter(|t| !t.is_hidden.unwrap())
+                .filter(|t| t.is_visible())
                 .collect();
             match enemy_targets.len() {
                 0 => Some(targets.first()?.clone()), // Sorry, buddy, time to die
                 1 => Some(enemy_targets.first()?.clone()), // Easy choice
                 _ => {
-                    use rand::seq::SliceRandom;
-                    use rand::thread_rng;
-
                     let mut rng = thread_rng();
                     Some(enemy_targets.choose(&mut rng)?.clone()) // Get a random person
                 }
