@@ -4,7 +4,6 @@ use crate::tributes::actors::{TravelResult, Tribute as TributeActor};
 use crate::tributes::actions::{AttackOutcome, TributeAction};
 use crate::schema::tribute;
 use crate::tributes::actors::pick_target;
-use crate::areas::Area as AreaStruct;
 use diesel::prelude::*;
 use rand::prelude::*;
 
@@ -493,7 +492,6 @@ pub fn get_tribute(name: &str) -> Tribute {
 
 fn attack_target(attacker: Tribute, victim: Tribute) {
     use crate::tributes::actors::Tribute as TributeActor;
-    use crate::tributes::actors::do_combat;
 
     let mut tribute = TributeActor::from(attacker.clone());
     let mut target = TributeActor::from(victim.clone());
