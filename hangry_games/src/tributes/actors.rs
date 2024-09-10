@@ -70,7 +70,7 @@ impl TributeBrain {
     /// Decide on an action for the tribute to take
     /// First weighs any preferred actions, then decides based on current state
     pub fn act(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
-        if tribute.health == 0 { return TributeAction::Idle; }
+        if tribute.health == 0 { return TributeAction::None; }
 
         if let Some(preferred_action) = self.clone().preferred_action {
             if thread_rng().gen_bool(self.preferred_action_percentage) {
@@ -92,7 +92,7 @@ impl TributeBrain {
         if let Some(previous_action) = self.previous_actions.last() {
             previous_action.clone()
         } else {
-            TributeAction::Idle
+            TributeAction::None
         }
     }
 
@@ -100,21 +100,21 @@ impl TributeBrain {
     fn decide_on_action(tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
         // If the tribute isn't in the area, they do nothing
         if tribute.area.is_none() {
-            return TributeAction::Idle;
+            return TributeAction::None;
         }
-        if tribute.movement < 25 {
+        if tribute.movement <= 0 {
             return TributeAction::Rest;
         }
 
         let _area = tribute.area.as_ref().unwrap();
 
-        if nearby_tributes.len() > 1 && nearby_tributes.len() < 6 {
+        if (1..=5).contains((&nearby_tributes.len()).into()) {
             // enemies are nearby
             return match tribute.health {
                 // health is low, hide
-                1..=20 => TributeAction::Hide,
+                1..=10 => TributeAction::Hide,
                 // health isn't great, run away
-                21..=50 => TributeAction::Move,
+                11..=20 => TributeAction::Move,
                 // health is good, attack
                 _ => TributeAction::Attack,
             };
@@ -125,7 +125,7 @@ impl TributeBrain {
                 // Too dumb to know better, attacks
                 Some(0..26) => TributeAction::Attack,
                 // Smart enough to know better, hides
-                Some(75..101) => TributeAction::Hide,
+                Some(85..101) => TributeAction::Hide,
                 // Average intelligence, moves
                 _ => TributeAction::Move,
             }
@@ -235,6 +235,10 @@ impl Tribute {
         self.is_hidden = Some(true);
     }
 
+    pub fn reveals(&mut self) {
+        self.is_hidden = Some(false);
+    }
+
     pub fn attacks(&mut self, target: &mut Tribute) -> AttackOutcome {
         match attack_contest(self.clone(), target.clone()) {
             AttackResult::AttackerWins => {
@@ -316,7 +320,7 @@ fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
     tribute1_roll += tribute.strength.unwrap(); // Add strength
 
     let mut tribute2_roll = thread_rng().gen_range(1..=20); // Base roll
-    tribute2_roll += target.dexterity.unwrap(); // Add luck
+    tribute2_roll += target.dexterity.unwrap(); // Add dexterity
 
     if tribute1_roll > tribute2_roll {
         AttackResult::AttackerWins
