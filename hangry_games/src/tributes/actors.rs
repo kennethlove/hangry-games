@@ -248,6 +248,7 @@ impl Tribute {
     pub fn attacks(&mut self, target: &mut Tribute) -> AttackOutcome {
         match attack_contest(self.clone(), target.clone()) {
             AttackResult::AttackerWins => {
+                println!("{} attacks {}, and wins!", self.name, target.name);
                 target.takes_physical_damage(self.strength.unwrap());
                 apply_violence_stress(self);
 
@@ -263,6 +264,7 @@ impl Tribute {
                 AttackOutcome::Wound(self.clone(), target.clone())
             }
             AttackResult::DefenderWins => {
+                println!("{} attacks {}, but loses!", target.name, self.name);
                 self.takes_physical_damage(target.strength.unwrap());
                 apply_violence_stress(target);
                 if !self.is_alive {
@@ -277,6 +279,7 @@ impl Tribute {
                 AttackOutcome::Wound(target.clone(), self.clone())
             }
             AttackResult::Miss => {
+                println!("{} attacks {}, but misses!", self.name, target.name);
                 self.draws = Some(self.draws.unwrap() + 1);
                 target.draws = Some(target.draws.unwrap() + 1);
 

@@ -156,9 +156,7 @@ pub fn parse() {
         }
         Commands::RunNextDay { game_id } => {
             let mut game = get_game(&game_id).expect("Game not found");
-            game.do_day();
-
-            game.do_night();
+            game.run_next_day();
         }
         Commands::EndGame { game_id } => {
             let game = get_game(&game_id).expect("Game not found");
