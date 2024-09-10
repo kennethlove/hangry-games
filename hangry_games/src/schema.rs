@@ -57,6 +57,8 @@ diesel::table! {
         defense -> Nullable<Int4>,
         is_hidden -> Nullable<Bool>,
         dexterity -> Nullable<Int4>,
+        #[max_length = 255]
+        status -> Varchar,
     }
 }
 
