@@ -218,6 +218,11 @@ impl Tribute {
     }
 
     pub fn do_night(&mut self) -> Self {
+        if self.is_alive == false || self.health == 0 {
+            println!("{} is dead", self.name);
+            return self.clone();
+        }
+
         // Create Tribute struct
         let mut tribute = TributeActor::from(self.clone());
 

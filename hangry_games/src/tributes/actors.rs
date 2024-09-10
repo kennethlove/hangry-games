@@ -252,7 +252,7 @@ impl Tribute {
                 target.takes_physical_damage(self.strength.unwrap());
                 apply_violence_stress(self);
 
-                if !target.is_alive {
+                if target.is_alive == false {
                     self.kills = Some(self.kills.unwrap() + 1);
                     self.wins = Some(self.wins.unwrap() + 1);
                     target.killed_by = Some(self.name.clone());
@@ -264,10 +264,11 @@ impl Tribute {
                 AttackOutcome::Wound(self.clone(), target.clone())
             }
             AttackResult::DefenderWins => {
-                println!("{} attacks {}, but loses!", target.name, self.name);
+                println!("{} attacks {}, but loses!", self.name, target.name);
                 self.takes_physical_damage(target.strength.unwrap());
                 apply_violence_stress(target);
-                if !self.is_alive {
+
+                if self.is_alive == false {
                     target.kills = Some(target.kills.unwrap() + 1);
                     target.wins = Some(target.wins.unwrap() + 1);
                     self.killed_by = Some(target.name.clone());
