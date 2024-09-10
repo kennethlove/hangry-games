@@ -12,6 +12,8 @@ enum AttackResult {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
+    pub id: Option<i32>,
+    pub game_id: Option<i32>,
     pub name: String,
     pub health: i32,
     pub sanity: i32,
@@ -155,6 +157,8 @@ impl Tribute {
         let mut rng = thread_rng();
         let district = district.unwrap_or(0);
         Self {
+            id: None,
+            game_id: None,
             name: name.clone(),
             health: 100,
             sanity: 100,
@@ -382,6 +386,8 @@ impl From<TributeModel> for Tribute {
         };
 
         Self {
+            id: Some(tribute.id),
+            game_id: tribute.game_id,
             name: tribute.name.clone(),
             health: tribute.health,
             sanity: tribute.sanity,
@@ -419,6 +425,8 @@ impl Into<UpdateTribute> for Tribute {
         let name = self.name.clone();
 
         UpdateTribute {
+            id: self.id.unwrap(),
+            game_id: self.game_id.unwrap(),
             name,
             health: self.health,
             sanity: self.sanity,
