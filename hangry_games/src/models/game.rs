@@ -85,6 +85,11 @@ impl Game {
         // Update the day
         let day = self.day.unwrap_or(0);
         self.set_day(day + 1);
+
+        if day != 1 {
+            self.do_deaths();
+        }
+
         println!("☀️ Day {} begins.", day + 1);
 
         // Check for winner
@@ -114,7 +119,20 @@ impl Game {
     pub fn do_night(&mut self) {
         let living_tributes = get_all_living_tributes(&self);
 
-        // Find the tributes that have no health and kill them
+        // announce deaths
+        self.do_deaths();
+
+        // Trigger any nighttime events
+
+        println!("=== 🌙 Night {} begins ===", self.day.unwrap_or(0) + 1);
+        // Trigger any nighttime events
+        // Run the tribute AI
+        for mut tribute in living_tributes {
+            tribute.do_night();
+        }
+    }
+
+    fn do_deaths(&self) {
         let dead_tributes = get_dead_tributes(&self).into_iter()
             .filter(|t| t.day_killed.is_none())
             .collect::<Vec<_>>();
@@ -127,15 +145,6 @@ impl Game {
         println!("=== 📯 {} tribute{} died ===", dead_tributes.len(), if dead_tributes.len() == 1 { "" } else { "s" });
         for tribute in dead_tributes {
             println!("- 💀 {}", tribute.name);
-        }
-
-        // Trigger any nighttime events
-
-        println!("=== 🌙 Night {} begins ===", self.day.unwrap_or(0) + 1);
-        // Trigger any nighttime events
-        // Run the tribute AI
-        for mut tribute in living_tributes {
-            tribute.do_night();
         }
     }
 }
