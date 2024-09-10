@@ -1,7 +1,9 @@
+use std::str::FromStr;
 use crate::areas::Area;
 use rand::prelude::*;
 
 use super::actions::{TributeAction, AttackResult, AttackOutcome};
+use super::statuses::TributeStatus;
 
 #[derive(Debug)]
 enum AttackResult {
@@ -39,6 +41,7 @@ pub struct Tribute {
     pub defense: Option<i32>,
     pub is_hidden: Option<bool>,
     pub dexterity: Option<i32>,
+    pub status: TributeStatus
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -108,40 +111,42 @@ impl TributeBrain {
 
         let _area = tribute.area.as_ref().unwrap();
 
-        if (1..=5).contains((&nearby_tributes.len()).into()) {
-            // enemies are nearby
-            return match tribute.health {
-                // health is low, hide
-                1..=10 => TributeAction::Hide,
-                // health isn't great, run away
-                11..=20 => TributeAction::Move,
-                // health is good, attack
-                _ => TributeAction::Attack,
-            };
-        }
-
-        if nearby_tributes.len() > 5 {
-            return match tribute.intelligence {
-                // Too dumb to know better, attacks
-                Some(0..26) => TributeAction::Attack,
-                // Smart enough to know better, hides
-                Some(85..101) => TributeAction::Hide,
-                // Average intelligence, moves
-                _ => TributeAction::Move,
+        match &nearby_tributes.len() {
+            0 => {
+                match tribute.health {
+                    // health is low, rest
+                    1..=10 => TributeAction::Rest,
+                    // health isn't great, hide
+                    11..=15 => TributeAction::Hide,
+                    // health is good, move
+                    _ => {
+                        // If the tribute has movement, move
+                        match tribute.movement {
+                            0 => TributeAction::Rest,
+                            _ => TributeAction::Move,
+                        }
+                    }
+                }
             }
-        }
-
-        // no enemies nearby
-        match tribute.health {
-            // health is low, rest
-            1..=10 => TributeAction::Rest,
-            // health isn't great, hide
-            11..=25 => TributeAction::Hide,
-            // health is good, move
+            1..6 => {
+                // Enemies are nearby, attack depending on health
+                match tribute.health {
+                    // health is low, hide
+                    1..=5 => TributeAction::Hide,
+                    // health isn't great, run away
+                    6..=10 => TributeAction::Move,
+                    // health is good, attack
+                    _ => TributeAction::Attack,
+                }
+            },
             _ => {
-                // If the tribute has movement, move
-                match tribute.movement {
-                    0..=20 => TributeAction::Rest,
+                // More than 5 enemies? Intelligence decides next move
+                match tribute.intelligence {
+                    // Too dumb to know better, attacks
+                    Some(0..36) => TributeAction::Attack,
+                    // Smart enough to know better, hides
+                    Some(85..101) => TributeAction::Hide,
+                    // Average intelligence, moves
                     _ => TributeAction::Move,
                 }
             }
@@ -184,6 +189,7 @@ impl Tribute {
             defense: Some(rng.gen_range(1..=50)),
             is_hidden: Some(false),
             dexterity: Some(rng.gen_range(1..=100)),
+            status: TributeStatus::Healthy,
         }
     }
 
@@ -250,8 +256,10 @@ impl Tribute {
                     self.wins = Some(self.wins.unwrap() + 1);
                     target.killed_by = Some(self.name.clone());
                     target.defeats = Some(target.defeats.unwrap() + 1);
+                    target.status = TributeStatus::Dead;
                     return AttackOutcome::Kill(self.clone(), target.clone());
                 }
+                target.status = TributeStatus::Injured;
                 AttackOutcome::Wound(self.clone(), target.clone())
             }
             AttackResult::DefenderWins => {
@@ -262,8 +270,10 @@ impl Tribute {
                     target.wins = Some(target.wins.unwrap() + 1);
                     self.killed_by = Some(target.name.clone());
                     self.defeats = Some(self.defeats.unwrap() + 1);
+                    self.status = TributeStatus::Dead;
                     return AttackOutcome::Kill(target.clone(), self.clone());
                 }
+                self.status = TributeStatus::Injured;
                 AttackOutcome::Wound(target.clone(), self.clone())
             }
             AttackResult::Miss => {
@@ -417,6 +427,7 @@ impl From<TributeModel> for Tribute {
             defense: tribute.defense,
             is_hidden: tribute.is_hidden,
             dexterity: tribute.dexterity,
+            status: TributeStatus::from_str(tribute.status.as_str()).unwrap(),
         }
     }
 }
@@ -447,6 +458,7 @@ impl Into<UpdateTribute> for Tribute {
             games: self.games,
             is_hidden: self.is_hidden,
             dexterity: self.dexterity,
+            status: self.status.to_string(),
         }
     }
 }

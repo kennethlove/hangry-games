@@ -176,7 +176,11 @@ pub fn parse() {
             }
             println!("Deaths");
             for tribute in dead_tributes {
-                println!("{} died on day {}", tribute.name, tribute.day_killed.unwrap());
+                println!("{} died on day {}, killed by {}", tribute.name, tribute.day_killed.unwrap(), tribute.killed_by.unwrap());
+            }
+            println!("Statuses");
+            for tribute in living_tributes {
+                println!("{} is {}, {}/100, {}", tribute.name, tribute.status, tribute.health, tribute.actions().last().unwrap().name);
             }
         }
         Commands::QuickStart => {

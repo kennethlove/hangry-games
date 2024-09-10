@@ -106,12 +106,14 @@ impl Game {
         // Run the tribute AI
         living_tributes.shuffle(&mut rng);
         for mut tribute in living_tributes {
+            tribute.injure();
             tribute.do_day();
         }
     }
 
     pub fn do_night(&mut self) {
         let living_tributes = get_all_living_tributes(&self);
+
         // Find the tributes that have no health and kill them
         let dead_tributes = get_dead_tributes(&self).into_iter()
             .filter(|t| t.day_killed.is_none())
