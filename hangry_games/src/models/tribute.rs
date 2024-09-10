@@ -146,13 +146,13 @@ impl Tribute {
     }
 
     pub fn do_day(&mut self) -> Self {
+        if self.status == TributeStatus::Injured.to_string() {
+            *self = injure_tribute(self.clone());
+        }
+
         if self.is_alive == false || self.health == 0 {
             println!("{} is dead", self.name);
             return self.clone();
-        }
-
-        if self.status == TributeStatus::Injured.to_string() {
-            *self = injure_tribute(self.clone());
         }
 
         let area = self.area().unwrap();
@@ -534,10 +534,10 @@ fn attack_target(attacker: Tribute, victim: Tribute) {
         }
     }
 
-    let tribute = Tribute::from(tribute);
-    let target = Tribute::from(target);
-    update_tribute(attacker.id, tribute);
-    update_tribute(victim.id, target);
+    let attacker = Tribute::from(attacker);
+    let victim = Tribute::from(victim);
+    update_tribute(attacker.id, attacker);
+    update_tribute(victim.id, victim);
 }
 
 fn update_tribute(tribute_id: i32, tribute: Tribute) {

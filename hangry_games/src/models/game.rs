@@ -81,30 +81,7 @@ impl Game {
 
     pub fn do_day(&mut self) {
         let mut rng = rand::thread_rng();
-
-        // Update the day
-        let day = self.day.unwrap_or(0);
-        self.set_day(day + 1);
-
-        if day != 1 {
-            self.do_deaths();
-        }
-
-        // Check for winner
         let mut living_tributes = get_all_living_tributes(&self);
-        if living_tributes.len() == 1 {
-            println!("=== 🏆 The winner is {} ===", living_tributes[0].name);
-            return;
-        }
-
-        println!("☀️ Day {} begins.", day + 1);
-
-        println!("=== {} tributes remain ===", living_tributes.len());
-
-        // Update the day
-        let day = self.day.unwrap_or(0);
-        self.set_day(day + 1);
-        println!("=== ☀️ Day {} begins. ===", day + 1);
 
         // Trigger any daytime events
 
@@ -112,26 +89,18 @@ impl Game {
         living_tributes.shuffle(&mut rng);
         for tribute in living_tributes {
             let mut tribute = injure_tribute(tribute);
-            // tribute.injure();
             tribute.do_day();
         }
     }
 
     pub fn do_night(&mut self) {
-        let living_tributes = get_all_living_tributes(&self);
-        if living_tributes.len() == 1 {
-            println!("=== 🏆 The winner is {} ===", living_tributes[0].name);
-            return;
-        }
-
-        // announce deaths
-        self.do_deaths();
+        let mut rng = rand::thread_rng();
+        let mut living_tributes = get_all_living_tributes(&self);
 
         // Trigger any nighttime events
 
-        println!("=== 🌙 Night {} begins ===", self.day.unwrap_or(0) + 1);
-        // Trigger any nighttime events
         // Run the tribute AI
+        living_tributes.shuffle(&mut rng);
         for mut tribute in living_tributes {
             tribute.do_night();
         }
@@ -151,6 +120,37 @@ impl Game {
         for tribute in dead_tributes {
             println!("- 💀 {}", tribute.name);
         }
+    }
+
+    pub fn run_next_day(&mut self) {
+        // Update the day
+        let day = self.day.unwrap_or(0) + 1;
+        self.set_day(day);
+
+        let living_tributes = get_all_living_tributes(&self);
+
+        // Check for winner
+        if living_tributes.len() == 1 {
+            println!("=== 🏆 The winner is {} ===", living_tributes[0].name);
+            self.end();
+            return;
+        }
+
+        println!("☀️ Day {} begins.", day);
+        println!("=== {} tribute{} remain{} ===",
+                 living_tributes.len(),
+                 if living_tributes.len() == 1 { "" } else { "s" },
+                 if living_tributes.len() == 1 { "s" } else { "" }
+        );
+
+        self.do_day();
+
+        self.do_deaths();
+
+        println!("=== 🌙 Night {} begins ===", day);
+        self.do_night();
+
+        self.do_deaths();
     }
 }
 
