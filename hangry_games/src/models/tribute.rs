@@ -120,7 +120,6 @@ impl Tribute {
 
         if new_health <= 0 {
             self.dies();
-            println!("{} dies from injuries", self.name);
             return;
         }
 
@@ -235,17 +234,18 @@ impl Tribute {
         }
 
         // Get nearby tributes and targets
-        let nearby_tributes = Self::get_nearby_tributes(area.clone(), self.game_id.unwrap());
         let nearby_targets = Self::get_nearby_targets(area.clone(), self.game_id.unwrap());
+        let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
+            .filter(|t| t.id != self.id)
+            .map(
+                |t| TributeActor::from(t.clone())
+            ).collect();
 
         // Get Brain struct
         let mut brain = tribute.brain.clone();
 
         // Decide the next logical action
-        brain.act(
-            &tribute,
-            nearby_tributes.clone(),
-        );
+        brain.act(&tribute, nearby_targets.clone());
 
         match brain.last_action() {
             TributeAction::Move => {
@@ -258,12 +258,6 @@ impl Tribute {
                 let bravado: u32 = rng.gen_range(0..=100);
                 let brave_enough = bravado + bravery as u32 > 50;
 
-                let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
-                    .filter(|t| t.id != self.id)
-                    .filter(|t| t.district != self.district)
-                    .map(
-                        |t| TributeActor::from(t.clone())
-                    ).collect();
                 if let Some(target) = pick_target(self.clone(), nearby_targets) {
                     let target = Tribute::from(target);
                     if brave_enough == true {
@@ -359,7 +353,7 @@ fn hide_tribute(tribute: Tribute) {
     println!("{} tries to hide", tribute.name);
 }
 
-fn injure_tribute(tribute: Tribute) -> Tribute {
+pub fn injure_tribute(tribute: Tribute) -> Tribute {
     let mut tribute = TributeActor::from(tribute);
     tribute.takes_physical_damage(2);
     if !tribute.is_alive {

@@ -1,7 +1,7 @@
 use crate::schema::game;
 use diesel::prelude::*;
 use crate::{establish_connection, models};
-use crate::models::Tribute;
+use crate::models::{injure_tribute, Tribute};
 use rand::seq::SliceRandom;
 use fake::faker::name::raw::Name;
 use fake::locales::EN;
@@ -90,14 +90,14 @@ impl Game {
             self.do_deaths();
         }
 
-        println!("☀️ Day {} begins.", day + 1);
-
         // Check for winner
         let mut living_tributes = get_all_living_tributes(&self);
         if living_tributes.len() == 1 {
             println!("=== 🏆 The winner is {} ===", living_tributes[0].name);
             return;
         }
+
+        println!("☀️ Day {} begins.", day + 1);
 
         println!("=== {} tributes remain ===", living_tributes.len());
 
@@ -110,14 +110,19 @@ impl Game {
 
         // Run the tribute AI
         living_tributes.shuffle(&mut rng);
-        for mut tribute in living_tributes {
-            tribute.injure();
+        for tribute in living_tributes {
+            let mut tribute = injure_tribute(tribute);
+            // tribute.injure();
             tribute.do_day();
         }
     }
 
     pub fn do_night(&mut self) {
         let living_tributes = get_all_living_tributes(&self);
+        if living_tributes.len() == 1 {
+            println!("=== 🏆 The winner is {} ===", living_tributes[0].name);
+            return;
+        }
 
         // announce deaths
         self.do_deaths();
