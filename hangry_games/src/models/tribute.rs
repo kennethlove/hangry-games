@@ -168,7 +168,7 @@ impl Tribute {
             TributeAction::Hide => {
                 hide_tribute(Tribute::from(tribute));
             }
-            TributeAction::Rest | TributeAction::Idle => {
+            TributeAction::Rest | TributeAction::None => {
                 rest_tribute(tribute.into());
             }
             TributeAction::Attack => {
@@ -318,7 +318,8 @@ fn move_tribute(tribute: Tribute) {
             println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &area.as_str());
         }
         TravelResult::Failure => {
-            println!("{} fails to move from {}", tribute.name, tribute_area.as_str());
+            tribute.rests();
+            println!("{} is too tired to move from {}, rests instead", tribute.name, tribute_area.as_str());
         }
     }
 
@@ -330,6 +331,7 @@ fn move_tribute(tribute: Tribute) {
 fn hide_tribute(tribute: Tribute) {
     let mut hidden_tribute = TributeActor::from(tribute.clone());
     hidden_tribute.hides();
+    hidden_tribute.rests();
 
     update_tribute(tribute.id, Tribute::from(hidden_tribute));
     println!("{} tries to hide", tribute.name);

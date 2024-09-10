@@ -5,7 +5,7 @@ use diesel::deserialize::FromSql;
 #[derive(Clone, Debug, Default, PartialEq)]
 pub enum TributeAction {
     #[default]
-    Idle,
+    None,
     Move,
     Rest,
     UseItem,
@@ -16,7 +16,7 @@ pub enum TributeAction {
 impl TributeAction {
     pub fn as_str(&self) -> &str {
         match self {
-            TributeAction::Idle => "Idle",
+            TributeAction::None => "None",
             TributeAction::Move => "Move",
             TributeAction::Rest => "Rest",
             TributeAction::UseItem => "Use Item",
@@ -38,7 +38,7 @@ impl FromStr for TributeAction {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "idle" => Ok(TributeAction::Idle),
+            "none" => Ok(TributeAction::None),
             "move" => Ok(TributeAction::Move),
             "rest" => Ok(TributeAction::Rest),
             "use item" => Ok(TributeAction::UseItem),
