@@ -119,9 +119,7 @@ impl Game {
     }
 
     fn do_deaths(&self) {
-        let dead_tributes = get_recently_dead_tributes(&self).into_iter()
-            .filter(|t| t.day_killed.is_none())
-            .collect::<Vec<_>>();
+        let dead_tributes = get_recently_dead_tributes(&self);
 
         for tribute in &dead_tributes {
             tribute.dies();
@@ -264,6 +262,7 @@ pub fn get_recently_dead_tributes(game: &Game) -> Vec<Tribute> {
                 TributeStatus::Wounded.to_string(),
             ])
         )
+        .filter(tribute::day_killed.is_null())
         .filter(tribute::health.le(0))
         .load::<Tribute>(conn)
         .expect("Error loading recently dead tributes")

@@ -188,7 +188,7 @@ pub fn parse() {
             while game.living_tributes().len() > 1 {
                 game.run_next_day();
             }
-
+            game.end();
         }
     }
 }
