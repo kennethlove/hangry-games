@@ -254,7 +254,7 @@ impl Tribute {
                     target.status = TributeStatus::Dead;
                     return AttackOutcome::Kill(self.clone(), target.clone());
                 }
-                target.status = TributeStatus::Injured;
+                target.status = TributeStatus::Wounded;
                 AttackOutcome::Wound(self.clone(), target.clone())
             }
             AttackResult::DefenderWins => {
@@ -270,7 +270,7 @@ impl Tribute {
                     self.status = TributeStatus::Dead;
                     return AttackOutcome::Kill(target.clone(), self.clone());
                 }
-                self.status = TributeStatus::Injured;
+                self.status = TributeStatus::Wounded;
                 AttackOutcome::Wound(target.clone(), self.clone())
             }
             AttackResult::Miss => {

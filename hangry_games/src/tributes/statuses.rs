@@ -5,7 +5,7 @@ use std::str::FromStr;
 pub enum TributeStatus {
     #[default]
     Healthy,
-    Injured,
+    Wounded,
     // Dying,
     // Starving,
     // Dehydrated,
@@ -28,7 +28,8 @@ impl FromStr for TributeStatus {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "healthy" => Ok(TributeStatus::Healthy),
-            "injured" => Ok(TributeStatus::Injured),
+            "wounded" => Ok(TributeStatus::Wounded),
+            "injured" => Ok(TributeStatus::Wounded),
             // "dying" => Ok(TributeStatus::Dying),
             // "starving" => Ok(TributeStatus::Starving),
             // "dehydrated" => Ok(TributeStatus::Dehydrated),
@@ -52,7 +53,7 @@ impl Display for TributeStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             TributeStatus::Healthy => write!(f, "Healthy"),
-            TributeStatus::Injured => write!(f, "Injured"),
+            TributeStatus::Wounded => write!(f, "Wounded"),
             // TributeStatus::Dying => write!(f, "Dying"),
             // TributeStatus::Starving => write!(f, "Starving"),
             // TributeStatus::Dehydrated => write!(f, "Dehydrated"),

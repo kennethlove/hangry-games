@@ -1,7 +1,7 @@
 use crate::schema::game;
 use diesel::prelude::*;
 use crate::{establish_connection, models};
-use crate::models::{injure_tribute, Tribute};
+use crate::models::{bleed_tribute, Tribute};
 use rand::seq::SliceRandom;
 use fake::faker::name::raw::Name;
 use fake::locales::EN;
@@ -88,7 +88,7 @@ impl Game {
         // Run the tribute AI
         living_tributes.shuffle(&mut rng);
         for tribute in living_tributes {
-            let mut tribute = injure_tribute(tribute);
+            let mut tribute = bleed_tribute(tribute);
             tribute.do_day();
         }
     }
