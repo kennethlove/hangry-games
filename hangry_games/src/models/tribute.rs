@@ -110,26 +110,6 @@ impl Tribute {
         Ok(())
     }
 
-    /// Injured tributes take 2 damage per day
-    pub fn injure(&mut self) {
-        if self.status != TributeStatus::Injured.to_string() {
-            return;
-        }
-        let new_health = self.health - 2;
-        println!("{} takes 2 damage", self.name);
-
-        if new_health <= 0 {
-            self.dies();
-            return;
-        }
-
-        let connection = &mut establish_connection();
-        diesel::update(tribute::table.find(self.id))
-            .set(tribute::health.eq(new_health))
-            .execute(connection)
-            .expect("Error injuring tribute");
-    }
-
     pub fn dies(&self) {
         let connection = &mut establish_connection();
         let game = get_game_by_id(self.game_id.unwrap()).unwrap();
@@ -146,10 +126,6 @@ impl Tribute {
     }
 
     pub fn do_day(&mut self) -> Self {
-        if self.status == TributeStatus::Injured.to_string() {
-            *self = injure_tribute(self.clone());
-        }
-
         if self.is_alive == false || self.health == 0 {
             println!("{} is dead", self.name);
             return self.clone();
@@ -358,12 +334,13 @@ fn hide_tribute(tribute: Tribute) {
     println!("{} tries to hide", tribute.name);
 }
 
-pub fn injure_tribute(tribute: Tribute) -> Tribute {
+pub fn bleed_tribute(tribute: Tribute) -> Tribute {
     let mut tribute = TributeActor::from(tribute);
     tribute.takes_physical_damage(2);
+    println!("{} bleeds", tribute.name);
     if !tribute.is_alive {
-        tribute.killed_by = Some("Injuries".to_string());
-        println!("{} dies from injuries", tribute.name);
+        tribute.killed_by = Some("Blood loss".to_string());
+        println!("{} dies by bleeding out", tribute.name);
     }
     let tribute = Tribute::from(tribute);
     update_tribute(tribute.id, tribute.clone());
@@ -521,13 +498,11 @@ pub fn get_tribute(name: &str) -> Tribute {
 }
 
 fn attack_target(attacker: Tribute, victim: Tribute) {
-    use crate::tributes::actors::Tribute as TributeActor;
+    let mut attacker = TributeActor::from(attacker.clone());
+    let mut victim = TributeActor::from(victim.clone());
 
-    let mut tribute = TributeActor::from(attacker.clone());
-    let mut target = TributeActor::from(victim.clone());
-
-    // Mutates tribute and target
-    match TributeActor::attacks(&mut tribute, &mut target) {
+    // Mutates attacker and victim
+    match TributeActor::attacks(&mut attacker, &mut victim) {
         AttackOutcome::Kill(attacker, victim) => {
             println!("{} kills {}", attacker.name, victim.name);
         }
