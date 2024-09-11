@@ -14,7 +14,6 @@ pub struct Tribute {
     pub health: i32,
     pub sanity: i32,
     pub movement: i32,
-    pub is_alive: bool,
     pub district: i32,
     pub brain: TributeBrain,
     pub area: Option<Area>,
@@ -162,7 +161,6 @@ impl Tribute {
             health: 100,
             sanity: 100,
             movement: 100,
-            is_alive: true,
             district,
             area: Some(Area::default()),
             brain,
@@ -220,7 +218,7 @@ impl Tribute {
     }
 
     pub fn dies(&mut self) {
-        self.is_alive = false;
+        self.status = TributeStatus::RecentlyDead;
     }
 
     pub fn changes_area(&mut self, area: Area) {
@@ -239,19 +237,27 @@ impl Tribute {
         self.is_hidden = Some(false);
     }
 
+    pub fn bleeds(&mut self) {
+        if self.status == TributeStatus::Wounded {
+            self.takes_physical_damage(2);
+            println!("{} bleeds.", self.name);
+        }
+    }
+
     pub fn attacks(&mut self, target: &mut Tribute) -> AttackOutcome {
+        let game = get_game_by_id(self.game_id.unwrap()).unwrap();
         match attack_contest(self.clone(), target.clone()) {
             AttackResult::AttackerWins => {
                 println!("{} attacks {}, and wins!", self.name, target.name);
                 target.takes_physical_damage(self.strength.unwrap());
                 apply_violence_stress(self);
 
-                if target.is_alive == false {
+                if target.status == TributeStatus::RecentlyDead {
                     self.kills = Some(self.kills.unwrap() + 1);
                     self.wins = Some(self.wins.unwrap() + 1);
                     target.killed_by = Some(self.name.clone());
+                    target.day_killed = Some(game.day.unwrap());
                     target.defeats = Some(target.defeats.unwrap() + 1);
-                    target.status = TributeStatus::Dead;
                     return AttackOutcome::Kill(self.clone(), target.clone());
                 }
                 target.status = TributeStatus::Wounded;
@@ -262,12 +268,12 @@ impl Tribute {
                 self.takes_physical_damage(target.strength.unwrap());
                 apply_violence_stress(target);
 
-                if self.is_alive == false {
+                if self.status == TributeStatus::RecentlyDead {
                     target.kills = Some(target.kills.unwrap() + 1);
                     target.wins = Some(target.wins.unwrap() + 1);
                     self.killed_by = Some(target.name.clone());
+                    self.day_killed = Some(game.day.unwrap());
                     self.defeats = Some(self.defeats.unwrap() + 1);
-                    self.status = TributeStatus::Dead;
                     return AttackOutcome::Kill(target.clone(), self.clone());
                 }
                 self.status = TributeStatus::Wounded;
@@ -379,7 +385,7 @@ impl Default for Tribute {
     }
 }
 
-use crate::models::{get_area, Tribute as TributeModel};
+use crate::models::{get_area, get_game_by_id, Tribute as TributeModel};
 impl From<TributeModel> for Tribute {
     fn from(tribute: crate::models::tribute::Tribute) -> Self {
         use crate::areas::Area;
@@ -404,7 +410,6 @@ impl From<TributeModel> for Tribute {
             health: tribute.health,
             sanity: tribute.sanity,
             movement: tribute.movement,
-            is_alive: tribute.is_alive,
             district: tribute.district,
             brain,
             area: Some(area),
@@ -444,7 +449,6 @@ impl Into<UpdateTribute> for Tribute {
             health: self.health,
             sanity: self.sanity,
             movement: self.movement,
-            is_alive: self.is_alive,
             district: self.district,
             area_id: Some(area),
             day_killed: self.day_killed,
@@ -471,7 +475,7 @@ mod tests {
         assert_eq!(tribute.health, 100);
         assert_eq!(tribute.sanity, 100);
         assert_eq!(tribute.movement, 100);
-        assert!(tribute.is_alive);
+        assert_eq!(tribute.status, TributeStatus::Healthy);
     }
 
     #[test]
@@ -479,6 +483,7 @@ mod tests {
         let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.takes_physical_damage(10);
         assert_eq!(tribute.health, 90);
+        assert_eq!(tribute.status, TributeStatus::Wounded);
     }
 
     #[test]
@@ -502,7 +507,7 @@ mod tests {
     fn takes_damage_and_dies() {
         let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.takes_physical_damage(100);
-        assert!(!tribute.is_alive);
+        assert_eq!(tribute.status, TributeStatus::Dead);
     }
 
     #[test]

@@ -6,6 +6,7 @@ use rand::seq::SliceRandom;
 use fake::faker::name::raw::Name;
 use fake::locales::EN;
 use fake::Fake;
+use crate::tributes::statuses::TributeStatus;
 
 #[derive(Queryable, Selectable, Debug)]
 #[diesel(table_name = game)]
@@ -107,7 +108,7 @@ impl Game {
     }
 
     fn do_deaths(&self) {
-        let dead_tributes = get_dead_tributes(&self).into_iter()
+        let dead_tributes = get_recently_dead_tributes(&self).into_iter()
             .filter(|t| t.day_killed.is_none())
             .collect::<Vec<_>>();
 
@@ -212,7 +213,8 @@ pub fn get_all_living_tributes(game: &Game) -> Vec<Tribute> {
     tribute::table
         .select(tribute::all_columns)
         .filter(tribute::game_id.eq(game.id))
-        .filter(tribute::is_alive.eq(true))
+        .filter(tribute::status.ne(TributeStatus::Dead.to_string()))
+        .filter(tribute::status.ne(TributeStatus::RecentlyDead.to_string()))
         .load::<Tribute>(conn)
         .expect("Error loading tributes")
 }
@@ -233,9 +235,27 @@ pub fn get_dead_tributes(game: &Game) -> Vec<Tribute> {
     tribute::table
         .select(tribute::all_columns)
         .filter(tribute::game_id.eq(game.id))
-        .filter(tribute::is_alive.eq(false))
+        .filter(tribute::status.eq(TributeStatus::Dead.to_string()))
+        .filter(tribute::day_killed.is_not_null())
         .load::<Tribute>(conn)
         .expect("Error loading dead tributes")
+}
+
+pub fn get_recently_dead_tributes(game: &Game) -> Vec<Tribute> {
+    use crate::schema::tribute;
+    let conn = &mut establish_connection();
+    tribute::table
+        .select(tribute::all_columns)
+        .filter(tribute::game_id.eq(game.id))
+        .filter(
+            tribute::status.eq_any(vec![
+                TributeStatus::RecentlyDead.to_string(),
+                TributeStatus::Wounded.to_string(),
+            ])
+        )
+        .filter(tribute::health.le(0))
+        .load::<Tribute>(conn)
+        .expect("Error loading recently dead tributes")
 }
 
 /// Fill the tribute table with up to 24 tributes.

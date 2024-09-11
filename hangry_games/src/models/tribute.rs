@@ -20,7 +20,6 @@ pub struct Tribute {
     pub health: i32,
     pub sanity: i32,
     pub movement: i32,
-    pub is_alive: bool,
     pub district: i32,
     pub area_id: Option<i32>,
     pub game_id: Option<i32>,
@@ -117,7 +116,7 @@ impl Tribute {
 
         diesel::update(tribute::table.find(self.id))
             .set((
-                tribute::is_alive.eq(false),
+                tribute::status.eq(TributeStatus::Dead.to_string()),
                 tribute::health.eq(0),
                 tribute::day_killed.eq(game_day),
             ))
@@ -126,8 +125,9 @@ impl Tribute {
     }
 
     pub fn do_day(&mut self) -> Self {
-        if self.is_alive == false || self.health == 0 {
+        if self.health == 0 {
             println!("{} is dead", self.name);
+            self.status = TributeStatus::RecentlyDead.to_string();
             return self.clone();
         }
 
@@ -194,8 +194,9 @@ impl Tribute {
     }
 
     pub fn do_night(&mut self) -> Self {
-        if self.is_alive == false || self.health == 0 {
+        if self.health == 0 {
             println!("{} is dead", self.name);
+            self.status = TributeStatus::RecentlyDead.to_string();
             return self.clone();
         }
 
@@ -269,7 +270,11 @@ impl Tribute {
         // Get nearby tributes
         let area_tributes = area.tributes(game_id);
         let living_tributes = area_tributes.iter()
-            .filter(|t| t.is_alive && t.health > 0 && t.game_id == Some(game_id));
+            .filter(|t|
+                t.status != TributeStatus::RecentlyDead.to_string() &&
+                t.status != TributeStatus::Dead.to_string() &&
+                t.health > 0
+            );
         let nearby_tributes: Vec<TributeActor> = living_tributes.clone()
             .map(|t| TributeActor::from(t.clone()))
             .filter(|t| t.is_visible())
@@ -336,12 +341,14 @@ fn hide_tribute(tribute: Tribute) {
 
 pub fn bleed_tribute(tribute: Tribute) -> Tribute {
     let mut tribute = TributeActor::from(tribute);
-    tribute.takes_physical_damage(2);
-    println!("{} bleeds", tribute.name);
-    if !tribute.is_alive {
+    tribute.bleeds();
+
+    if tribute.health == 0 {
+        tribute.status = TributeStatus::RecentlyDead;
         tribute.killed_by = Some("Blood loss".to_string());
         println!("{} dies by bleeding out", tribute.name);
     }
+
     let tribute = Tribute::from(tribute);
     update_tribute(tribute.id, tribute.clone());
     tribute
@@ -359,7 +366,6 @@ impl From<crate::tributes::actors::Tribute> for Tribute {
             health: tribute.health,
             sanity: tribute.sanity,
             movement: tribute.movement,
-            is_alive: tribute.is_alive,
             district: tribute.district,
             area_id: Some(area.id),
             game_id: Some(game_id),
@@ -432,7 +438,6 @@ pub struct UpdateTribute {
     pub health: i32,
     pub sanity: i32,
     pub movement: i32,
-    pub is_alive: bool,
     pub area_id: Option<i32>,
     pub game_id: i32,
     pub day_killed: Option<i32>,
@@ -529,7 +534,6 @@ fn update_tribute(tribute_id: i32, tribute: Tribute) {
         health: tribute.health,
         sanity: tribute.sanity,
         movement: tribute.movement,
-        is_alive: tribute.is_alive,
         area_id: tribute.area_id,
         game_id: tribute.game_id.unwrap(),
         day_killed: tribute.day_killed,

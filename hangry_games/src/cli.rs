@@ -1,16 +1,4 @@
-use crate::models::{
-    create_area,
-    create_game,
-    create_tribute,
-    get_action,
-    get_all_tributes,
-    get_area,
-    get_areas,
-    get_game,
-    get_games,
-    get_tribute,
-    place_tribute_in_area
-};
+use crate::models::{create_area, create_game, create_tribute, get_action, get_all_tributes, get_area, get_areas, get_game, get_games, get_recently_dead_tributes, get_tribute, place_tribute_in_area};
 use clap::{Parser, Subcommand};
 use crate::models::game::{fill_tributes, get_all_living_tributes, get_dead_tributes, get_game_tributes};
 
@@ -166,6 +154,7 @@ pub fn parse() {
             let game = get_game(&game_id).expect("Game not found");
             let living_tributes = get_all_living_tributes(&game);
             let dead_tributes = get_dead_tributes(&game).into_iter().filter(|t| t.day_killed.is_some()).collect::<Vec<_>>();
+            let recently_dead_tributes = get_recently_dead_tributes(&game).into_iter().collect::<Vec<_>>();
             println!("Day {}", game.day.unwrap_or(0));
             println!("{} tributes left", living_tributes.len());
             for area in get_areas() {
@@ -174,7 +163,11 @@ pub fn parse() {
             }
             println!("Deaths");
             for tribute in dead_tributes {
-                println!("{} died on day {}, killed by {}", tribute.name, tribute.day_killed.unwrap(), tribute.killed_by.unwrap());
+                println!("{} died on day {}, killed by {}", tribute.name, tribute.day_killed.unwrap_or(-1), tribute.killed_by.unwrap_or("Unknown".to_string()));
+            }
+            println!("Recently Dead");
+            for tribute in recently_dead_tributes {
+                println!("{} died today, killed by {}", tribute.name, tribute.killed_by.unwrap_or("Unknown".to_string()));
             }
             println!("Statuses");
             for tribute in living_tributes {

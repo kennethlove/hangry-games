@@ -35,7 +35,6 @@ diesel::table! {
         health -> Int4,
         sanity -> Int4,
         movement -> Int4,
-        is_alive -> Bool,
         district -> Int4,
         area_id -> Nullable<Int4>,
         game_id -> Nullable<Int4>,
