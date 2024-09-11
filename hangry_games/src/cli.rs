@@ -31,6 +31,7 @@ enum Commands {
     CloseArea { game_id: String, area_id: String },
     OpenArea { game_id: String, area_id: String },
     QuickStart,
+    RunFullGame { game_id: String },
 }
 
 pub fn parse() {
@@ -180,6 +181,14 @@ pub fn parse() {
             let count = fill_tributes(&game);
             println!("{} tributes created", count);
             game.start();
+        }
+        Commands::RunFullGame { game_id } => {
+            let mut game = get_game(&game_id).expect("Game not found");
+            game.start();
+            while game.living_tributes().len() > 1 {
+                game.run_next_day();
+            }
+
         }
     }
 }

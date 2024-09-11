@@ -29,6 +29,17 @@ impl Game {
             .expect("Error loading tributes")
     }
 
+    pub fn living_tributes(&self) -> Vec<Tribute> {
+        use crate::schema::tribute;
+        let connection = &mut establish_connection();
+        tribute::table
+            .filter(tribute::game_id.eq(self.id))
+            .filter(tribute::status.ne(TributeStatus::Dead.to_string()))
+            .filter(tribute::status.ne(TributeStatus::RecentlyDead.to_string()))
+            .load::<Tribute>(connection)
+            .expect("Error loading tributes")
+    }
+
     pub fn start(&self) {
         let cornucopia = models::get_area("The Cornucopia");
 
