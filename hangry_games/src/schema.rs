@@ -24,6 +24,7 @@ diesel::table! {
         created_at -> Timestamp,
         day -> Nullable<Int4>,
         closed_areas -> Nullable<Array<Nullable<Int4>>>,
+        ended_at -> Nullable<Timestamp>,
     }
 }
 
