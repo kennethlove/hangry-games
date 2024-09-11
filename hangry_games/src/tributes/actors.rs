@@ -5,12 +5,6 @@ use rand::prelude::*;
 use super::actions::{TributeAction, AttackResult, AttackOutcome};
 use super::statuses::TributeStatus;
 
-#[derive(Debug)]
-enum AttackResult {
-    AttackerWins,
-    DefenderWins,
-    Tie,
-}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
