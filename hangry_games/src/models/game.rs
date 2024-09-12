@@ -270,7 +270,6 @@ pub fn get_recently_dead_tributes(game: &Game) -> Vec<Tribute> {
                 TributeStatus::Wounded.to_string(),
             ])
         )
-        .filter(tribute::day_killed.is_null())
         .filter(tribute::health.le(0))
         .load::<Tribute>(conn)
         .expect("Error loading recently dead tributes")
