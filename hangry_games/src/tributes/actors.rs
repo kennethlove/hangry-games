@@ -108,9 +108,16 @@ impl TributeBrain {
             0 => {
                 match tribute.health {
                     // health is low, rest
-                    1..=10 => TributeAction::Rest,
+                    1..=20 => TributeAction::Rest,
                     // health isn't great, hide
-                    11..=15 => TributeAction::Hide,
+                    // unless sanity is also low, then move
+                    21..=30 => {
+                        if tribute.sanity > 20 && tribute.is_visible() {
+                            TributeAction::Hide
+                        } else {
+                            TributeAction::Move
+                        }
+                    },
                     // health is good, move
                     _ => {
                         // If the tribute has movement, move
@@ -125,20 +132,33 @@ impl TributeBrain {
                 // Enemies are nearby, attack depending on health
                 match tribute.health {
                     // health is low, hide
-                    1..=5 => TributeAction::Hide,
+                    1..=5 => {
+                        if tribute.sanity > 20 && tribute.is_visible() {
+                            TributeAction::Hide
+                        } else {
+                            TributeAction::Attack
+                        }
+                    },
                     // health isn't great, run away
-                    6..=10 => TributeAction::Move,
+                    6..=10 => {
+                        if tribute.sanity > 20 {
+                            TributeAction::Move
+                        } else {
+                            TributeAction::Attack
+                        }
+                    },
                     // health is good, attack
                     _ => TributeAction::Attack,
                 }
             },
             _ => {
                 // More than 5 enemies? Intelligence decides next move
-                match tribute.intelligence {
+                let sense = 100 - tribute.intelligence.unwrap() - tribute.sanity;
+                match sense {
                     // Too dumb to know better, attacks
-                    Some(0..36) => TributeAction::Attack,
+                    0..36 => TributeAction::Attack,
                     // Smart enough to know better, hides
-                    Some(85..101) => TributeAction::Hide,
+                    85..101 => TributeAction::Hide,
                     // Average intelligence, moves
                     _ => TributeAction::Move,
                 }
@@ -211,6 +231,7 @@ impl Tribute {
 
     pub fn moves(&mut self) {
         self.movement = std::cmp::max(0, self.movement - 50);
+        self.is_hidden = Some(false);
     }
 
     pub fn rests(&mut self) {
@@ -219,14 +240,17 @@ impl Tribute {
 
     pub fn dies(&mut self) {
         self.status = TributeStatus::RecentlyDead;
+        self.is_hidden = Some(false);
     }
 
     pub fn changes_area(&mut self, area: Area) {
         self.area = Some(area);
+        self.is_hidden = Some(false);
     }
 
     pub fn leaves_area(&mut self) {
         self.area = None;
+        self.is_hidden = Some(false);
     }
 
     pub fn hides(&mut self) {
@@ -240,7 +264,14 @@ impl Tribute {
     pub fn bleeds(&mut self) {
         if self.status == TributeStatus::Wounded {
             self.takes_physical_damage(2);
-            println!("{} bleeds.", self.name);
+            println!("{} bleeds from their wounds. {}/100", self.name, self.health);
+        }
+    }
+
+    pub fn suffers(&mut self) {
+        if self.sanity > 1 {
+            self.takes_mental_damage(2);
+            println!("{} suffers from loneliness and terror. {}/100", self.name, self.sanity);
         }
     }
 
@@ -326,7 +357,7 @@ pub enum TravelResult {
 }
 
 fn apply_violence_stress(tribute: &mut Tribute) {
-    tribute.takes_mental_damage(10);
+    tribute.takes_mental_damage(20);
 }
 
 fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
@@ -349,25 +380,38 @@ pub fn pick_target(tribute: TributeModel, targets: Vec<Tribute>) -> Option<Tribu
     match targets.len() {
         0 => { // there are no other targets
             match tribute.sanity {
-                0..=9 => Some(targets.first()?.clone()), // attempt suicide
+                0..=9 => {
+                    println!("{} attempts suicide.", tribute.name);
+                    Some(tribute.into())
+                }, // attempt suicide
                 10..=19 => match thread_rng().gen_bool(0.2) {
-                    true => Some(targets.first()?.clone()), // attempt suicide
+                    true => {
+                        println!("{} attempts suicide.", tribute.name);
+                        Some(tribute.into())
+                    }, // attempt suicide
                     false => None, // Attack no one
                 },
                 _ => None, // Attack no one
             }
         },
         _ => {
+            let mut targets = targets.clone();
             let enemy_targets: Vec<Tribute> = targets.iter().cloned()
                 .filter(|t| t.district != tribute.district)
                 .filter(|t| t.is_visible())
                 .collect();
+
+            match tribute.sanity {
+                0..20 => targets = enemy_targets.clone(), // Sanity is low, target everyone
+                _ => ()
+            }
+
             match enemy_targets.len() {
                 0 => Some(targets.first()?.clone()), // Sorry, buddy, time to die
                 1 => Some(enemy_targets.first()?.clone()), // Easy choice
                 _ => {
                     let mut rng = thread_rng();
-                    Some(enemy_targets.choose(&mut rng)?.clone()) // Get a random person
+                    Some(enemy_targets.choose(&mut rng)?.clone()) // Get a random enemy
                 }
             }
         }
