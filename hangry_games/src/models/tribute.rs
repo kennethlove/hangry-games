@@ -1,13 +1,12 @@
 use crate::establish_connection;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
-use crate::tributes::actors::Tribute as TributeActor;
-use crate::tributes::actions::TributeAction;
+use crate::tributes::actors::{TravelResult, Tribute as TributeActor};
+use crate::tributes::actions::{AttackOutcome, TributeAction};
 use crate::schema::tribute;
 use crate::tributes::actors::pick_target;
-use crate::areas::Area as AreaStruct;
 use diesel::prelude::*;
 use rand::prelude::*;
-
+use crate::tributes::statuses::TributeStatus;
 use super::get_area_by_id;
 
 #[derive(Queryable, Selectable, Debug, Clone, Associations)]
@@ -21,7 +20,6 @@ pub struct Tribute {
     pub health: i32,
     pub sanity: i32,
     pub movement: i32,
-    pub is_alive: bool,
     pub district: i32,
     pub area_id: Option<i32>,
     pub game_id: Option<i32>,
@@ -42,6 +40,7 @@ pub struct Tribute {
     pub defense: Option<i32>,
     pub is_hidden: Option<bool>,
     pub dexterity: Option<i32>,
+    pub status: String,
 }
 
 impl Tribute {
@@ -117,7 +116,7 @@ impl Tribute {
 
         diesel::update(tribute::table.find(self.id))
             .set((
-                tribute::is_alive.eq(false),
+                tribute::status.eq(TributeStatus::Dead.to_string()),
                 tribute::health.eq(0),
                 tribute::day_killed.eq(game_day),
             ))
@@ -126,8 +125,9 @@ impl Tribute {
     }
 
     pub fn do_day(&mut self) -> Self {
-        if self.is_alive == false || self.health == 0 {
+        if self.health == 0 {
             println!("{} is dead", self.name);
+            self.status = TributeStatus::RecentlyDead.to_string();
             return self.clone();
         }
 
@@ -145,46 +145,42 @@ impl Tribute {
             brain.set_preferred_action(TributeAction::Move, 0.5);
         }
 
-        // Get nearby tributes
-        let nearby_tributes = Self::get_nearby_tributes(area.clone(), self.game_id.unwrap());
+        // Get nearby targets
         let nearby_targets = Self::get_nearby_targets(area.clone(), self.game_id.unwrap());
+        let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
+            .filter(|t| t.id != self.id)
+            .map(
+                |t| TributeActor::from(t.clone())
+            ).collect();
 
         // If the tribute is in a closed area, move them.
-        let game = get_game_by_id(self.game_id.unwrap());
-        if let Ok(game) = game {
-            if game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).contains(&Some(area.id)) {
-                move_tribute(self.game_id.unwrap(), self.id, tribute.clone());
-                println!("{}", format!("{} leaves the closed area", tribute.name));
-                return self.clone();
-            }
+        if game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).contains(&Some(area.id)) {
+            move_tribute(tribute.clone().into());
+            println!("{}", format!("{} leaves the closed area", tribute.name));
+            return self.clone();
         }
 
         // Decide the next logical action
-        brain.act(&tribute, nearby_tributes.clone());
+        brain.act(&tribute, nearby_targets.clone());
 
         match brain.last_action() {
             TributeAction::Move => {
-                move_tribute(self.game_id.unwrap(), self.id, tribute);
+                move_tribute(tribute.into());
             }
             TributeAction::Hide => {
                 hide_tribute(Tribute::from(tribute));
             }
-            TributeAction::Rest | TributeAction::Idle => {
-                rest_tribute(self.id, tribute);
+            TributeAction::Rest | TributeAction::None => {
+                rest_tribute(tribute.into());
             }
             TributeAction::Attack => {
-                let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
-                    .filter(|t| t.id != self.id)
-                    .map(
-                        |t| TributeActor::from(t.clone())
-                    ).collect();
-                if let Some(target) = pick_target(self.clone(), nearby_targets) {
+                if let Some(target) = pick_target(self.clone(), nearby_targets.clone()) {
                     let target = Tribute::from(target);
                     attack_target(self.clone(), target.clone());
                 }
             }
             _ => {
-                // Do nothing
+                println!("{} does nothing", self.name);
             }
         }
 
@@ -198,6 +194,12 @@ impl Tribute {
     }
 
     pub fn do_night(&mut self) -> Self {
+        if self.health == 0 {
+            println!("{} is dead", self.name);
+            self.status = TributeStatus::RecentlyDead.to_string();
+            return self.clone();
+        }
+
         // Create Tribute struct
         let mut tribute = TributeActor::from(self.clone());
 
@@ -214,21 +216,22 @@ impl Tribute {
         }
 
         // Get nearby tributes and targets
-        let nearby_tributes = Self::get_nearby_tributes(area.clone(), self.game_id.unwrap());
         let nearby_targets = Self::get_nearby_targets(area.clone(), self.game_id.unwrap());
+        let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
+            .filter(|t| t.id != self.id)
+            .map(
+                |t| TributeActor::from(t.clone())
+            ).collect();
 
         // Get Brain struct
         let mut brain = tribute.brain.clone();
 
         // Decide the next logical action
-        brain.act(
-            &tribute,
-            nearby_tributes.clone()
-        );
+        brain.act(&tribute, nearby_targets.clone());
 
         match brain.last_action() {
             TributeAction::Move => {
-                move_tribute(self.game_id.unwrap(), self.id, tribute);
+                move_tribute(tribute.into());
             }
             TributeAction::Attack => {
                 // How brave does the tribute feel at night?
@@ -237,12 +240,6 @@ impl Tribute {
                 let bravado: u32 = rng.gen_range(0..=100);
                 let brave_enough = bravado + bravery as u32 > 50;
 
-                let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
-                    .filter(|t| t.id != self.id)
-                    .filter(|t| t.district != self.district)
-                    .map(
-                        |t| TributeActor::from(t.clone())
-                    ).collect();
                 if let Some(target) = pick_target(self.clone(), nearby_targets) {
                     let target = Tribute::from(target);
                     if brave_enough == true {
@@ -256,7 +253,7 @@ impl Tribute {
                 hide_tribute(Tribute::from(tribute));
             }
             _ => {
-                rest_tribute(self.id, tribute);
+                rest_tribute(tribute.into());
             }
         }
 
@@ -273,7 +270,11 @@ impl Tribute {
         // Get nearby tributes
         let area_tributes = area.tributes(game_id);
         let living_tributes = area_tributes.iter()
-            .filter(|t| t.is_alive && t.health > 0 && t.game_id == Some(game_id));
+            .filter(|t|
+                t.status != TributeStatus::RecentlyDead.to_string() &&
+                t.status != TributeStatus::Dead.to_string() &&
+                t.health > 0
+            );
         let nearby_tributes: Vec<TributeActor> = living_tributes.clone()
             .map(|t| TributeActor::from(t.clone()))
             .filter(|t| t.is_visible())
@@ -283,77 +284,74 @@ impl Tribute {
 
     fn get_nearby_targets(area: Area, game_id: i32) -> Vec<Tribute> {
         let nearby_tributes = Self::get_nearby_tributes(area, game_id);
-        let nearby_targets: Vec<Tribute> = nearby_tributes.clone().into_iter().map(|t| Tribute::from(t) ).collect();
+        let nearby_targets: Vec<Tribute> = nearby_tributes.clone().into_iter().map(|t| Tribute::from(t)).collect();
         nearby_targets
     }
 }
 
-fn rest_tribute(tribute_id: i32, mut tribute: crate::tributes::actors::Tribute) {
-    let connection = &mut establish_connection();
+fn rest_tribute(tribute: Tribute) {
+    let mut tribute = TributeActor::from(tribute);
+
     // Rest the tribute
-    tribute.heals(50);
-    tribute.heals_mental_damage(50);
+    tribute.heals(10);
+    tribute.heals_mental_damage(25);
     tribute.rests();
 
-    diesel::update(tribute::table.find(tribute_id))
-        .set((
-            tribute::health.eq(tribute.health),
-            tribute::sanity.eq(tribute.sanity),
-            tribute::movement.eq(tribute.movement),
-        ))
-        .execute(connection)
-        .expect("Error resting tribute");
+    update_tribute(tribute.id.unwrap(), Tribute::from(tribute.clone()));
+
     println!("{} rests", tribute.name);
 }
 
-fn move_tribute(game_id: i32, tribute_id: i32, mut tribute: crate::tributes::actors::Tribute) {
-    if tribute.movement < 20 {
-        println!("{} is too tired to move", tribute.name);
-        tribute.rests();
-        update_tribute(tribute_id, Tribute::from(tribute.clone()));
-        return;
-    }
-
-    let game = get_game_by_id(game_id).unwrap();
+fn move_tribute(tribute: Tribute) {
+    let mut tribute = TributeActor::from(tribute);
+    let game = get_game_by_id(tribute.game_id.unwrap()).unwrap();
     let tribute_area = tribute.clone().area.unwrap();
-    let neighbors = tribute_area.neighbors();
-
-    // Get a random neighbor that isn't the tribute's current area
-    let random_neighbor = loop {
-        let area = neighbors.choose(&mut thread_rng()).unwrap();
-        let area = get_area(area.as_str());
-
-        // Same area check
-        if area.name == tribute_area.as_str() {
-            continue;
-        }
-        // Closed area check
-        if game.closed_areas.clone().unwrap_or(vec![]).contains(&Some(area.id)) {
-            continue;
-        }
-        break area;
-    };
 
     tribute.moves();
-    let new_area = AreaStruct::from(random_neighbor.clone());
-    if tribute.movement == 0 {
-        tribute.changes_area(new_area.clone());
-        println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &new_area.as_str());
-    } else {
-        println!("{} moves towards {}", tribute.name, &new_area.as_str());
+
+    let closed_areas: Vec<crate::areas::Area> = game.closed_areas.clone().unwrap_or(vec![]).iter()
+        .map(|id| get_area_by_id(*id))
+        .map(|a| a.unwrap())
+        .map(crate::areas::Area::from)
+        .collect();
+    match &tribute.travels(closed_areas.clone()) {
+        TravelResult::Success(area) => {
+            tribute.changes_area(area.clone());
+            println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &area.as_str());
+        }
+        TravelResult::Failure => {
+            tribute.rests();
+            println!("{} is too tired to move from {}, rests instead", tribute.name, tribute_area.as_str());
+        }
     }
 
     let tribute_instance = Tribute::from(tribute.clone());
     // save tribute_instance
-    update_tribute(tribute_id, tribute_instance.clone());
+    update_tribute(tribute.id.unwrap(), tribute_instance.clone());
 }
 
 fn hide_tribute(tribute: Tribute) {
     let mut hidden_tribute = TributeActor::from(tribute.clone());
     hidden_tribute.hides();
+    hidden_tribute.rests();
 
     update_tribute(tribute.id, Tribute::from(hidden_tribute));
     println!("{} tries to hide", tribute.name);
+}
+
+pub fn bleed_tribute(tribute: Tribute) -> Tribute {
+    let mut tribute = TributeActor::from(tribute);
+    tribute.bleeds();
+
+    if tribute.health == 0 {
+        tribute.status = TributeStatus::RecentlyDead;
+        tribute.killed_by = Some("Blood loss".to_string());
+        println!("{} dies by bleeding out", tribute.name);
+    }
+
+    let tribute = Tribute::from(tribute);
+    update_tribute(tribute.id, tribute.clone());
+    tribute
 }
 
 impl From<crate::tributes::actors::Tribute> for Tribute {
@@ -368,7 +366,6 @@ impl From<crate::tributes::actors::Tribute> for Tribute {
             health: tribute.health,
             sanity: tribute.sanity,
             movement: tribute.movement,
-            is_alive: tribute.is_alive,
             district: tribute.district,
             area_id: Some(area.id),
             game_id: Some(game_id),
@@ -389,6 +386,7 @@ impl From<crate::tributes::actors::Tribute> for Tribute {
             defense: tribute.defense,
             is_hidden: tribute.is_hidden,
             dexterity: tribute.dexterity,
+            status: tribute.status.to_string(),
         };
         out_tribute
     }
@@ -408,11 +406,11 @@ pub struct NewTribute {
     pub strength: Option<i32>,
     pub defense: Option<i32>,
     pub dexterity: Option<i32>,
+    pub status: String,
 }
 
 impl From<crate::tributes::actors::Tribute> for NewTribute {
     fn from(tribute: crate::tributes::actors::Tribute) -> Self {
-
         let out_tribute = NewTribute {
             name: tribute.name.clone(),
             district: tribute.district,
@@ -425,6 +423,7 @@ impl From<crate::tributes::actors::Tribute> for NewTribute {
             strength: tribute.strength,
             defense: tribute.defense,
             dexterity: tribute.dexterity,
+            status: tribute.status.to_string(),
         };
         out_tribute
     }
@@ -433,13 +432,14 @@ impl From<crate::tributes::actors::Tribute> for NewTribute {
 #[derive(Insertable, Debug, AsChangeset)]
 #[diesel(table_name = tribute)]
 pub struct UpdateTribute {
+    pub id: i32,
     pub name: String,
     pub district: i32,
     pub health: i32,
     pub sanity: i32,
     pub movement: i32,
-    pub is_alive: bool,
     pub area_id: Option<i32>,
+    pub game_id: i32,
     pub day_killed: Option<i32>,
     pub kills: Option<i32>,
     pub wins: Option<i32>,
@@ -449,6 +449,7 @@ pub struct UpdateTribute {
     pub killed_by: Option<String>,
     pub is_hidden: Option<bool>,
     pub dexterity: Option<i32>,
+    pub status: String,
 }
 
 pub fn create_tribute(name: &str) -> Tribute {
@@ -502,31 +503,39 @@ pub fn get_tribute(name: &str) -> Tribute {
 }
 
 fn attack_target(attacker: Tribute, victim: Tribute) {
-    use crate::tributes::actors::Tribute as TributeActor;
-    use crate::tributes::actors::do_combat;
+    let mut attacker = TributeActor::from(attacker.clone());
+    let mut victim = TributeActor::from(victim.clone());
 
-    let mut tribute = TributeActor::from(attacker.clone());
-    let mut target = TributeActor::from(victim.clone());
+    // Mutates attacker and victim
+    match TributeActor::attacks(&mut attacker, &mut victim) {
+        AttackOutcome::Kill(attacker, victim) => {
+            println!("{} kills {}", attacker.name, victim.name);
+        }
+        AttackOutcome::Wound(attacker, victim) => {
+            println!("{} wounds {}", attacker.name, victim.name);
+        }
+        AttackOutcome::Miss(attacker, victim) => {
+            println!("{} misses {}", attacker.name, victim.name);
+        }
+    }
 
-    // Mutates tribute and target
-    do_combat(&mut tribute, &mut target);
-
-    let tribute = Tribute::from(tribute);
-    let target = Tribute::from(target);
-    update_tribute(attacker.id, tribute);
-    update_tribute(victim.id, target);
+    let attacker = Tribute::from(attacker);
+    let victim = Tribute::from(victim);
+    update_tribute(attacker.id, attacker);
+    update_tribute(victim.id, victim);
 }
 
 fn update_tribute(tribute_id: i32, tribute: Tribute) {
     let conn = &mut establish_connection();
     let update_tribute = UpdateTribute {
+        id: tribute_id,
         name: tribute.name,
         district: tribute.district,
         health: tribute.health,
         sanity: tribute.sanity,
         movement: tribute.movement,
-        is_alive: tribute.is_alive,
         area_id: tribute.area_id,
+        game_id: tribute.game_id.unwrap(),
         day_killed: tribute.day_killed,
         killed_by: tribute.killed_by,
         kills: tribute.kills,
@@ -536,6 +545,7 @@ fn update_tribute(tribute_id: i32, tribute: Tribute) {
         games: tribute.games,
         is_hidden: tribute.is_hidden,
         dexterity: tribute.dexterity,
+        status: tribute.status,
     };
     diesel::update(tribute::table.find(tribute_id))
         .set(&update_tribute)

@@ -1,11 +1,12 @@
 use crate::schema::game;
 use diesel::prelude::*;
 use crate::{establish_connection, models};
-use crate::models::Tribute;
+use crate::models::{bleed_tribute, Tribute};
 use rand::seq::SliceRandom;
 use fake::faker::name::raw::Name;
 use fake::locales::EN;
 use fake::Fake;
+use crate::tributes::statuses::TributeStatus;
 
 #[derive(Queryable, Selectable, Debug)]
 #[diesel(table_name = game)]
@@ -19,17 +20,28 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn tributes(&self) -> Vec<crate::models::Tribute> {
+    pub fn tributes(&self) -> Vec<Tribute> {
         use crate::schema::tribute;
         let connection = &mut establish_connection();
         tribute::table
             .filter(tribute::game_id.eq(self.id))
-            .load::<crate::models::Tribute>(connection)
+            .load::<Tribute>(connection)
+            .expect("Error loading tributes")
+    }
+
+    pub fn living_tributes(&self) -> Vec<Tribute> {
+        use crate::schema::tribute;
+        let connection = &mut establish_connection();
+        tribute::table
+            .filter(tribute::game_id.eq(self.id))
+            .filter(tribute::status.ne(TributeStatus::Dead.to_string()))
+            .filter(tribute::status.ne(TributeStatus::RecentlyDead.to_string()))
+            .load::<Tribute>(connection)
             .expect("Error loading tributes")
     }
 
     pub fn start(&self) {
-        let cornucopia = crate::models::get_area("The Cornucopia");
+        let cornucopia = models::get_area("The Cornucopia");
 
         let tributes = self.tributes();
         for mut tribute in tributes {
@@ -52,7 +64,7 @@ impl Game {
             .expect("Error updating game");
     }
 
-    pub fn close_area(&mut self, area: &crate::models::Area) {
+    pub fn close_area(&mut self, area: &models::Area) {
         let connection = &mut establish_connection();
 
         let mut binding: Vec<Option<i32>> = vec![];
@@ -66,7 +78,7 @@ impl Game {
             .expect("Error updating game");
     }
 
-    pub fn open_area(&mut self, area: &crate::models::Area) {
+    pub fn open_area(&mut self, area: &models::Area) {
         let connection = &mut establish_connection();
 
         let mut closed_areas = vec![];
@@ -81,36 +93,33 @@ impl Game {
 
     pub fn do_day(&mut self) {
         let mut rng = rand::thread_rng();
-
-        // Check for winner
         let mut living_tributes = get_all_living_tributes(&self);
-        if living_tributes.len() == 1 {
-            println!("=== 🏆 The winner is {} ===", living_tributes[0].name);
-            return;
-        }
-
-        println!("=== {} tributes remain ===", living_tributes.len());
-
-        // Update the day
-        let day = self.day.unwrap_or(0);
-        self.set_day(day + 1);
-        println!("=== ☀️ Day {} begins. ===", day + 1);
 
         // Trigger any daytime events
 
         // Run the tribute AI
         living_tributes.shuffle(&mut rng);
-        for mut tribute in living_tributes {
+        for tribute in living_tributes {
+            let mut tribute = bleed_tribute(tribute);
             tribute.do_day();
         }
     }
 
     pub fn do_night(&mut self) {
-        let living_tributes = get_all_living_tributes(&self);
-        // Find the tributes that have no health and kill them
-        let dead_tributes = get_dead_tributes(&self).into_iter()
-            .filter(|t| t.day_killed.is_none())
-            .collect::<Vec<_>>();
+        let mut rng = rand::thread_rng();
+        let mut living_tributes = get_all_living_tributes(&self);
+
+        // Trigger any nighttime events
+
+        // Run the tribute AI
+        living_tributes.shuffle(&mut rng);
+        for mut tribute in living_tributes {
+            tribute.do_night();
+        }
+    }
+
+    fn do_deaths(&self) {
+        let dead_tributes = get_recently_dead_tributes(&self);
 
         for tribute in &dead_tributes {
             tribute.dies();
@@ -121,14 +130,37 @@ impl Game {
         for tribute in dead_tributes {
             println!("- 💀 {}", tribute.name);
         }
+    }
 
-        // Trigger any nighttime events
+    pub fn run_next_day(&mut self) {
+        // Update the day
+        let day = self.day.unwrap_or(0) + 1;
+        self.set_day(day);
 
-        println!("=== 🌙 Night {} begins ===", self.day.unwrap_or(0) + 1);
-        // Run the tribute AI
-        for mut tribute in living_tributes {
-            tribute.do_night();
+        let living_tributes = get_all_living_tributes(&self);
+
+        // Check for winner
+        if living_tributes.len() == 1 {
+            println!("=== 🏆 The winner is {} ===", living_tributes[0].name);
+            self.end();
+            return;
         }
+
+        println!("☀️ Day {} begins.", day);
+        println!("=== {} tribute{} remain{} ===",
+                 living_tributes.len(),
+                 if living_tributes.len() == 1 { "" } else { "s" },
+                 if living_tributes.len() == 1 { "s" } else { "" }
+        );
+
+        self.do_day();
+
+        self.do_deaths();
+
+        println!("=== 🌙 Night {} begins ===", day);
+        self.do_night();
+
+        self.do_deaths();
     }
 }
 
@@ -190,7 +222,8 @@ pub fn get_all_living_tributes(game: &Game) -> Vec<Tribute> {
     tribute::table
         .select(tribute::all_columns)
         .filter(tribute::game_id.eq(game.id))
-        .filter(tribute::is_alive.eq(true))
+        .filter(tribute::status.ne(TributeStatus::Dead.to_string()))
+        .filter(tribute::status.ne(TributeStatus::RecentlyDead.to_string()))
         .load::<Tribute>(conn)
         .expect("Error loading tributes")
 }
@@ -211,9 +244,28 @@ pub fn get_dead_tributes(game: &Game) -> Vec<Tribute> {
     tribute::table
         .select(tribute::all_columns)
         .filter(tribute::game_id.eq(game.id))
-        .filter(tribute::is_alive.eq(false))
+        .filter(tribute::status.eq(TributeStatus::Dead.to_string()))
+        .filter(tribute::day_killed.is_not_null())
         .load::<Tribute>(conn)
         .expect("Error loading dead tributes")
+}
+
+pub fn get_recently_dead_tributes(game: &Game) -> Vec<Tribute> {
+    use crate::schema::tribute;
+    let conn = &mut establish_connection();
+    tribute::table
+        .select(tribute::all_columns)
+        .filter(tribute::game_id.eq(game.id))
+        .filter(
+            tribute::status.eq_any(vec![
+                TributeStatus::RecentlyDead.to_string(),
+                TributeStatus::Wounded.to_string(),
+            ])
+        )
+        .filter(tribute::day_killed.is_null())
+        .filter(tribute::health.le(0))
+        .load::<Tribute>(conn)
+        .expect("Error loading recently dead tributes")
 }
 
 /// Fill the tribute table with up to 24 tributes.
