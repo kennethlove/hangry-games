@@ -132,10 +132,11 @@ pub fn parse() {
         }
         Commands::ShowGames => {
             for _game in get_games() {
-                println!("{}, Day {}, Tributes {}/24",
+                println!("{}, Day {}, Tributes {}/24 {}",
                     _game.name,
                     _game.day.unwrap_or(0),
-                    get_all_living_tributes(&_game).len()
+                    get_all_living_tributes(&_game).len(),
+                    if _game.ended_at.is_some() { "Closed" } else { "" }
                 );
             }
         }
@@ -145,6 +146,11 @@ pub fn parse() {
         }
         Commands::RunNextDay { game_id } => {
             let mut game = get_game(&game_id).expect("Game not found");
+            if game.ended_at.is_some() {
+                println!("Game is already over");
+                return;
+            }
+
             game.run_next_day();
         }
         Commands::EndGame { game_id } => {

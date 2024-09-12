@@ -17,6 +17,7 @@ pub struct Game {
     pub created_at: chrono::NaiveDateTime,
     pub day: Option<i32>,
     pub closed_areas: Option<Vec<Option<i32>>>,
+    pub ended_at: Option<chrono::NaiveDateTime>,
 }
 
 impl Game {
@@ -42,7 +43,6 @@ impl Game {
 
     pub fn start(&self) {
         let cornucopia = models::get_area("The Cornucopia");
-
         let tributes = self.tributes();
         for mut tribute in tributes {
             tribute.set_area(&cornucopia);
@@ -50,10 +50,18 @@ impl Game {
     }
 
     pub fn end(&self) {
+        let connection = &mut establish_connection();
+
         let tributes = self.tributes();
         for tribute in tributes {
             tribute.unset_area();
         }
+
+        let ended_at = Some(chrono::Utc::now().naive_utc());
+        diesel::update(game::table.find(self.id))
+            .set(game::ended_at.eq(ended_at))
+            .execute(connection)
+            .expect("Error updating game");
     }
 
     pub fn set_day(&self, day_number: i32) {
