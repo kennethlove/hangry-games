@@ -2,7 +2,7 @@ use std::str::FromStr;
 use crate::areas::Area;
 use rand::prelude::*;
 
-use super::actions::{TributeAction, AttackResult, AttackOutcome};
+use super::actions::{TributeAction, AttackResult, AttackOutcome, PreferredAction};
 use super::statuses::TributeStatus;
 
 
@@ -40,7 +40,7 @@ pub struct Tribute {
 #[derive(Clone, Debug, PartialEq)]
 pub struct TributeBrain {
     previous_actions: Vec<TributeAction>,
-    preferred_action: Option<TributeAction>,
+    preferred_action: Option<PreferredAction>,
     preferred_action_percentage: f64,
 }
 
@@ -53,7 +53,7 @@ impl TributeBrain {
         }
     }
 
-    pub fn set_preferred_action(&mut self, action: TributeAction, percentage: f64) {
+    pub fn set_preferred_action(&mut self, action: PreferredAction, percentage: f64) {
         self.preferred_action = Some(action);
         self.preferred_action_percentage = percentage;
     }
@@ -65,13 +65,21 @@ impl TributeBrain {
 
     /// Decide on an action for the tribute to take
     /// First weighs any preferred actions, then decides based on current state
-    pub fn act(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
+    pub fn act(&mut self, tribute: &mut Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
         if tribute.health == 0 { return TributeAction::None; }
 
         if let Some(preferred_action) = self.clone().preferred_action {
             if thread_rng().gen_bool(self.preferred_action_percentage) {
-                self.previous_actions.push(preferred_action.clone());
-                return preferred_action;
+                match preferred_action {
+                    PreferredAction::Move(area) => {
+                        self.previous_actions.push(TributeAction::Move);
+                        if tribute.area.is_some() {
+                            tribute.changes_area(area.unwrap());
+                        }
+                        return TributeAction::Move;
+                    },
+                    _ => (),
+                }
             }
         }
 
