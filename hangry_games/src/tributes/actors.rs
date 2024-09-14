@@ -157,7 +157,7 @@ impl Tribute {
             },
             10..=100 => {
                 // Tribute is lonely and scared.
-                self.takes_mental_damage(2);
+                self.takes_mental_damage(1);
                 let mut rng = thread_rng();
                 if rng.gen_bool(self.sanity as f64 / 100.0) {
                     // Tribute is homesick as well.
