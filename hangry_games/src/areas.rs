@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use rand::Rng;
 
-#[derive(Clone, Default, Debug, PartialEq)]
+#[derive(Clone, Default, Debug, Eq, PartialEq)]
 pub enum Area {
     #[default]
     Cornucopia,

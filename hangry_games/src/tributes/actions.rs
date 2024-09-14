@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use diesel::deserialize::FromSql;
+use crate::areas::Area;
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub enum TributeAction {
@@ -72,4 +73,10 @@ pub enum AttackOutcome {
     Kill(Tribute, Tribute),
     Wound(Tribute, Tribute),
     Miss(Tribute, Tribute),
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum PreferredAction {
+    Move(Option<Area>),
+    UseItem,
 }
