@@ -1,11 +1,11 @@
 use std::str::FromStr;
 use crate::areas::Area;
+use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
 
 use super::actions::{AttackOutcome, AttackResult};
 use super::statuses::TributeStatus;
 use super::brains::TributeBrain;
-
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
@@ -40,7 +40,7 @@ pub struct Tribute {
 
 
 impl Tribute {
-    /// Creates a new Tribute with full health, sanity, and movement
+    /// Creates a new Tribute with full health, sanity, and movement.
     pub fn new(name: String, district: Option<i32>) -> Self {
         let brain = TributeBrain::new();
         let mut rng = thread_rng();
@@ -76,7 +76,7 @@ impl Tribute {
         }
     }
 
-    /// Reduces health
+    /// Reduces health, triggers death if health reaches 0.
     pub fn takes_physical_damage(&mut self, damage: i32) {
         self.health = std::cmp::max(0, self.health - damage);
         self.status = TributeStatus::Wounded;
@@ -86,53 +86,61 @@ impl Tribute {
         }
     }
 
-    /// Reduces mental health
+    /// Reduces mental health.
     pub fn takes_mental_damage(&mut self, damage: i32) {
         self.sanity = std::cmp::max(0, self.sanity - damage);
     }
 
-    /// Restores health
+    /// Restores health.
     pub fn heals(&mut self, health: i32) {
         self.health = std::cmp::min(100, self.health + health);
     }
 
-    /// Restores mental health
+    /// Restores mental health.
     pub fn heals_mental_damage(&mut self, health: i32) {
         self.sanity = std::cmp::min(100, self.sanity + health);
     }
 
+    /// Consumes movement and removes hidden status.
     pub fn moves(&mut self) {
         self.movement = std::cmp::max(0, self.movement - 50);
         self.is_hidden = Some(false);
     }
 
+    /// Restores movement.
     pub fn rests(&mut self) {
         self.movement = 100;
     }
 
+    /// Marks the tribute as recently dead and reveals them.
     pub fn dies(&mut self) {
         self.status = TributeStatus::RecentlyDead;
         self.is_hidden = Some(false);
     }
 
+    /// Moves the tribute from one area to another, removes hidden status.
     pub fn changes_area(&mut self, area: Area) {
         self.area = Some(area);
         self.is_hidden = Some(false);
     }
 
+    /// Removes the tribute from the game arena, removes hidden status.
     pub fn leaves_area(&mut self) {
         self.area = None;
         self.is_hidden = Some(false);
     }
 
+    /// Hides the tribute from view.
     pub fn hides(&mut self) {
         self.is_hidden = Some(true);
     }
 
+    /// Reveals the tribute to view.
     pub fn reveals(&mut self) {
         self.is_hidden = Some(false);
     }
 
+    /// Tribute is wounded, loses some health.
     pub fn bleeds(&mut self) {
         if self.status == TributeStatus::Wounded {
             self.takes_physical_damage(2);
@@ -140,10 +148,24 @@ impl Tribute {
         }
     }
 
+    /// Tribute is lonely/homesick/etc., loses some sanity.
     pub fn suffers(&mut self) {
-        if self.sanity > 1 {
-            self.takes_mental_damage(2);
-            println!("{} suffers from loneliness and terror. {}/100", self.name, self.sanity);
+        match self.sanity {
+            0..=9 => {
+                self.takes_mental_damage(1);
+                println!("{} suffers from loneliness and terror. {}/100", self.name, self.sanity);
+            },
+            10..=100 => {
+                // Tribute is lonely and scared.
+                self.takes_mental_damage(2);
+                let mut rng = thread_rng();
+                if rng.gen_bool(self.sanity as f64 / 100.0) {
+                    // Tribute is homesick as well.
+                    self.takes_mental_damage(2);
+                }
+                println!("{} mentally suffers through the night. {}/100", self.name, self.sanity);
+            },
+            _ => ()
         }
     }
 
@@ -351,7 +373,6 @@ impl From<TributeModel> for Tribute {
     }
 }
 
-use crate::models::tribute::UpdateTribute;
 
 impl Into<UpdateTribute> for Tribute {
     fn into(self) -> UpdateTribute {
