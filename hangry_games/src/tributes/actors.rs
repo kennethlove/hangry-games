@@ -522,7 +522,7 @@ mod tests {
     fn decide_on_action_default() {
         // If there are no enemies nearby, the tribute should move
         let mut tribute = Tribute::new("Katniss".to_string(), None);
-        let action = tribute.brain.act(&tribute.clone(), vec![]);
+        let action = tribute.brain.act(&mut tribute.clone(), vec![]);
         assert_eq!(action, TributeAction::Move);
     }
 
@@ -531,7 +531,7 @@ mod tests {
         // If the tribute has low health, they should rest
         let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.takes_physical_damage(90);
-        let action = tribute.brain.act(&tribute.clone(), vec![]);
+        let action = tribute.brain.act(&mut tribute.clone(), vec![]);
         assert_eq!(action, TributeAction::Rest);
     }
 
@@ -541,7 +541,7 @@ mod tests {
         let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.speed = Some(100);
         tribute.moves();
-        let action = tribute.brain.act(&tribute.clone(), vec![]);
+        let action = tribute.brain.act(&mut tribute.clone(), vec![]);
         assert_eq!(action, TributeAction::Rest);
     }
 
@@ -550,7 +550,7 @@ mod tests {
         // If there are enemies nearby, the tribute should attack
         let mut tribute = Tribute::new("Katniss".to_string(), None);
         let tribute2 = Tribute::new("Peeta".to_string(), None);
-        let action = tribute.brain.act(&tribute.clone(), vec![tribute.clone(), tribute2]);
+        let action = tribute.brain.act(&mut tribute.clone(), vec![tribute.clone(), tribute2]);
         assert_eq!(action, TributeAction::Attack);
     }
 
@@ -561,7 +561,7 @@ mod tests {
         let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.takes_physical_damage(90);
         let tribute2 = Tribute::new("Peeta".to_string(), None);
-        let action = tribute.brain.act(&tribute.clone(),vec![tribute.clone(), tribute2]);
+        let action = tribute.brain.act(&mut tribute.clone(),vec![tribute.clone(), tribute2]);
         assert_eq!(action, TributeAction::Hide);
     }
 
