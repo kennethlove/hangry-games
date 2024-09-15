@@ -3,7 +3,7 @@ use crate::areas::Area;
 use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
 
-use super::actions::{TributeAction, AttackResult, AttackOutcome};
+use super::actions::{AttackResult, AttackOutcome};
 use super::statuses::TributeStatus;
 use super::brains::TributeBrain;
 
@@ -224,11 +224,15 @@ impl Tribute {
         }
     }
 
-    pub fn travels(&self, closed_areas: Vec<Area>) -> TravelResult {
+    pub fn travels(&self, closed_areas: Vec<Area>, suggested_area: Option<Area>) -> TravelResult {
         let mut rng = thread_rng();
         let area = self.clone().area.unwrap();
 
         if self.movement > 0 {
+            if let Some(area) = suggested_area {
+                return TravelResult::Success(area);
+            }
+
             let neighbors = area.neighbors();
             let new_area = loop {
                 let new_area = neighbors.choose(&mut rng).unwrap();
