@@ -377,7 +377,6 @@ impl From<TributeModel> for Tribute {
     }
 }
 
-use crate::models::tribute::UpdateTribute;
 impl Into<UpdateTribute> for Tribute {
     fn into(self) -> UpdateTribute {
         let area = self.area.as_ref().unwrap();

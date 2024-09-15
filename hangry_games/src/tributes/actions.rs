@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use diesel::deserialize::FromSql;
+use crate::areas::Area;
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub enum TributeAction {

@@ -79,7 +79,7 @@ impl Tribute {
 
     pub fn take_action(&self, action: &Action) {
         use crate::models::TributeAction;
-        TributeAction::create(self.id, action.id);
+        TributeAction::create(self.id, action.id, None);
     }
 
     pub fn set_game(&mut self, game: &Game) {
@@ -174,10 +174,16 @@ impl Tribute {
 
         // Decide the next logical action
         brain.act(&mut tribute, nearby_targets.clone());
+        let mut target = None;
 
         match brain.last_action() {
             TributeAction::Move(area) => {
-                move_tribute(tribute.into(), area);
+                if let Some(area) = area {
+                    target = Some(area.as_str().to_string());
+                    move_tribute(tribute.into(), Some(area));
+                } else {
+                    move_tribute(tribute.into(), None);
+                }
             }
             TributeAction::Hide => {
                 hide_tribute(Tribute::from(tribute));
@@ -186,9 +192,9 @@ impl Tribute {
                 rest_tribute(tribute.into());
             }
             TributeAction::Attack => {
-                if let Some(target) = pick_target(self.clone(), nearby_targets.clone()) {
-                    let target = Tribute::from(target);
-                    attack_target(self.clone(), target.clone());
+                if let Some(victim) = pick_target(self.clone(), nearby_targets.clone()) {
+                    let victim = Tribute::from(victim);
+                    attack_target(self.clone(), victim.clone());
                 }
             }
             _ => {
@@ -200,7 +206,7 @@ impl Tribute {
         let last_action = crate::models::action::get_action(brain.last_action().as_str());
 
         // Connect Tribute to Action
-        tribute_action::take_action(&self.clone(), &last_action);
+        tribute_action::take_action(&self.clone(), &last_action, target);
 
         self.clone()
     }
@@ -240,10 +246,16 @@ impl Tribute {
 
         // Decide the next logical action
         brain.act(&mut tribute, nearby_targets.clone());
+        let mut target = None;
 
         match brain.last_action() {
             TributeAction::Move(area) => {
-                move_tribute(tribute.into(), area);
+                if let Some(area) = area {
+                    target = Some(area.as_str().to_string());
+                    move_tribute(tribute.into(), Some(area));
+                } else {
+                    move_tribute(tribute.into(), None);
+                }
             }
             TributeAction::Attack => {
                 // How brave does the tribute feel at night?
@@ -273,7 +285,7 @@ impl Tribute {
         let last_action = crate::models::action::get_action(brain.last_action().as_str());
 
         // Connect Tribute to Action
-        tribute_action::take_action(&self.clone(), &last_action);
+        tribute_action::take_action(&self.clone(), &last_action, target);
 
         self.clone()
     }
