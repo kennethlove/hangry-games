@@ -293,13 +293,13 @@ fn rest_tribute(tribute: Tribute) {
     let mut tribute = TributeActor::from(tribute);
 
     // Rest the tribute
-    tribute.heals(10);
-    tribute.heals_mental_damage(25);
+    tribute.heals(5);
+    tribute.heals_mental_damage(5);
     tribute.rests();
 
     update_tribute(tribute.id.unwrap(), Tribute::from(tribute.clone()));
 
-    println!("{} rests", tribute.name);
+    println!("{} rests and recovers a little", tribute.name);
 }
 
 fn move_tribute(tribute: Tribute) {
@@ -348,6 +348,15 @@ pub fn bleed_tribute(tribute: Tribute) -> Tribute {
         tribute.killed_by = Some("Blood loss".to_string());
         println!("{} dies by bleeding out", tribute.name);
     }
+
+    let tribute = Tribute::from(tribute);
+    update_tribute(tribute.id, tribute.clone());
+    tribute
+}
+
+pub fn suffer_tribute(tribute: Tribute) -> Tribute {
+    let mut tribute = TributeActor::from(tribute);
+    tribute.suffers();
 
     let tribute = Tribute::from(tribute);
     update_tribute(tribute.id, tribute.clone());

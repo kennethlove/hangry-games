@@ -1,7 +1,7 @@
 use crate::schema::game;
 use diesel::prelude::*;
 use crate::{establish_connection, models};
-use crate::models::{bleed_tribute, Tribute};
+use crate::models::{bleed_tribute, suffer_tribute, Tribute};
 use rand::seq::SliceRandom;
 use fake::faker::name::raw::Name;
 use fake::locales::EN;
@@ -121,7 +121,8 @@ impl Game {
 
         // Run the tribute AI
         living_tributes.shuffle(&mut rng);
-        for mut tribute in living_tributes {
+        for tribute in living_tributes {
+            let mut tribute = suffer_tribute(tribute);
             tribute.do_night();
         }
     }
@@ -270,7 +271,6 @@ pub fn get_recently_dead_tributes(game: &Game) -> Vec<Tribute> {
                 TributeStatus::Wounded.to_string(),
             ])
         )
-        .filter(tribute::day_killed.is_null())
         .filter(tribute::health.le(0))
         .load::<Tribute>(conn)
         .expect("Error loading recently dead tributes")

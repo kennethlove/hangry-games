@@ -1,10 +1,11 @@
 use std::str::FromStr;
 use crate::areas::Area;
+use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
 
-use super::actions::{TributeAction, AttackResult, AttackOutcome};
+use super::actions::{AttackOutcome, AttackResult};
 use super::statuses::TributeStatus;
-
+use super::brains::TributeBrain;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
@@ -37,119 +38,9 @@ pub struct Tribute {
     pub status: TributeStatus
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct TributeBrain {
-    previous_actions: Vec<TributeAction>,
-    preferred_action: Option<TributeAction>,
-    preferred_action_percentage: f64,
-}
-
-impl TributeBrain {
-    fn new() -> Self {
-        Self {
-            previous_actions: Vec::new(),
-            preferred_action: None,
-            preferred_action_percentage: 0.0,
-        }
-    }
-
-    pub fn set_preferred_action(&mut self, action: TributeAction, percentage: f64) {
-        self.preferred_action = Some(action);
-        self.preferred_action_percentage = percentage;
-    }
-
-    pub fn clear_preferred_action(&mut self) {
-        self.preferred_action = None;
-        self.preferred_action_percentage = 0.0;
-    }
-
-    /// Decide on an action for the tribute to take
-    /// First weighs any preferred actions, then decides based on current state
-    pub fn act(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
-        if tribute.health == 0 { return TributeAction::None; }
-
-        if let Some(preferred_action) = self.clone().preferred_action {
-            if thread_rng().gen_bool(self.preferred_action_percentage) {
-                self.previous_actions.push(preferred_action.clone());
-                return preferred_action;
-            }
-        }
-
-        let action = TributeBrain::decide_on_action(tribute, nearby_tributes.clone());
-
-        // Try to get a different action?
-
-        self.previous_actions.push(action.clone());
-        action
-    }
-
-    /// Get the last action taken by the tribute
-    pub fn last_action(&self) -> TributeAction {
-        if let Some(previous_action) = self.previous_actions.last() {
-            previous_action.clone()
-        } else {
-            TributeAction::None
-        }
-    }
-
-    /// The AI for a tribute. Automatic decisions based on current state.
-    fn decide_on_action(tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
-        // If the tribute isn't in the area, they do nothing
-        if tribute.area.is_none() {
-            return TributeAction::None;
-        }
-        if tribute.movement <= 0 {
-            return TributeAction::Rest;
-        }
-
-        let _area = tribute.area.as_ref().unwrap();
-
-        match &nearby_tributes.len() {
-            0 => {
-                match tribute.health {
-                    // health is low, rest
-                    1..=10 => TributeAction::Rest,
-                    // health isn't great, hide
-                    11..=15 => TributeAction::Hide,
-                    // health is good, move
-                    _ => {
-                        // If the tribute has movement, move
-                        match tribute.movement {
-                            0 => TributeAction::Rest,
-                            _ => TributeAction::Move,
-                        }
-                    }
-                }
-            }
-            1..6 => {
-                // Enemies are nearby, attack depending on health
-                match tribute.health {
-                    // health is low, hide
-                    1..=5 => TributeAction::Hide,
-                    // health isn't great, run away
-                    6..=10 => TributeAction::Move,
-                    // health is good, attack
-                    _ => TributeAction::Attack,
-                }
-            },
-            _ => {
-                // More than 5 enemies? Intelligence decides next move
-                match tribute.intelligence {
-                    // Too dumb to know better, attacks
-                    Some(0..36) => TributeAction::Attack,
-                    // Smart enough to know better, hides
-                    Some(85..101) => TributeAction::Hide,
-                    // Average intelligence, moves
-                    _ => TributeAction::Move,
-                }
-            }
-        }
-    }
-}
-
 
 impl Tribute {
-    /// Creates a new Tribute with full health, sanity, and movement
+    /// Creates a new Tribute with full health, sanity, and movement.
     pub fn new(name: String, district: Option<i32>) -> Self {
         let brain = TributeBrain::new();
         let mut rng = thread_rng();
@@ -185,62 +76,96 @@ impl Tribute {
         }
     }
 
-    /// Reduces health
+    /// Reduces health, triggers death if health reaches 0.
     pub fn takes_physical_damage(&mut self, damage: i32) {
         self.health = std::cmp::max(0, self.health - damage);
+        self.status = TributeStatus::Wounded;
 
         if self.health == 0 {
             self.dies();
         }
     }
 
-    /// Reduces mental health
+    /// Reduces mental health.
     pub fn takes_mental_damage(&mut self, damage: i32) {
         self.sanity = std::cmp::max(0, self.sanity - damage);
     }
 
-    /// Restores health
+    /// Restores health.
     pub fn heals(&mut self, health: i32) {
         self.health = std::cmp::min(100, self.health + health);
     }
 
-    /// Restores mental health
+    /// Restores mental health.
     pub fn heals_mental_damage(&mut self, health: i32) {
         self.sanity = std::cmp::min(100, self.sanity + health);
     }
 
+    /// Consumes movement and removes hidden status.
     pub fn moves(&mut self) {
         self.movement = std::cmp::max(0, self.movement - 50);
+        self.is_hidden = Some(false);
     }
 
+    /// Restores movement.
     pub fn rests(&mut self) {
         self.movement = 100;
     }
 
+    /// Marks the tribute as recently dead and reveals them.
     pub fn dies(&mut self) {
         self.status = TributeStatus::RecentlyDead;
+        self.is_hidden = Some(false);
     }
 
+    /// Moves the tribute from one area to another, removes hidden status.
     pub fn changes_area(&mut self, area: Area) {
         self.area = Some(area);
+        self.is_hidden = Some(false);
     }
 
+    /// Removes the tribute from the game arena, removes hidden status.
     pub fn leaves_area(&mut self) {
         self.area = None;
+        self.is_hidden = Some(false);
     }
 
+    /// Hides the tribute from view.
     pub fn hides(&mut self) {
         self.is_hidden = Some(true);
     }
 
+    /// Reveals the tribute to view.
     pub fn reveals(&mut self) {
         self.is_hidden = Some(false);
     }
 
+    /// Tribute is wounded, loses some health.
     pub fn bleeds(&mut self) {
         if self.status == TributeStatus::Wounded {
             self.takes_physical_damage(2);
-            println!("{} bleeds.", self.name);
+            println!("{} bleeds from their wounds. {}/100", self.name, self.health);
+        }
+    }
+
+    /// Tribute is lonely/homesick/etc., loses some sanity.
+    pub fn suffers(&mut self) {
+        match self.sanity {
+            0..=9 => {
+                self.takes_mental_damage(1);
+                println!("{} suffers from loneliness and terror. {}/100", self.name, self.sanity);
+            },
+            10..=100 => {
+                // Tribute is lonely and scared.
+                self.takes_mental_damage(1);
+                let mut rng = thread_rng();
+                if rng.gen_bool(self.sanity as f64 / 100.0) {
+                    // Tribute is homesick as well.
+                    self.takes_mental_damage(2);
+                }
+                println!("{} mentally suffers through the night. {}/100", self.name, self.sanity);
+            },
+            _ => ()
         }
     }
 
@@ -326,7 +251,7 @@ pub enum TravelResult {
 }
 
 fn apply_violence_stress(tribute: &mut Tribute) {
-    tribute.takes_mental_damage(10);
+    tribute.takes_mental_damage(20);
 }
 
 fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
@@ -349,25 +274,38 @@ pub fn pick_target(tribute: TributeModel, targets: Vec<Tribute>) -> Option<Tribu
     match targets.len() {
         0 => { // there are no other targets
             match tribute.sanity {
-                0..=9 => Some(targets.first()?.clone()), // attempt suicide
+                0..=9 => {
+                    println!("{} attempts suicide.", tribute.name);
+                    Some(tribute.into())
+                }, // attempt suicide
                 10..=19 => match thread_rng().gen_bool(0.2) {
-                    true => Some(targets.first()?.clone()), // attempt suicide
+                    true => {
+                        println!("{} attempts suicide.", tribute.name);
+                        Some(tribute.into())
+                    }, // attempt suicide
                     false => None, // Attack no one
                 },
                 _ => None, // Attack no one
             }
         },
         _ => {
+            let mut targets = targets.clone();
             let enemy_targets: Vec<Tribute> = targets.iter().cloned()
                 .filter(|t| t.district != tribute.district)
                 .filter(|t| t.is_visible())
                 .collect();
+
+            match tribute.sanity {
+                0..20 => targets = enemy_targets.clone(), // Sanity is low, target everyone
+                _ => ()
+            }
+
             match enemy_targets.len() {
                 0 => Some(targets.first()?.clone()), // Sorry, buddy, time to die
                 1 => Some(enemy_targets.first()?.clone()), // Easy choice
                 _ => {
                     let mut rng = thread_rng();
-                    Some(enemy_targets.choose(&mut rng)?.clone()) // Get a random person
+                    Some(enemy_targets.choose(&mut rng)?.clone()) // Get a random enemy
                 }
             }
         }
@@ -435,7 +373,7 @@ impl From<TributeModel> for Tribute {
     }
 }
 
-use crate::models::tribute::UpdateTribute;
+
 impl Into<UpdateTribute> for Tribute {
     fn into(self) -> UpdateTribute {
         let area = self.area.as_ref().unwrap();
@@ -496,9 +434,8 @@ mod tests {
     #[test]
     fn moves_and_rests() {
         let mut tribute = Tribute::new("Katniss".to_string(), None);
-        tribute.speed = Some(10);
         tribute.moves();
-        assert_eq!(tribute.movement, 90);
+        assert_eq!(tribute.movement, 50);
         tribute.rests();
         assert_eq!(tribute.movement, 100);
     }
@@ -507,54 +444,7 @@ mod tests {
     fn takes_damage_and_dies() {
         let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.takes_physical_damage(100);
-        assert_eq!(tribute.status, TributeStatus::Dead);
-    }
-
-    #[test]
-    fn decide_on_action_default() {
-        // If there are no enemies nearby, the tribute should move
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
-        let action = tribute.brain.act(&tribute.clone(), vec![]);
-        assert_eq!(action, TributeAction::Move);
-    }
-
-    #[test]
-    fn decide_on_action_low_health() {
-        // If the tribute has low health, they should rest
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
-        tribute.takes_physical_damage(90);
-        let action = tribute.brain.act(&tribute.clone(), vec![]);
-        assert_eq!(action, TributeAction::Rest);
-    }
-
-    #[test]
-    fn decide_on_action_no_movement() {
-        // If the tribute has no movement, they should rest
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
-        tribute.speed = Some(100);
-        tribute.moves();
-        let action = tribute.brain.act(&tribute.clone(), vec![]);
-        assert_eq!(action, TributeAction::Rest);
-    }
-
-    #[test]
-    fn decide_on_action_enemies() {
-        // If there are enemies nearby, the tribute should attack
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
-        let tribute2 = Tribute::new("Peeta".to_string(), None);
-        let action = tribute.brain.act(&tribute.clone(), vec![tribute.clone(), tribute2]);
-        assert_eq!(action, TributeAction::Attack);
-    }
-
-    #[test]
-    fn decide_on_action_enemies_low_health() {
-        // If there are enemies nearby, but the tribute is low on health
-        // the tribute should hide
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
-        tribute.takes_physical_damage(90);
-        let tribute2 = Tribute::new("Peeta".to_string(), None);
-        let action = tribute.brain.act(&tribute.clone(),vec![tribute.clone(), tribute2]);
-        assert_eq!(action, TributeAction::Hide);
+        assert_eq!(tribute.status, TributeStatus::RecentlyDead);
     }
 
     #[test]
