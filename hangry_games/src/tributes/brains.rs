@@ -33,33 +33,6 @@ impl TributeBrain {
     pub fn act(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
         if tribute.health == 0 { return TributeAction::None; }
 
-        // if let Some(preferred_action) = self.clone().preferred_action {
-        //     if thread_rng().gen_bool(self.preferred_action_percentage) {
-        //         self.previous_actions.push(preferred_action.clone());
-        //         return match preferred_action {
-        //             TributeAction::Move(area) => {
-        //                 if area.is_some() {
-        //                     if tribute.area.is_some() && &area.clone().unwrap() == tribute.area.as_ref().unwrap() {
-        //                         return TributeAction::None;
-        //                     }
-        //                     let closed_areas = vec![
-        //                         Area::Cornucopia,
-        //                         Area::Northwest,
-        //                         Area::Northeast,
-        //                         Area::Southeast,
-        //                         Area::Southwest
-        //                     ].iter().filter(|a| &a.as_str() != &area.clone().unwrap().as_str()).cloned().collect();
-        //                     tribute.travels(closed_areas);
-        //                 }
-        //                 TributeAction::None
-        //             },
-        //             _ => {
-        //                 preferred_action
-        //             }
-        //         }
-        //     }
-        // }
-
         let action = self.decide_on_action(tribute, nearby_tributes.clone());
 
         // Try to get a different action?
