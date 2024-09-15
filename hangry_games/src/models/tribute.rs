@@ -1,7 +1,7 @@
 use crate::establish_connection;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::tributes::actors::{TravelResult, Tribute as TributeActor};
-use crate::tributes::actions::{AttackOutcome, PreferredAction, TributeAction};
+use crate::tributes::actions::{AttackOutcome, TributeAction};
 use crate::schema::tribute;
 use crate::tributes::actors::pick_target;
 use diesel::prelude::*;
@@ -142,15 +142,15 @@ impl Tribute {
         // Get Brain struct
         let mut brain = tribute.brain.clone();
         if game.day == Some(1) {
-            brain.set_preferred_action(PreferredAction::Move(None), 0.5);
+            brain.set_preferred_action(TributeAction::Move, 0.5);
         }
         if game.day.unwrap() % 2 == 0 {
-            brain.set_preferred_action(
-                PreferredAction::Move(
-                    Some(crate::areas::Area::Cornucopia)
-                ),
-               1.0
-            );
+            // brain.set_preferred_action(
+            //     TributeAction::Move(
+            //         Some(crate::areas::Area::Cornucopia)
+            //     ),
+            //    1.0
+            // );
         }
 
         // Get nearby targets

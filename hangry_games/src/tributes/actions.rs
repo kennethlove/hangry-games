@@ -74,9 +74,3 @@ pub enum AttackOutcome {
     Wound(Tribute, Tribute),
     Miss(Tribute, Tribute),
 }
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum PreferredAction {
-    Move(Option<Area>),
-    UseItem,
-}
