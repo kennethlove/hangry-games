@@ -72,10 +72,13 @@ impl TributeBrain {
             if thread_rng().gen_bool(self.preferred_action_percentage) {
                 match preferred_action {
                     PreferredAction::Move(area) => {
-                        self.previous_actions.push(TributeAction::Move);
-                        if tribute.area.is_some() {
+                        if area.is_some() {
+                            println!("{} moves", tribute.name);
                             tribute.changes_area(area.unwrap());
+                            self.previous_actions.push(TributeAction::None);
+                            return TributeAction::None;
                         }
+                        self.previous_actions.push(TributeAction::Move);
                         return TributeAction::Move;
                     },
                     _ => (),
@@ -218,7 +221,7 @@ impl Tribute {
     }
 
     pub fn moves(&mut self) {
-        self.movement = std::cmp::max(0, self.movement - 50);
+        self.movement = std::cmp::max(0, self.movement - 25);
     }
 
     pub fn rests(&mut self) {
