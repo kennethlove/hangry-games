@@ -103,7 +103,7 @@ impl Tribute {
 
     /// Consumes movement and removes hidden status.
     pub fn moves(&mut self) {
-        self.movement = std::cmp::max(0, self.movement - 50);
+        self.movement = std::cmp::max(0, self.movement - 25);
         self.is_hidden = Some(false);
     }
 
