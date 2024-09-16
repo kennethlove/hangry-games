@@ -178,9 +178,9 @@ impl Tribute {
 
         match brain.last_action() {
             TributeAction::Move(area) => {
-                if let Some(area) = area {
-                    target = Some(area.as_str().to_string());
-                    move_tribute(tribute.into(), Some(area));
+                if area.is_some() {
+                    target = Some(area.clone().unwrap().as_str().to_string());
+                    move_tribute(tribute.into(), area);
                 } else {
                     move_tribute(tribute.into(), None);
                 }
@@ -250,9 +250,9 @@ impl Tribute {
 
         match brain.last_action() {
             TributeAction::Move(area) => {
-                if let Some(area) = area {
-                    target = Some(area.as_str().to_string());
-                    move_tribute(tribute.into(), Some(area));
+                if area.is_some() {
+                    target = Some(area.clone().unwrap().as_str().to_string());
+                    move_tribute(tribute.into(), area);
                 } else {
                     move_tribute(tribute.into(), None);
                 }
@@ -332,8 +332,6 @@ fn move_tribute(tribute: Tribute, area: Option<crate::areas::Area>) {
     let game = get_game_by_id(tribute.game_id.unwrap()).unwrap();
     let tribute_area = tribute.clone().area.unwrap();
 
-    tribute.moves();
-
     let closed_areas: Vec<crate::areas::Area> = game.closed_areas.clone().unwrap_or(vec![]).iter()
         .map(|id| get_area_by_id(*id))
         .map(|a| a.unwrap())
@@ -341,6 +339,7 @@ fn move_tribute(tribute: Tribute, area: Option<crate::areas::Area>) {
         .collect();
     match &tribute.travels(closed_areas.clone(), area) {
         TravelResult::Success(area) => {
+            tribute.moves();
             tribute.changes_area(area.clone());
             println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &area.as_str());
         }
