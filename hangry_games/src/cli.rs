@@ -178,7 +178,21 @@ pub fn parse() {
             }
             println!("Statuses");
             for tribute in living_tributes {
-                println!("{} is {}, {}/100, {}({:?})", tribute.name, tribute.status, tribute.health, tribute.actions().last().unwrap().name, tribute.actions().last().unwrap());
+                let actions = tribute.actions();
+                let last_actions = actions.last_chunk::<2>();
+                let last_action = last_actions.unwrap().last().unwrap();
+                let next_to_last_action = last_actions.unwrap().first().unwrap();
+
+                println!("{} is {}, {}/100, {}/100, {}({:?}) -> {}({:?})",
+                    tribute.name,
+                    tribute.status,
+                    tribute.health,
+                    tribute.sanity,
+                    next_to_last_action.name,
+                    next_to_last_action,
+                    last_action.name,
+                    last_action,
+                );
             }
         }
         Commands::QuickStart => {
