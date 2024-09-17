@@ -35,6 +35,14 @@ impl TributeAction {
             .get_result(connection)
             .expect("Error saving new tribute action")
     }
+
+    pub fn get_all_for_tribute(tribute_id: i32) -> Vec<TributeAction> {
+        let connection = &mut establish_connection();
+        tribute_action::table
+            .filter(tribute_action::tribute_id.eq(tribute_id))
+            .load(connection)
+            .expect("Error loading tribute actions")
+    }
 }
 
 pub fn take_action(tribute: &Tribute, action: &Action, target: Option<String>) -> TributeAction {

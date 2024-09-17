@@ -224,12 +224,13 @@ impl Tribute {
         }
     }
 
-    pub fn travels(&self, closed_areas: Vec<Area>, suggested_area: Option<Area>) -> TravelResult {
+    pub fn travels(&self, closed_areas: Vec<Area>, suggested_area: Option<String>) -> TravelResult {
         let mut rng = thread_rng();
         let area = self.clone().area.unwrap();
 
         if self.movement > 0 {
-            if let Some(area) = suggested_area {
+            if let Some(area_string) = suggested_area {
+                let area = Area::from_str(area_string.as_str()).unwrap();
                 return TravelResult::Success(area);
             }
 

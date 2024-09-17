@@ -83,6 +83,12 @@ impl From<AreaModel> for Area {
     }
 }
 
+impl From<String> for Area {
+    fn from(s: String) -> Self {
+        Self::from_str(s.as_str()).unwrap_or(Area::Cornucopia)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::Area;

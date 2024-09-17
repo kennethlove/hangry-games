@@ -77,6 +77,11 @@ impl Tribute {
             .expect("Error loading actions")
     }
 
+    /// Get all the TributeActions for a Tribute.
+    pub fn tribute_actions(&self) -> Vec<crate::models::TributeAction> {
+        tribute_action::TributeAction::get_all_for_tribute(self.id)
+    }
+
     pub fn take_action(&self, action: &Action) {
         use crate::models::TributeAction;
         TributeAction::create(self.id, action.id, None);
@@ -151,7 +156,7 @@ impl Tribute {
         if game.day == Some(3) {
             brain.set_preferred_action(
                 TributeAction::Move(
-                    Some(crate::areas::Area::Cornucopia)
+                    Some(crate::areas::Area::Cornucopia.to_string())
                 ),
                0.75
             );
@@ -180,7 +185,7 @@ impl Tribute {
             TributeAction::Move(area) => {
                 if area.is_some() {
                     target = Some(area.clone().unwrap().as_str().to_string());
-                    move_tribute(tribute.into(), area);
+                    move_tribute(tribute.into(), Some(area.unwrap().as_str().to_string()));
                 } else {
                     move_tribute(tribute.into(), None);
                 }
@@ -327,7 +332,7 @@ fn rest_tribute(tribute: Tribute) {
 }
 
 
-fn move_tribute(tribute: Tribute, area: Option<crate::areas::Area>) {
+fn move_tribute(tribute: Tribute, area: Option<String>) {
     let mut tribute = TributeActor::from(tribute);
     let game = get_game_by_id(tribute.game_id.unwrap()).unwrap();
     let tribute_area = tribute.clone().area.unwrap();
