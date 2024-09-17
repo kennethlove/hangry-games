@@ -13,6 +13,7 @@ pub struct TributeAction {
     pub tribute_id: i32,
     pub action_id: i32,
     pub created_at: chrono::NaiveDateTime,
+    pub target: Option<String>,
 }
 
 #[derive(Insertable, Debug)]
@@ -20,12 +21,13 @@ pub struct TributeAction {
 pub struct NewTributeAction {
     pub tribute_id: i32,
     pub action_id: i32,
+    pub target: Option<String>,
 }
 
 impl TributeAction {
-    pub fn create(tribute_id: i32, action_id: i32) -> TributeAction {
+    pub fn create(tribute_id: i32, action_id: i32, target: Option<String>) -> TributeAction {
         let connection = &mut establish_connection();
-        let new_tribute_action = NewTributeAction { tribute_id, action_id };
+        let new_tribute_action = NewTributeAction { tribute_id, action_id, target };
 
         diesel::insert_into(tribute_action::table)
             .values(&new_tribute_action)
@@ -33,8 +35,16 @@ impl TributeAction {
             .get_result(connection)
             .expect("Error saving new tribute action")
     }
+
+    pub fn get_all_for_tribute(tribute_id: i32) -> Vec<TributeAction> {
+        let connection = &mut establish_connection();
+        tribute_action::table
+            .filter(tribute_action::tribute_id.eq(tribute_id))
+            .load(connection)
+            .expect("Error loading tribute actions")
+    }
 }
 
-pub fn take_action(tribute: &Tribute, action: &Action) {
-    TributeAction::create(tribute.id, action.id);
+pub fn take_action(tribute: &Tribute, action: &Action, target: Option<String>) -> TributeAction {
+    TributeAction::create(tribute.id, action.id, target)
 }

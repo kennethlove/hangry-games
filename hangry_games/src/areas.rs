@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use rand::Rng;
 
-#[derive(Clone, Default, Debug, PartialEq)]
+#[derive(Clone, Default, Debug, Eq, PartialEq)]
 pub enum Area {
     #[default]
     Cornucopia,
@@ -80,6 +80,12 @@ use super::models::area::Area as AreaModel;
 impl From<AreaModel> for Area {
     fn from(area: AreaModel) -> Self {
         Self::from_str(area.name.as_str()).unwrap_or(Area::Cornucopia)
+    }
+}
+
+impl From<String> for Area {
+    fn from(s: String) -> Self {
+        Self::from_str(s.as_str()).unwrap_or(Area::Cornucopia)
     }
 }
 

@@ -86,6 +86,7 @@ diesel::table! {
         tribute_id -> Int4,
         action_id -> Int4,
         created_at -> Timestamp,
+        target -> Nullable<Text>,
     }
 }
 

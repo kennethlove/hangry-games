@@ -3,7 +3,7 @@ use crate::areas::Area;
 use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
 
-use super::actions::{AttackOutcome, AttackResult};
+use super::actions::{AttackResult, AttackOutcome};
 use super::statuses::TributeStatus;
 use super::brains::TributeBrain;
 
@@ -103,7 +103,7 @@ impl Tribute {
 
     /// Consumes movement and removes hidden status.
     pub fn moves(&mut self) {
-        self.movement = std::cmp::max(0, self.movement - 50);
+        self.movement = std::cmp::max(0, self.movement - 25);
         self.is_hidden = Some(false);
     }
 
@@ -224,11 +224,16 @@ impl Tribute {
         }
     }
 
-    pub fn travels(&self, closed_areas: Vec<Area>) -> TravelResult {
+    pub fn travels(&self, closed_areas: Vec<Area>, suggested_area: Option<String>) -> TravelResult {
         let mut rng = thread_rng();
         let area = self.clone().area.unwrap();
 
         if self.movement > 0 {
+            if let Some(area_string) = suggested_area {
+                let area = Area::from_str(area_string.as_str()).unwrap();
+                return TravelResult::Success(area);
+            }
+
             let neighbors = area.neighbors();
             let new_area = loop {
                 let new_area = neighbors.choose(&mut rng).unwrap();
@@ -372,7 +377,6 @@ impl From<TributeModel> for Tribute {
         }
     }
 }
-
 
 impl Into<UpdateTribute> for Tribute {
     fn into(self) -> UpdateTribute {
