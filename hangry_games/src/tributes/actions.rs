@@ -1,12 +1,15 @@
 use std::str::FromStr;
 
 use diesel::deserialize::FromSql;
+use crate::models::Action as ActionModel;
+use crate::tributes::actors::Tribute;
+
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub enum TributeAction {
     #[default]
     None,
-    Move,
+    Move(Option<String>),
     Rest,
     UseItem,
     Attack,
@@ -17,7 +20,7 @@ impl TributeAction {
     pub fn as_str(&self) -> &str {
         match self {
             TributeAction::None => "None",
-            TributeAction::Move => "Move",
+            TributeAction::Move(_) => "Move",
             TributeAction::Rest => "Rest",
             TributeAction::UseItem => "Use Item",
             TributeAction::Attack => "Attack",
@@ -39,7 +42,7 @@ impl FromStr for TributeAction {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "none" => Ok(TributeAction::None),
-            "move" => Ok(TributeAction::Move),
+            "move" => Ok(TributeAction::Move(None)),
             "rest" => Ok(TributeAction::Rest),
             "use item" => Ok(TributeAction::UseItem),
             "attack" => Ok(TributeAction::Attack),
@@ -48,9 +51,6 @@ impl FromStr for TributeAction {
         }
     }
 }
-
-use crate::models::Action as ActionModel;
-use crate::tributes::actors::Tribute;
 
 impl From<&ActionModel> for TributeAction {
     fn from(value: &ActionModel) -> Self {

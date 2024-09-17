@@ -77,9 +77,14 @@ impl Tribute {
             .expect("Error loading actions")
     }
 
+    /// Get all the TributeActions for a Tribute.
+    pub fn tribute_actions(&self) -> Vec<crate::models::TributeAction> {
+        tribute_action::TributeAction::get_all_for_tribute(self.id)
+    }
+
     pub fn take_action(&self, action: &Action) {
         use crate::models::TributeAction;
-        TributeAction::create(self.id, action.id);
+        TributeAction::create(self.id, action.id, None);
     }
 
     pub fn set_game(&mut self, game: &Game) {
@@ -134,15 +139,27 @@ impl Tribute {
         let area = self.area().unwrap();
 
         // Create Tribute struct
-        let tribute = TributeActor::from(self.clone());
+        let mut tribute = TributeActor::from(self.clone());
 
         // Get game
         let game = get_game_by_id(self.game_id.unwrap()).unwrap();
 
         // Get Brain struct
         let mut brain = tribute.brain.clone();
+
+        // Day 1, prefer to move
         if game.day == Some(1) {
-            brain.set_preferred_action(TributeAction::Move, 0.5);
+            brain.set_preferred_action(TributeAction::Move(None), 0.5);
+        }
+
+        // Day 3 is the Feast, prefer move to the Cornucopia
+        if game.day == Some(3) {
+            brain.set_preferred_action(
+                TributeAction::Move(
+                    Some(crate::areas::Area::Cornucopia.to_string())
+                ),
+               0.75
+            );
         }
 
         // Get nearby targets
@@ -155,17 +172,23 @@ impl Tribute {
 
         // If the tribute is in a closed area, move them.
         if game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).contains(&Some(area.id)) {
-            move_tribute(tribute.clone().into());
+            move_tribute(tribute.clone().into(), None);
             println!("{}", format!("{} leaves the closed area", tribute.name));
             return self.clone();
         }
 
         // Decide the next logical action
-        brain.act(&tribute, nearby_targets.clone());
+        brain.act(&mut tribute, nearby_targets.clone());
+        let mut target = None;
 
         match brain.last_action() {
-            TributeAction::Move => {
-                move_tribute(tribute.into());
+            TributeAction::Move(area) => {
+                if area.is_some() {
+                    target = Some(area.clone().unwrap().as_str().to_string());
+                    move_tribute(tribute.into(), Some(area.unwrap().as_str().to_string()));
+                } else {
+                    move_tribute(tribute.into(), None);
+                }
             }
             TributeAction::Hide => {
                 hide_tribute(Tribute::from(tribute));
@@ -174,9 +197,9 @@ impl Tribute {
                 rest_tribute(tribute.into());
             }
             TributeAction::Attack => {
-                if let Some(target) = pick_target(self.clone(), nearby_targets.clone()) {
-                    let target = Tribute::from(target);
-                    attack_target(self.clone(), target.clone());
+                if let Some(victim) = pick_target(self.clone(), nearby_targets.clone()) {
+                    let victim = Tribute::from(victim);
+                    attack_target(self.clone(), victim.clone());
                 }
             }
             _ => {
@@ -188,7 +211,7 @@ impl Tribute {
         let last_action = crate::models::action::get_action(brain.last_action().as_str());
 
         // Connect Tribute to Action
-        tribute_action::take_action(&self.clone(), &last_action);
+        tribute_action::take_action(&self.clone(), &last_action, target);
 
         self.clone()
     }
@@ -227,11 +250,17 @@ impl Tribute {
         let mut brain = tribute.brain.clone();
 
         // Decide the next logical action
-        brain.act(&tribute, nearby_targets.clone());
+        brain.act(&mut tribute, nearby_targets.clone());
+        let mut target = None;
 
         match brain.last_action() {
-            TributeAction::Move => {
-                move_tribute(tribute.into());
+            TributeAction::Move(area) => {
+                if area.is_some() {
+                    target = Some(area.clone().unwrap().as_str().to_string());
+                    move_tribute(tribute.into(), area);
+                } else {
+                    move_tribute(tribute.into(), None);
+                }
             }
             TributeAction::Attack => {
                 // How brave does the tribute feel at night?
@@ -261,7 +290,7 @@ impl Tribute {
         let last_action = crate::models::action::get_action(brain.last_action().as_str());
 
         // Connect Tribute to Action
-        tribute_action::take_action(&self.clone(), &last_action);
+        tribute_action::take_action(&self.clone(), &last_action, target);
 
         self.clone()
     }
@@ -302,20 +331,20 @@ fn rest_tribute(tribute: Tribute) {
     println!("{} rests and recovers a little", tribute.name);
 }
 
-fn move_tribute(tribute: Tribute) {
+
+fn move_tribute(tribute: Tribute, area: Option<String>) {
     let mut tribute = TributeActor::from(tribute);
     let game = get_game_by_id(tribute.game_id.unwrap()).unwrap();
     let tribute_area = tribute.clone().area.unwrap();
-
-    tribute.moves();
 
     let closed_areas: Vec<crate::areas::Area> = game.closed_areas.clone().unwrap_or(vec![]).iter()
         .map(|id| get_area_by_id(*id))
         .map(|a| a.unwrap())
         .map(crate::areas::Area::from)
         .collect();
-    match &tribute.travels(closed_areas.clone()) {
+    match &tribute.travels(closed_areas.clone(), area) {
         TravelResult::Success(area) => {
+            tribute.moves();
             tribute.changes_area(area.clone());
             println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &area.as_str());
         }

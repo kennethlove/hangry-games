@@ -33,14 +33,7 @@ impl TributeBrain {
     pub fn act(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
         if tribute.health == 0 { return TributeAction::None; }
 
-        if let Some(preferred_action) = self.clone().preferred_action {
-            if thread_rng().gen_bool(self.preferred_action_percentage) {
-                self.previous_actions.push(preferred_action.clone());
-                return preferred_action;
-            }
-        }
-
-        let action = TributeBrain::decide_on_action(tribute, nearby_tributes.clone());
+        let action = self.decide_on_action(tribute, nearby_tributes.clone());
 
         // Try to get a different action?
 
@@ -58,7 +51,7 @@ impl TributeBrain {
     }
 
     /// The AI for a tribute. Automatic decisions based on current state.
-    fn decide_on_action(tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
+    fn decide_on_action(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
         // If the tribute isn't in the area, they do nothing
         if tribute.area.is_none() {
             return TributeAction::None;
@@ -68,6 +61,14 @@ impl TributeBrain {
         }
 
         let _area = tribute.area.as_ref().unwrap();
+
+        // If there is a preferred action, we should take it, assuming a positive roll
+        if let Some(preferred_action) = self.preferred_action.clone() {
+            if thread_rng().gen_bool(self.preferred_action_percentage) {
+                self.previous_actions.push(preferred_action.clone());
+                return preferred_action
+            }
+        }
 
         match &nearby_tributes.len() {
             0 => {
@@ -80,7 +81,7 @@ impl TributeBrain {
                         if tribute.sanity > 20 && tribute.is_visible() {
                             TributeAction::Hide
                         } else {
-                            TributeAction::Move
+                            TributeAction::Move(None)
                         }
                     },
                     // health is good, move
@@ -88,7 +89,7 @@ impl TributeBrain {
                         // If the tribute has movement, move
                         match tribute.movement {
                             0 => TributeAction::Rest,
-                            _ => TributeAction::Move,
+                            _ => TributeAction::Move(None),
                         }
                     }
                 }
@@ -107,7 +108,7 @@ impl TributeBrain {
                     // health isn't great, run away
                     6..=10 => {
                         if tribute.sanity > 20 {
-                            TributeAction::Move
+                            TributeAction::Move(None)
                         } else {
                             TributeAction::Attack
                         }
@@ -125,7 +126,7 @@ impl TributeBrain {
                     // Smart enough to know better, hides
                     85..101 => TributeAction::Hide,
                     // Average intelligence, moves
-                    _ => TributeAction::Move,
+                    _ => TributeAction::Move(None),
                 }
             }
         }
@@ -141,7 +142,7 @@ mod tests {
         // If there are no enemies nearby, the tribute should move
         let mut tribute = Tribute::new("Katniss".to_string(), None);
         let action = tribute.brain.act(&tribute.clone(), vec![]);
-        assert_eq!(action, TributeAction::Move);
+        assert_eq!(action, TributeAction::Move(None));
     }
 
     #[test]
@@ -180,6 +181,6 @@ mod tests {
         tribute.takes_physical_damage(90);
         let tribute2 = Tribute::new("Peeta".to_string(), None);
         let action = tribute.brain.act(&tribute.clone(),vec![tribute.clone(), tribute2]);
-        assert_eq!(action, TributeAction::Move);
+        assert_eq!(action, TributeAction::Move(None));
     }
 }
