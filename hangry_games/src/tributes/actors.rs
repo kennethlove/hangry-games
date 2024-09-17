@@ -3,7 +3,7 @@ use crate::areas::Area;
 use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
 
-use super::actions::{AttackOutcome, AttackResult};
+use super::actions::{AttackResult, AttackOutcome};
 use super::statuses::TributeStatus;
 use super::brains::TributeBrain;
 
