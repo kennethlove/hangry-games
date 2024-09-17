@@ -199,6 +199,7 @@ impl Tribute {
             TributeAction::Attack => {
                 if let Some(victim) = pick_target(self.clone(), nearby_targets.clone()) {
                     let victim = Tribute::from(victim);
+                    target = Some(victim.name.clone());
                     attack_target(self.clone(), victim.clone());
                 }
             }
@@ -269,12 +270,13 @@ impl Tribute {
                 let bravado: u32 = rng.gen_range(0..=100);
                 let brave_enough = bravado + bravery as u32 > 50;
 
-                if let Some(target) = pick_target(self.clone(), nearby_targets) {
-                    let target = Tribute::from(target);
+                if let Some(victim) = pick_target(self.clone(), nearby_targets) {
+                    let victim = Tribute::from(victim);
                     if brave_enough == true {
-                        attack_target(self.clone(), target.clone());
+                        target = Some(victim.name.clone());
+                        attack_target(self.clone(), victim.clone());
                     } else {
-                        println!("{} is too scared to attack {}", self.name, target.name);
+                        println!("{} is too scared to attack {}", self.name, victim.name);
                     }
                 }
             }
