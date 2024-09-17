@@ -39,9 +39,10 @@ diesel::table! {
         health_mod -> Int4,
         speed_mod -> Int4,
         attack_mod -> Int4,
+        max_durability -> Int4,
+        durability -> Int4,
         area_id -> Nullable<Int4>,
         game_id -> Nullable<Int4>,
-        durability -> Nullable<Int4>,
     }
 }
 
