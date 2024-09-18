@@ -1,6 +1,8 @@
 use std::fmt::Display;
 use std::str::FromStr;
+use rand::Rng;
 
+#[derive(Clone, Debug)]
 pub enum AreaEvent {
     Wildfire,
     Flood,
@@ -49,5 +51,19 @@ impl AreaEvent {
             AreaEvent::Blizzard => "Blizzard",
             AreaEvent::Landslide => "Landslide",
         }
+    }
+
+    pub fn random() -> AreaEvent {
+        let mut rng = rand::thread_rng();
+        let events = vec![
+            AreaEvent::Wildfire,
+            AreaEvent::Flood,
+            AreaEvent::Earthquake,
+            AreaEvent::Avalanche,
+            AreaEvent::Blizzard,
+            AreaEvent::Landslide,
+        ];
+        let index = rng.gen_range(0..events.len());
+        events[index].clone()
     }
 }
