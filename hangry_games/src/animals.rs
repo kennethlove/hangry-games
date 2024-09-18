@@ -19,6 +19,38 @@ pub enum Animal {
     TrackerJacker,
 }
 
+impl Animal {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Animal::Squirrel => "Squirrel",
+            Animal::Bear => "Bear",
+            Animal::Wolf => "Wolf",
+            Animal::Cougar => "Cougar",
+            Animal::Boar => "Boar",
+            Animal::Snake => "Snake",
+            Animal::Monkey => "Monkey",
+            Animal::Baboon => "Baboon",
+            Animal::Hyena => "Hyena",
+            Animal::Lion => "Lion",
+            Animal::Tiger => "Tiger",
+            Animal::Elephant => "Elephant",
+            Animal::Rhino => "Rhino",
+            Animal::Hippo => "Hippo",
+            Animal::TrackerJacker => "Tracker Jacker",
+        }
+    }
+
+    pub fn plural(&self) -> String {
+        match self {
+            Animal::Wolf => "Wolves".to_string(),
+            _ => {
+                let pluralized = format!("{}s", self.as_str());
+                pluralized
+            },
+        }
+    }
+}
+
 impl FromStr for Animal {
     type Err = ();
 
@@ -66,34 +98,3 @@ impl Display for Animal {
     }
 }
 
-impl Animal {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Animal::Squirrel => "Squirrel",
-            Animal::Bear => "Bear",
-            Animal::Wolf => "Wolf",
-            Animal::Cougar => "Cougar",
-            Animal::Boar => "Boar",
-            Animal::Snake => "Snake",
-            Animal::Monkey => "Monkey",
-            Animal::Baboon => "Baboon",
-            Animal::Hyena => "Hyena",
-            Animal::Lion => "Lion",
-            Animal::Tiger => "Tiger",
-            Animal::Elephant => "Elephant",
-            Animal::Rhino => "Rhino",
-            Animal::Hippo => "Hippo",
-            Animal::TrackerJacker => "Tracker Jacker",
-        }
-    }
-
-    pub fn plural(&self) -> String {
-        match self {
-            Animal::Wolf => "Wolves".to_string(),
-            _ => {
-                let pluralized = format!("{}s", self.as_str());
-                pluralized
-            },
-        }
-    }
-}
