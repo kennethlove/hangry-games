@@ -87,10 +87,13 @@ impl Animal {
         }
     }
 
-    pub fn plural(&self) -> &str {
+    pub fn plural(&self) -> String {
         match self {
-            Animal::Wolf => "Wolves",
-            _ => format!("{}s", self.as_str()).as_str(),
+            Animal::Wolf => "Wolves".to_string(),
+            _ => {
+                let pluralized = format!("{}s", self.as_str());
+                pluralized
+            },
         }
     }
 }
