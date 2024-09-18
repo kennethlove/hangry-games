@@ -6,6 +6,9 @@ use rand::seq::SliceRandom;
 use fake::faker::name::raw::Name;
 use fake::locales::EN;
 use fake::Fake;
+use rand::Rng;
+use crate::areas::Area;
+use crate::events::AreaEvent;
 use crate::tributes::statuses::TributeStatus;
 
 #[derive(Queryable, Selectable, Debug)]
@@ -104,6 +107,16 @@ impl Game {
         let mut living_tributes = get_all_living_tributes(&self);
 
         // Trigger any daytime events
+        if self.day > Some(1) && rng.gen_bool(1.0) {
+            // Event happens
+            let event = AreaEvent::random();
+            let area = Area::random();
+            let model_area = models::Area::from(area.clone());
+            println!("=== 🚨 An event has occurred ===");
+            println!("=== There is a(n) {} in {} ===", event, area);
+            models::AreaEvent::create(event.to_string(), model_area.id, self.id);
+            self.close_area(&model_area);
+        }
 
         // Run the tribute AI
         living_tributes.shuffle(&mut rng);
