@@ -51,7 +51,7 @@ impl TributeBrain {
     }
 
     /// The AI for a tribute. Automatic decisions based on current state.
-    fn decide_on_action(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
+    fn decide_on_action(&mut self, tribute: &Tribute, nearby_tributes: usize) -> TributeAction {
         // If the tribute isn't in the area, they do nothing
         if tribute.area.is_none() {
             return TributeAction::None;
@@ -70,7 +70,7 @@ impl TributeBrain {
             }
         }
 
-        match &nearby_tributes.len() {
+        match &nearby_tributes {
             0 => {
                 match tribute.health {
                     // health is low, rest
