@@ -154,6 +154,7 @@ impl Tribute {
 
         // Day 3 is the Feast, prefer move to the Cornucopia
         if game.day == Some(3) {
+            println!("🍱 FEAST DAY!");
             brain.set_preferred_action(
                 TributeAction::Move(
                     Some(crate::areas::Area::Cornucopia.to_string())
