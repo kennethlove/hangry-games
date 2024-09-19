@@ -569,7 +569,7 @@ fn attack_target(attacker: Tribute, victim: Tribute) {
     update_tribute(victim.id, victim);
 }
 
-fn update_tribute(tribute_id: i32, tribute: Tribute) {
+pub fn update_tribute(tribute_id: i32, tribute: Tribute) {
     let conn = &mut establish_connection();
     let update_tribute = UpdateTribute {
         id: tribute_id,
