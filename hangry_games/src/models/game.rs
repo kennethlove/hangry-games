@@ -1,7 +1,7 @@
 use crate::schema::game;
 use diesel::prelude::*;
 use crate::{establish_connection, models};
-use crate::models::{bleed_tribute, suffer_tribute, Tribute};
+use crate::models::{bleed_tribute, get_area_by_id, suffer_tribute, update_tribute, Tribute};
 use rand::seq::SliceRandom;
 use fake::faker::name::raw::Name;
 use fake::locales::EN;
@@ -11,7 +11,7 @@ use crate::areas::Area;
 use crate::events::AreaEvent;
 use crate::tributes::statuses::TributeStatus;
 
-#[derive(Queryable, Selectable, Debug)]
+#[derive(Queryable, Selectable, Clone, Debug)]
 #[diesel(table_name = game)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Game {
@@ -82,6 +82,7 @@ impl Game {
         let closed_areas = self.closed_areas.as_mut().unwrap_or(&mut binding);
         closed_areas.push(Some(area.id));
         let closed_areas = closed_areas.clone();
+        self.closed_areas = Some(closed_areas.clone());
 
         diesel::update(game::table.find(self.id))
             .set(game::closed_areas.eq(closed_areas))
@@ -94,28 +95,35 @@ impl Game {
 
         let mut closed_areas = vec![];
         let closed_areas = self.closed_areas.as_mut().unwrap_or(&mut closed_areas);
-        let closed_areas = closed_areas.iter().filter(|a| a.unwrap() != area.id).collect::<Vec<_>>();
+        let closed_areas = closed_areas.iter().filter(|a| a.unwrap() != area.id).cloned().collect::<Vec<_>>();
+        self.closed_areas = Some(closed_areas.clone());
 
         diesel::update(game::table.find(self.id))
-            .set(game::closed_areas.eq(closed_areas))
+            .set(game::closed_areas.eq(closed_areas.clone()))
             .execute(connection)
             .expect("Error updating game");
     }
 
     pub fn do_day(&mut self) {
         let mut rng = rand::thread_rng();
-        let mut living_tributes = get_all_living_tributes(&self);
 
         // Trigger any daytime events
-        if self.day > Some(1) && self.day != Some(3) && rng.gen_bool(0.1) {
+        if self.day > Some(2) && rng.gen_bool(1.0 / 4.0) {
             // Event happens
             let event = AreaEvent::random();
-            let area = Area::random();
+            let closed_areas = self.closed_areas.clone().unwrap_or(vec![]);
+            let closed_areas = closed_areas.iter()
+                .map(|a| get_area_by_id(*a))
+                .map(|a| Area::from(a.unwrap()))
+                .collect::<Vec<_>>();
+            let area = Area::random_open(closed_areas);
             let model_area = models::Area::from(area.clone());
             println!("=== 🚨 A(n) {} has occurred in {} ===", event, area);
             models::AreaEvent::create(event.to_string(), model_area.id, self.id);
             self.close_area(&model_area);
         }
+
+        let mut living_tributes = get_all_living_tributes(&self);
 
         // Run the tribute AI
         living_tributes.shuffle(&mut rng);
@@ -127,14 +135,39 @@ impl Game {
 
     pub fn do_night(&mut self) {
         let mut rng = rand::thread_rng();
-        let mut living_tributes = get_all_living_tributes(&self);
+
+        // Handle closed areas
+        for area_id in self.closed_areas.clone().unwrap_or(vec![]) {
+            let area = get_area_by_id(area_id).unwrap();
+            let mut tributes = area.tributes(self.id);
+            let tributes = tributes
+                .iter_mut()
+                .filter(|t| t.day_killed.is_none())
+                .collect::<Vec<_>>();
+
+            let area_name = area.name.strip_prefix("The ").unwrap_or(area.name.as_str());
+            for tribute in tributes {
+                println!("{} is trapped in the {}.", tribute.name, area_name);
+                tribute.health = 0;
+                tribute.status = TributeStatus::RecentlyDead.to_string();
+                tribute.is_hidden = Some(false);
+                tribute.killed_by = Some("The Gamemakers".to_string());
+                update_tribute(tribute.id, tribute.clone());
+            }
+            if rng.gen_bool(0.5) {
+                println!("The Gamemakers open the {}.", area_name);
+                self.open_area(&area);
+            }
+        }
 
         // Trigger any nighttime events
 
+        let mut living_tributes = get_all_living_tributes(&self);
+
         // Run the tribute AI
         living_tributes.shuffle(&mut rng);
-        for tribute in living_tributes {
-            let mut tribute = suffer_tribute(tribute);
+        for mut tribute in living_tributes {
+            tribute = suffer_tribute(tribute);
             tribute.do_night();
         }
     }

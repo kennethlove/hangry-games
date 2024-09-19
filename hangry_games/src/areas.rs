@@ -74,6 +74,16 @@ impl Area {
             _ => Area::Cornucopia,
         }
     }
+
+    pub fn random_open(closed_areas: Vec<Area>) -> Area {
+        let area = loop {
+            let random_area = Area::random();
+            if !closed_areas.contains(&random_area.clone()) {
+                break random_area;
+            }
+        };
+        area
+    }
 }
 
 use super::models::area::Area as AreaModel;

@@ -131,7 +131,7 @@ impl Tribute {
 
     pub fn do_day(&mut self) -> Self {
         if self.health == 0 {
-            println!("{} is dead", self.name);
+            println!("!!! {} is dead !!!", self.name);
             self.status = TributeStatus::RecentlyDead.to_string();
             return self.clone();
         }
@@ -170,15 +170,14 @@ impl Tribute {
                 |t| TributeActor::from(t.clone())
             ).collect();
 
-        // If the tribute is in a closed area, move them.
-        if game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).contains(&Some(area.id)) {
-            move_tribute(tribute.clone().into(), None);
-            println!("{}", format!("{} leaves the closed area", tribute.name));
-            return self.clone();
-        }
+        // Collect the closed areas
+        let closed_areas: Vec<crate::areas::Area> = game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).iter()
+            .map(|id| get_area_by_id(*id).unwrap())
+            .map(|a| crate::areas::Area::from(a))
+            .collect::<Vec<_>>();
 
         // Decide the next logical action
-        brain.act(&mut tribute, nearby_targets.clone());
+        brain.act(&mut tribute, nearby_targets.clone(), closed_areas.clone());
         let mut target = None;
 
         match brain.last_action() {
@@ -227,16 +226,21 @@ impl Tribute {
         // Create Tribute struct
         let mut tribute = TributeActor::from(self.clone());
 
-        let game = get_game_by_id(self.game_id.unwrap());
+        let game = get_game_by_id(self.game_id.unwrap()).expect("Couldn't get game");
         let area = get_area_by_id(self.area_id).expect("Couldn't get area");
 
-        if let Ok(game) = game {
-            if game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).contains(&Some(area.id)) {
-                tribute.takes_physical_damage(100);
-                tribute.dies();
-                tribute.killed_by = Some(format!("{} waited too long in a closed area", tribute.name));
-                return Tribute::from(tribute);
-            }
+        // Collect the closed areas
+        let closed_areas: Vec<crate::areas::Area> = game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).iter()
+            .map(|id| get_area_by_id(*id).unwrap())
+            .map(|a| crate::areas::Area::from(a))
+            .collect::<Vec<_>>();
+
+        if closed_areas.contains(&crate::areas::Area::from(area.clone())) {
+            tribute.takes_physical_damage(100);
+            tribute.killed_by = Some(format!("{} waited too long in a closed area", tribute.name));
+            let t = Self::from(tribute);
+            t.dies();
+            return t;
         }
 
         // Get nearby tributes and targets
@@ -251,7 +255,7 @@ impl Tribute {
         let mut brain = tribute.brain.clone();
 
         // Decide the next logical action
-        brain.act(&mut tribute, nearby_targets.clone());
+        brain.act(&mut tribute, nearby_targets.clone(), closed_areas.clone());
         let mut target = None;
 
         match brain.last_action() {
