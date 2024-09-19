@@ -164,11 +164,9 @@ impl Tribute {
 
         // Get nearby targets
         let nearby_targets = Self::get_nearby_targets(area.clone(), self.game_id.unwrap());
-        let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
+        let nearby_targets: usize = nearby_targets.iter()
             .filter(|t| t.id != self.id)
-            .map(
-                |t| TributeActor::from(t.clone())
-            ).collect();
+            .len();
 
         // Collect the closed areas
         let closed_areas: Vec<crate::areas::Area> = game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).iter()
@@ -177,7 +175,7 @@ impl Tribute {
             .collect::<Vec<_>>();
 
         // Decide the next logical action
-        brain.act(&mut tribute, nearby_targets.len(), closed_areas.clone());
+        brain.act(&mut tribute, nearby_targets, closed_areas.clone());
         let mut target = None;
 
         match brain.last_action() {
@@ -245,17 +243,15 @@ impl Tribute {
 
         // Get nearby tributes and targets
         let nearby_targets = Self::get_nearby_targets(area.clone(), self.game_id.unwrap());
-        let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
+        let nearby_targets: usize<TributeActor> = nearby_targets.iter()
             .filter(|t| t.id != self.id)
-            .map(
-                |t| TributeActor::from(t.clone())
-            ).collect();
+            .len();
 
         // Get Brain struct
         let mut brain = tribute.brain.clone();
 
         // Decide the next logical action
-        brain.act(&mut tribute, nearby_targets.len(), closed_areas.clone());
+        brain.act(&mut tribute, nearby_targets, closed_areas.clone());
         let mut target = None;
 
         match brain.last_action() {
