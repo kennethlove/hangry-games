@@ -107,20 +107,11 @@ impl Game {
     pub fn do_day(&mut self) {
         let mut rng = rand::thread_rng();
 
+        self.do_area_event_cleanup();
+
         // Trigger any daytime events
         if self.day > Some(2) && rng.gen_bool(1.0 / 4.0) {
-            // Event happens
-            let event = AreaEvent::random();
-            let closed_areas = self.closed_areas.clone().unwrap_or(vec![]);
-            let closed_areas = closed_areas.iter()
-                .map(|a| get_area_by_id(*a))
-                .map(|a| Area::from(a.unwrap()))
-                .collect::<Vec<_>>();
-            let area = Area::random_open(closed_areas);
-            let model_area = models::Area::from(area.clone());
-            println!("=== 🚨 A(n) {} has occurred in {} ===", event, area);
-            models::AreaEvent::create(event.to_string(), model_area.id, self.id);
-            self.close_area(&model_area);
+            self.do_area_event();
         }
 
         let mut living_tributes = get_all_living_tributes(&self);
@@ -134,6 +125,41 @@ impl Game {
     }
 
     pub fn do_night(&mut self) {
+        let mut rng = rand::thread_rng();
+
+        self.do_area_event_cleanup();
+
+        // Trigger any nighttime events
+        if rng.gen_bool(1.0 / 8.0) {
+            self.do_area_event();
+        }
+
+        let mut living_tributes = get_all_living_tributes(&self);
+
+        // Run the tribute AI
+        living_tributes.shuffle(&mut rng);
+        for mut tribute in living_tributes {
+            tribute = suffer_tribute(tribute);
+            tribute.do_night();
+        }
+    }
+
+    fn do_area_event(&mut self) {
+        // Event happens
+        let event = AreaEvent::random();
+        let closed_areas = self.closed_areas.clone().unwrap_or(vec![]);
+        let closed_areas = closed_areas.iter()
+            .map(|a| get_area_by_id(*a))
+            .map(|a| Area::from(a.unwrap()))
+            .collect::<Vec<_>>();
+        let area = Area::random_open(closed_areas);
+        let model_area = models::Area::from(area.clone());
+        println!("=== 🚨 A(n) {} has occurred in {} ===", event, area);
+        models::AreaEvent::create(event.to_string(), model_area.id, self.id);
+        self.close_area(&model_area);
+    }
+
+    fn do_area_event_cleanup(&mut self) {
         let mut rng = rand::thread_rng();
 
         // Handle closed areas
@@ -154,21 +180,12 @@ impl Game {
                 tribute.killed_by = Some("The Gamemakers".to_string());
                 update_tribute(tribute.id, tribute.clone());
             }
+
+            // Re-open area?
             if rng.gen_bool(0.5) {
                 println!("The Gamemakers open the {}.", area_name);
                 self.open_area(&area);
             }
-        }
-
-        // Trigger any nighttime events
-
-        let mut living_tributes = get_all_living_tributes(&self);
-
-        // Run the tribute AI
-        living_tributes.shuffle(&mut rng);
-        for mut tribute in living_tributes {
-            tribute = suffer_tribute(tribute);
-            tribute.do_night();
         }
     }
 
