@@ -31,12 +31,12 @@ impl FromStr for AreaEvent {
 impl Display for AreaEvent {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            AreaEvent::Wildfire => write!(f, "Wildfire"),
-            AreaEvent::Flood => write!(f, "Flood"),
-            AreaEvent::Earthquake => write!(f, "Earthquake"),
-            AreaEvent::Avalanche => write!(f, "Avalanche"),
-            AreaEvent::Blizzard => write!(f, "Blizzard"),
-            AreaEvent::Landslide => write!(f, "Landslide"),
+            AreaEvent::Wildfire => write!(f, "wildfire"),
+            AreaEvent::Flood => write!(f, "flood"),
+            AreaEvent::Earthquake => write!(f, "earthquake"),
+            AreaEvent::Avalanche => write!(f, "avalanche"),
+            AreaEvent::Blizzard => write!(f, "blizzard"),
+            AreaEvent::Landslide => write!(f, "landslide"),
         }
     }
 }
@@ -44,12 +44,12 @@ impl Display for AreaEvent {
 impl AreaEvent {
     pub fn as_str(&self) -> &str {
         match self {
-            AreaEvent::Wildfire => "Wildfire",
-            AreaEvent::Flood => "Flood",
-            AreaEvent::Earthquake => "Earthquake",
-            AreaEvent::Avalanche => "Avalanche",
-            AreaEvent::Blizzard => "Blizzard",
-            AreaEvent::Landslide => "Landslide",
+            AreaEvent::Wildfire => "wildfire",
+            AreaEvent::Flood => "flood",
+            AreaEvent::Earthquake => "earthquake",
+            AreaEvent::Avalanche => "avalanche",
+            AreaEvent::Blizzard => "blizzard",
+            AreaEvent::Landslide => "landslide",
         }
     }
 
