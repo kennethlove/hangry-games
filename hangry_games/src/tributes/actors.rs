@@ -103,7 +103,7 @@ impl Tribute {
 
     /// Consumes movement and removes hidden status.
     pub fn moves(&mut self) {
-        self.movement = std::cmp::max(0, self.movement - 25);
+        self.movement = std::cmp::max(0, self.movement - self.speed.unwrap());
         self.is_hidden = Some(false);
     }
 
@@ -228,23 +228,33 @@ impl Tribute {
         let mut rng = thread_rng();
         let area = self.clone().area.unwrap();
 
-        if self.movement > 0 {
-            if let Some(area_string) = suggested_area {
-                let area = Area::from_str(area_string.as_str()).unwrap();
-                return TravelResult::Success(area);
-            }
-
-            let neighbors = area.neighbors();
-            let new_area = loop {
-                let new_area = neighbors.choose(&mut rng).unwrap();
-                if new_area == &area || closed_areas.contains(new_area) {
-                    continue;
+        match self.movement {
+            // No movement left, can't move
+            0 => TravelResult::Failure,
+            // Low movement, can only move to suggested area
+            1..=10 => {
+                if let Some(area_string) = suggested_area {
+                    let area = Area::from_str(area_string.as_str()).unwrap();
+                    return TravelResult::Success(area);
                 }
-                break new_area.clone();
-            };
-            TravelResult::Success(new_area)
-        } else {
-            TravelResult::Failure
+                TravelResult::Failure
+            },
+            // High movement, can move to any open neighbor or the suggested area
+            _ => {
+                if let Some(area_string) = suggested_area {
+                    let area = Area::from_str(area_string.as_str()).unwrap();
+                    return TravelResult::Success(area);
+                }
+                let neighbors = area.neighbors();
+                let new_area = loop {
+                    let new_area = neighbors.choose(&mut rng).unwrap();
+                    if new_area == &area || closed_areas.contains(new_area) {
+                        continue;
+                    }
+                    break new_area.clone();
+                };
+                TravelResult::Success(new_area)
+            }
         }
     }
 }
