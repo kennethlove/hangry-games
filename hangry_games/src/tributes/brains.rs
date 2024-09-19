@@ -31,7 +31,7 @@ impl TributeBrain {
 
     /// Decide on an action for the tribute to take
     /// First weighs any preferred actions, then decides based on current state
-    pub fn act(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>, closed_areas: Vec<Area>) -> TributeAction {
+    pub fn act(&mut self, tribute: &Tribute, nearby_tributes: usize, closed_areas: Vec<Area>) -> TributeAction {
         if tribute.health == 0 { return TributeAction::None; }
 
         // If the tribute is in a closed area, move them.
@@ -40,7 +40,7 @@ impl TributeBrain {
             return TributeAction::Move(None);
         }
 
-        let action = self.decide_on_action(tribute, nearby_tributes.len());
+        let action = self.decide_on_action(tribute, nearby_tributes);
 
         // Try to get a different action?
 

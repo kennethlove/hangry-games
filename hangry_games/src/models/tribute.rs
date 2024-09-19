@@ -177,7 +177,7 @@ impl Tribute {
             .collect::<Vec<_>>();
 
         // Decide the next logical action
-        brain.act(&mut tribute, nearby_targets.clone(), closed_areas.clone());
+        brain.act(&mut tribute, nearby_targets.len(), closed_areas.clone());
         let mut target = None;
 
         match brain.last_action() {
@@ -255,7 +255,7 @@ impl Tribute {
         let mut brain = tribute.brain.clone();
 
         // Decide the next logical action
-        brain.act(&mut tribute, nearby_targets.clone(), closed_areas.clone());
+        brain.act(&mut tribute, nearby_targets.len(), closed_areas.clone());
         let mut target = None;
 
         match brain.last_action() {
