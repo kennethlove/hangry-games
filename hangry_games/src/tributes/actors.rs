@@ -1,11 +1,11 @@
-use std::str::FromStr;
 use crate::areas::Area;
 use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
+use std::str::FromStr;
 
-use super::actions::{AttackResult, AttackOutcome};
-use super::statuses::TributeStatus;
+use super::actions::{AttackOutcome, AttackResult};
 use super::brains::TributeBrain;
+use super::statuses::TributeStatus;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
@@ -144,7 +144,7 @@ impl Tribute {
     pub fn bleeds(&mut self) {
         if self.status == TributeStatus::Wounded {
             self.takes_physical_damage(2);
-            println!("{} bleeds from their wounds. {}/100", self.name, self.health);
+            println!("🩸 {} bleeds from their wounds. 💪 {}/100", self.name, self.health);
         }
     }
 
@@ -153,7 +153,7 @@ impl Tribute {
         match self.sanity {
             0..=9 => {
                 self.takes_mental_damage(1);
-                println!("{} suffers from loneliness and terror. {}/100", self.name, self.sanity);
+                println!("😭 {} suffers from loneliness and terror. 🧠 {}/100", self.name, self.sanity);
             },
             10..=100 => {
                 // Tribute is lonely and scared.
@@ -163,7 +163,7 @@ impl Tribute {
                     // Tribute is homesick as well.
                     self.takes_mental_damage(2);
                 }
-                println!("{} mentally suffers through the night. {}/100", self.name, self.sanity);
+                println!("😢 {} mentally suffers through the night. 🧠 {}/100", self.name, self.sanity);
             },
             _ => ()
         }
@@ -173,7 +173,7 @@ impl Tribute {
         let game = get_game_by_id(self.game_id.unwrap()).unwrap();
         match attack_contest(self.clone(), target.clone()) {
             AttackResult::AttackerWins => {
-                println!("{} attacks {}, and wins!", self.name, target.name);
+                println!("🔪 {} attacks {}, and wins!", self.name, target.name);
                 target.takes_physical_damage(self.strength.unwrap());
                 apply_violence_stress(self);
 
@@ -189,7 +189,7 @@ impl Tribute {
                 AttackOutcome::Wound(self.clone(), target.clone())
             }
             AttackResult::DefenderWins => {
-                println!("{} attacks {}, but loses!", self.name, target.name);
+                println!("🤣 {} attacks {}, but loses!", self.name, target.name);
                 self.takes_physical_damage(target.strength.unwrap());
                 apply_violence_stress(target);
 
@@ -205,7 +205,7 @@ impl Tribute {
                 AttackOutcome::Wound(target.clone(), self.clone())
             }
             AttackResult::Miss => {
-                println!("{} attacks {}, but misses!", self.name, target.name);
+                println!("👻 {} attacks {}, but misses!", self.name, target.name);
                 self.draws = Some(self.draws.unwrap() + 1);
                 target.draws = Some(target.draws.unwrap() + 1);
 

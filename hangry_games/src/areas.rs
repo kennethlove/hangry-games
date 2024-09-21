@@ -76,7 +76,7 @@ impl Area {
         }
     }
 
-    pub fn random_open(closed_areas: Vec<Area>) -> Area {
+    pub fn random_open_area(closed_areas: Vec<Area>) -> Area {
         let area = loop {
             let random_area = Area::random();
             if !closed_areas.contains(&random_area.clone()) {

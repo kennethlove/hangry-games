@@ -1,15 +1,15 @@
-use crate::schema::game;
-use diesel::prelude::*;
-use crate::{establish_connection, models};
+use crate::areas::Area;
+use crate::events::AreaEvent;
 use crate::models::{bleed_tribute, get_area_by_id, suffer_tribute, update_tribute, Tribute};
-use rand::seq::SliceRandom;
+use crate::schema::game;
+use crate::tributes::statuses::TributeStatus;
+use crate::{establish_connection, models};
+use diesel::prelude::*;
 use fake::faker::name::raw::Name;
 use fake::locales::EN;
 use fake::Fake;
+use rand::seq::SliceRandom;
 use rand::Rng;
-use crate::areas::Area;
-use crate::events::AreaEvent;
-use crate::tributes::statuses::TributeStatus;
 
 #[derive(Queryable, Selectable, Clone, Debug)]
 #[diesel(table_name = game)]
@@ -55,11 +55,6 @@ impl Game {
     pub fn end(&self) {
         let connection = &mut establish_connection();
 
-        let tributes = self.tributes();
-        for tribute in tributes {
-            tribute.unset_area();
-        }
-
         let ended_at = Some(chrono::Utc::now().naive_utc());
         diesel::update(game::table.find(self.id))
             .set(game::ended_at.eq(ended_at))
@@ -96,7 +91,10 @@ impl Game {
         let mut closed_areas = vec![];
         let closed_areas = self.closed_areas.as_mut().unwrap_or(&mut closed_areas);
         let closed_areas = closed_areas.iter().filter(|a| a.unwrap() != area.id).cloned().collect::<Vec<_>>();
-        self.closed_areas = Some(closed_areas.clone());
+        self.closed_areas = match closed_areas.is_empty() {
+            true => None,
+            false => Some(closed_areas.clone())
+        };
 
         diesel::update(game::table.find(self.id))
             .set(game::closed_areas.eq(closed_areas.clone()))
@@ -152,10 +150,11 @@ impl Game {
             .map(|a| get_area_by_id(*a))
             .map(|a| Area::from(a.unwrap()))
             .collect::<Vec<_>>();
-        let area = Area::random_open(closed_areas);
+        let area = Area::random_open_area(closed_areas);
         let model_area = models::Area::from(area.clone());
-        println!("=== 🚨 A(n) {} has occurred in {} ===", event, area);
+        println!("=== ⚠️ A(n) {} has occurred in {} ===", event, area);
         models::AreaEvent::create(event.to_string(), model_area.id, self.id);
+        println!("=== 🔔 The Gamemakers close the {} ===", model_area.name);
         self.close_area(&model_area);
     }
 
@@ -173,7 +172,7 @@ impl Game {
 
             let area_name = area.name.strip_prefix("The ").unwrap_or(area.name.as_str());
             for tribute in tributes {
-                println!("{} is trapped in the {}.", tribute.name, area_name);
+                println!("⚡ {} is trapped in the {}.", tribute.name, area_name);
                 tribute.health = 0;
                 tribute.status = TributeStatus::RecentlyDead.to_string();
                 tribute.is_hidden = Some(false);
@@ -197,9 +196,9 @@ impl Game {
         }
 
         // Announce them
-        println!("=== 📯 {} tribute{} died ===", dead_tributes.len(), if dead_tributes.len() == 1 { "" } else { "s" });
+        println!("=== 💀 {} tribute{} died ===", dead_tributes.len(), if dead_tributes.len() == 1 { "" } else { "s" });
         for tribute in dead_tributes {
-            println!("- 💀 {}", tribute.name);
+            println!("🪦 {}", tribute.name);
         }
     }
 

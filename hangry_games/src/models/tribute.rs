@@ -1,13 +1,13 @@
+use super::get_area_by_id;
 use crate::establish_connection;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
-use crate::tributes::actors::{TravelResult, Tribute as TributeActor};
-use crate::tributes::actions::{AttackOutcome, TributeAction};
 use crate::schema::tribute;
+use crate::tributes::actions::{AttackOutcome, TributeAction};
 use crate::tributes::actors::pick_target;
+use crate::tributes::actors::{TravelResult, Tribute as TributeActor};
+use crate::tributes::statuses::TributeStatus;
 use diesel::prelude::*;
 use rand::prelude::*;
-use crate::tributes::statuses::TributeStatus;
-use super::get_area_by_id;
 
 #[derive(Queryable, Selectable, Debug, Clone, Associations)]
 #[diesel(table_name = tribute)]
@@ -131,7 +131,7 @@ impl Tribute {
 
     pub fn do_day(&mut self) -> Self {
         if self.health == 0 {
-            println!("!!! {} is dead !!!", self.name);
+            println!("😱 {} is dead!", self.name);
             self.status = TributeStatus::RecentlyDead.to_string();
             return self.clone();
         }
@@ -217,7 +217,7 @@ impl Tribute {
 
     pub fn do_night(&mut self) -> Self {
         if self.health == 0 {
-            println!("{} is dead", self.name);
+            println!("😱 {} is dead", self.name);
             self.status = TributeStatus::RecentlyDead.to_string();
             return self.clone();
         }
@@ -236,7 +236,7 @@ impl Tribute {
 
         if closed_areas.contains(&crate::areas::Area::from(area.clone())) {
             tribute.takes_physical_damage(100);
-            tribute.killed_by = Some(format!("{} waited too long in a closed area", tribute.name));
+            tribute.killed_by = Some(format!("🌋 {} waited too long in a closed area", tribute.name));
             let t = Self::from(tribute);
             t.dies();
             return t;
@@ -278,7 +278,7 @@ impl Tribute {
                         target = Some(victim.name.clone());
                         attack_target(self.clone(), victim.clone());
                     } else {
-                        println!("{} is too scared to attack {}", self.name, victim.name);
+                        println!("😨 {} is too scared to attack {}", self.name, victim.name);
                     }
                 }
             }
@@ -333,7 +333,7 @@ fn rest_tribute(tribute: Tribute) {
 
     update_tribute(tribute.id.unwrap(), Tribute::from(tribute.clone()));
 
-    println!("{} rests and recovers a little", tribute.name);
+    println!("💤 {} rests and recovers a little", tribute.name);
 }
 
 
@@ -351,11 +351,11 @@ fn move_tribute(tribute: Tribute, area: Option<String>) {
         TravelResult::Success(area) => {
             tribute.moves();
             tribute.changes_area(area.clone());
-            println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &area.as_str());
+            println!("🚶{} moves from {} to {}", tribute.name, tribute_area.as_str(), &area.as_str());
         }
         TravelResult::Failure => {
             tribute.rests();
-            println!("{} is too tired to move from {}, rests instead", tribute.name, tribute_area.as_str());
+            println!("😴 {} is too tired to move from {}, rests instead", tribute.name, tribute_area.as_str());
         }
     }
 
@@ -370,7 +370,7 @@ fn hide_tribute(tribute: Tribute) {
     hidden_tribute.rests();
 
     update_tribute(tribute.id, Tribute::from(hidden_tribute));
-    println!("{} tries to hide", tribute.name);
+    println!("🫥 {} tries to hide", tribute.name);
 }
 
 pub fn bleed_tribute(tribute: Tribute) -> Tribute {
@@ -380,7 +380,7 @@ pub fn bleed_tribute(tribute: Tribute) -> Tribute {
     if tribute.health == 0 {
         tribute.status = TributeStatus::RecentlyDead;
         tribute.killed_by = Some("Blood loss".to_string());
-        println!("{} dies by bleeding out", tribute.name);
+        println!("🩸🩸🩸 {} dies by bleeding out", tribute.name);
     }
 
     let tribute = Tribute::from(tribute);
@@ -552,13 +552,13 @@ fn attack_target(attacker: Tribute, victim: Tribute) {
     // Mutates attacker and victim
     match TributeActor::attacks(&mut attacker, &mut victim) {
         AttackOutcome::Kill(attacker, victim) => {
-            println!("{} kills {}", attacker.name, victim.name);
+            println!("☠️ {} kills {}", attacker.name, victim.name);
         }
         AttackOutcome::Wound(attacker, victim) => {
-            println!("{} wounds {}", attacker.name, victim.name);
+            println!("🤕 {} wounds {}", attacker.name, victim.name);
         }
         AttackOutcome::Miss(attacker, victim) => {
-            println!("{} misses {}", attacker.name, victim.name);
+            println!("💨 {} misses {}", attacker.name, victim.name);
         }
     }
 
