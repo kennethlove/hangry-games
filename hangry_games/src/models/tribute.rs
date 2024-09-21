@@ -154,7 +154,6 @@ impl Tribute {
 
         // Day 3 is the Feast, prefer move to the Cornucopia
         if game.day == Some(3) {
-            println!("🍱 FEAST DAY!");
             brain.set_preferred_action(
                 TributeAction::Move(
                     Some(crate::areas::Area::Cornucopia.to_string())
@@ -165,9 +164,10 @@ impl Tribute {
 
         // Get nearby targets
         let nearby_targets = Self::get_nearby_targets(area.clone(), self.game_id.unwrap());
-        let nearby_targets: usize = nearby_targets.iter()
+        let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
             .filter(|t| t.id != self.id)
-            .len();
+            .map(|t| TributeActor::from(t.clone()))
+            .collect::<Vec<_>>();
 
         // Collect the closed areas
         let closed_areas: Vec<crate::areas::Area> = game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).iter()
@@ -176,7 +176,7 @@ impl Tribute {
             .collect::<Vec<_>>();
 
         // Decide the next logical action
-        brain.act(&mut tribute, nearby_targets, closed_areas.clone());
+        brain.act(&mut tribute, nearby_targets.len(), closed_areas.clone());
         let mut target = None;
 
         match brain.last_action() {
@@ -195,7 +195,7 @@ impl Tribute {
                 rest_tribute(tribute.into());
             }
             TributeAction::Attack => {
-                if let Some(victim) = pick_target(self.clone(), nearby_targets.clone()) {
+                if let Some(victim) = pick_target(self.clone(), nearby_targets) {
                     let victim = Tribute::from(victim);
                     target = Some(victim.name.clone());
                     attack_target(self.clone(), victim.clone());
@@ -244,15 +244,16 @@ impl Tribute {
 
         // Get nearby tributes and targets
         let nearby_targets = Self::get_nearby_targets(area.clone(), self.game_id.unwrap());
-        let nearby_targets: usize<TributeActor> = nearby_targets.iter()
+        let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
             .filter(|t| t.id != self.id)
-            .len();
+            .map(|t| TributeActor::from(t.clone()))
+            .collect::<Vec<_>>();
 
         // Get Brain struct
         let mut brain = tribute.brain.clone();
 
         // Decide the next logical action
-        brain.act(&mut tribute, nearby_targets, closed_areas.clone());
+        brain.act(&mut tribute, nearby_targets.len(), closed_areas.clone());
         let mut target = None;
 
         match brain.last_action() {

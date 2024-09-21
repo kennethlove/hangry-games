@@ -183,7 +183,7 @@ impl Game {
 
             // Re-open area?
             if rng.gen_bool(0.5) {
-                println!("The Gamemakers open the {}.", area_name);
+                println!("=== 🔔 The Gamemakers open the {} ===", area_name);
                 self.open_area(&area);
             }
         }
@@ -217,7 +217,19 @@ impl Game {
             return;
         }
 
-        println!("☀️ Day {} begins.", day);
+        // Make day announcements
+        match self.day {
+            Some(1) => {
+                println!("=== 🎉 The Hunger Games begin! 🎉 ===");
+            }
+            Some(3) => {
+                println!("=== 😋 Feast Day ===");
+            }
+            _ => {
+                println!("=== ☀️ Day {} begins ===", self.day.unwrap());
+            }
+        }
+
         println!("=== {} tribute{} remain{} ===",
                  living_tributes.len(),
                  if living_tributes.len() == 1 { "" } else { "s" },
@@ -234,7 +246,6 @@ impl Game {
         self.do_deaths();
     }
 }
-
 #[derive(Insertable, Debug)]
 #[diesel(table_name = game)]
 pub struct NewGame<'a> {

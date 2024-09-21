@@ -188,7 +188,7 @@ pub fn parse() {
                     tribute.status,
                     tribute.health,
                     tribute.sanity,
-                    tribute.area().unwrap().id,
+                    tribute.area().expect("No area?").id,
                     next_to_last_action.action_id,
                     next_to_last_action.target,
                     last_action.action_id,
