@@ -133,10 +133,10 @@ pub fn parse() {
         Commands::ShowGames => {
             for _game in get_games() {
                 println!("{}, Day {}, Tributes {}/24 {}",
-                    _game.name,
-                    _game.day.unwrap_or(0),
-                    get_all_living_tributes(&_game).len(),
-                    if _game.ended_at.is_some() { "Closed" } else { "" }
+                         _game.name,
+                         _game.day.unwrap_or(0),
+                         get_all_living_tributes(&_game).len(),
+                         if _game.ended_at.is_some() { "Closed" } else { "" }
                 );
             }
         }
@@ -183,16 +183,20 @@ pub fn parse() {
                 let last_action = last_actions.unwrap().last().unwrap();
                 let next_to_last_action = last_actions.unwrap().first().unwrap();
 
+                let area = match tribute.area() {
+                    Some(area) => area.name.clone(),
+                    None => "Unknown".to_string()
+                };
                 println!("{} is {}, {}/100, {}/100, in {}, ({}, {:?}) -> ({}, {:?})",
-                    tribute.name,
-                    tribute.status,
-                    tribute.health,
-                    tribute.sanity,
-                    tribute.area().expect("No area?").id,
-                    next_to_last_action.action_id,
-                    next_to_last_action.target,
-                    last_action.action_id,
-                    last_action.target,
+                         tribute.name,
+                         tribute.status,
+                         tribute.health,
+                         tribute.sanity,
+                         area,
+                         next_to_last_action.action_id,
+                         next_to_last_action.target,
+                         last_action.action_id,
+                         last_action.target,
                 );
             }
             println!("Closed areas: {:?}", game.closed_areas);
