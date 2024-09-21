@@ -285,6 +285,7 @@ impl Tribute {
                 hide_tribute(Tribute::from(tribute));
             }
             _ => {
+                println!("{} does nothing", self.name);
                 rest_tribute(tribute.into());
             }
         }
