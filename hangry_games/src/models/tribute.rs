@@ -1,13 +1,13 @@
+use super::get_area_by_id;
 use crate::establish_connection;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
-use crate::tributes::actors::{TravelResult, Tribute as TributeActor};
-use crate::tributes::actions::{AttackOutcome, TributeAction};
 use crate::schema::tribute;
+use crate::tributes::actions::{AttackOutcome, TributeAction};
 use crate::tributes::actors::pick_target;
+use crate::tributes::actors::{TravelResult, Tribute as TributeActor};
+use crate::tributes::statuses::TributeStatus;
 use diesel::prelude::*;
 use rand::prelude::*;
-use crate::tributes::statuses::TributeStatus;
-use super::get_area_by_id;
 
 #[derive(Queryable, Selectable, Debug, Clone, Associations)]
 #[diesel(table_name = tribute)]
@@ -131,7 +131,7 @@ impl Tribute {
 
     pub fn do_day(&mut self) -> Self {
         if self.health == 0 {
-            println!("{} is dead", self.name);
+            println!("😱 {} is dead!", self.name);
             self.status = TributeStatus::RecentlyDead.to_string();
             return self.clone();
         }
@@ -166,19 +166,17 @@ impl Tribute {
         let nearby_targets = Self::get_nearby_targets(area.clone(), self.game_id.unwrap());
         let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
             .filter(|t| t.id != self.id)
-            .map(
-                |t| TributeActor::from(t.clone())
-            ).collect();
+            .map(|t| TributeActor::from(t.clone()))
+            .collect::<Vec<_>>();
 
-        // If the tribute is in a closed area, move them.
-        if game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).contains(&Some(area.id)) {
-            move_tribute(tribute.clone().into(), None);
-            println!("{}", format!("{} leaves the closed area", tribute.name));
-            return self.clone();
-        }
+        // Collect the closed areas
+        let closed_areas: Vec<crate::areas::Area> = game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).iter()
+            .map(|id| get_area_by_id(*id).unwrap())
+            .map(|a| crate::areas::Area::from(a))
+            .collect::<Vec<_>>();
 
         // Decide the next logical action
-        brain.act(&mut tribute, nearby_targets.clone());
+        brain.act(&mut tribute, nearby_targets.len(), closed_areas.clone());
         let mut target = None;
 
         match brain.last_action() {
@@ -197,7 +195,7 @@ impl Tribute {
                 rest_tribute(tribute.into());
             }
             TributeAction::Attack => {
-                if let Some(victim) = pick_target(self.clone(), nearby_targets.clone()) {
+                if let Some(victim) = pick_target(self.clone(), nearby_targets) {
                     let victim = Tribute::from(victim);
                     target = Some(victim.name.clone());
                     attack_target(self.clone(), victim.clone());
@@ -219,7 +217,7 @@ impl Tribute {
 
     pub fn do_night(&mut self) -> Self {
         if self.health == 0 {
-            println!("{} is dead", self.name);
+            println!("😱 {} is dead", self.name);
             self.status = TributeStatus::RecentlyDead.to_string();
             return self.clone();
         }
@@ -227,31 +225,35 @@ impl Tribute {
         // Create Tribute struct
         let mut tribute = TributeActor::from(self.clone());
 
-        let game = get_game_by_id(self.game_id.unwrap());
+        let game = get_game_by_id(self.game_id.unwrap()).expect("Couldn't get game");
         let area = get_area_by_id(self.area_id).expect("Couldn't get area");
 
-        if let Ok(game) = game {
-            if game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).contains(&Some(area.id)) {
-                tribute.takes_physical_damage(100);
-                tribute.dies();
-                tribute.killed_by = Some(format!("{} waited too long in a closed area", tribute.name));
-                return Tribute::from(tribute);
-            }
+        // Collect the closed areas
+        let closed_areas: Vec<crate::areas::Area> = game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).iter()
+            .map(|id| get_area_by_id(*id).unwrap())
+            .map(|a| crate::areas::Area::from(a))
+            .collect::<Vec<_>>();
+
+        if closed_areas.contains(&crate::areas::Area::from(area.clone())) {
+            tribute.takes_physical_damage(100);
+            tribute.killed_by = Some(format!("🌋 {} waited too long in a closed area", tribute.name));
+            let t = Self::from(tribute);
+            t.dies();
+            return t;
         }
 
         // Get nearby tributes and targets
         let nearby_targets = Self::get_nearby_targets(area.clone(), self.game_id.unwrap());
         let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
             .filter(|t| t.id != self.id)
-            .map(
-                |t| TributeActor::from(t.clone())
-            ).collect();
+            .map(|t| TributeActor::from(t.clone()))
+            .collect::<Vec<_>>();
 
         // Get Brain struct
         let mut brain = tribute.brain.clone();
 
         // Decide the next logical action
-        brain.act(&mut tribute, nearby_targets.clone());
+        brain.act(&mut tribute, nearby_targets.len(), closed_areas.clone());
         let mut target = None;
 
         match brain.last_action() {
@@ -276,7 +278,7 @@ impl Tribute {
                         target = Some(victim.name.clone());
                         attack_target(self.clone(), victim.clone());
                     } else {
-                        println!("{} is too scared to attack {}", self.name, victim.name);
+                        println!("😨 {} is too scared to attack {}", self.name, victim.name);
                     }
                 }
             }
@@ -284,6 +286,7 @@ impl Tribute {
                 hide_tribute(Tribute::from(tribute));
             }
             _ => {
+                println!("{} does nothing", self.name);
                 rest_tribute(tribute.into());
             }
         }
@@ -330,7 +333,7 @@ fn rest_tribute(tribute: Tribute) {
 
     update_tribute(tribute.id.unwrap(), Tribute::from(tribute.clone()));
 
-    println!("{} rests and recovers a little", tribute.name);
+    println!("💤 {} rests and recovers a little", tribute.name);
 }
 
 
@@ -348,11 +351,11 @@ fn move_tribute(tribute: Tribute, area: Option<String>) {
         TravelResult::Success(area) => {
             tribute.moves();
             tribute.changes_area(area.clone());
-            println!("{} moves from {} to {}", tribute.name, tribute_area.as_str(), &area.as_str());
+            println!("🚶{} moves from {} to {}", tribute.name, tribute_area.as_str(), &area.as_str());
         }
         TravelResult::Failure => {
             tribute.rests();
-            println!("{} is too tired to move from {}, rests instead", tribute.name, tribute_area.as_str());
+            println!("😴 {} is too tired to move from {}, rests instead", tribute.name, tribute_area.as_str());
         }
     }
 
@@ -367,7 +370,7 @@ fn hide_tribute(tribute: Tribute) {
     hidden_tribute.rests();
 
     update_tribute(tribute.id, Tribute::from(hidden_tribute));
-    println!("{} tries to hide", tribute.name);
+    println!("🫥 {} tries to hide", tribute.name);
 }
 
 pub fn bleed_tribute(tribute: Tribute) -> Tribute {
@@ -377,7 +380,7 @@ pub fn bleed_tribute(tribute: Tribute) -> Tribute {
     if tribute.health == 0 {
         tribute.status = TributeStatus::RecentlyDead;
         tribute.killed_by = Some("Blood loss".to_string());
-        println!("{} dies by bleeding out", tribute.name);
+        println!("🩸🩸🩸 {} dies by bleeding out", tribute.name);
     }
 
     let tribute = Tribute::from(tribute);
@@ -549,13 +552,13 @@ fn attack_target(attacker: Tribute, victim: Tribute) {
     // Mutates attacker and victim
     match TributeActor::attacks(&mut attacker, &mut victim) {
         AttackOutcome::Kill(attacker, victim) => {
-            println!("{} kills {}", attacker.name, victim.name);
+            println!("☠️ {} kills {}", attacker.name, victim.name);
         }
         AttackOutcome::Wound(attacker, victim) => {
-            println!("{} wounds {}", attacker.name, victim.name);
+            println!("🤕 {} wounds {}", attacker.name, victim.name);
         }
         AttackOutcome::Miss(attacker, victim) => {
-            println!("{} misses {}", attacker.name, victim.name);
+            println!("💨 {} misses {}", attacker.name, victim.name);
         }
     }
 
@@ -565,7 +568,7 @@ fn attack_target(attacker: Tribute, victim: Tribute) {
     update_tribute(victim.id, victim);
 }
 
-fn update_tribute(tribute_id: i32, tribute: Tribute) {
+pub fn update_tribute(tribute_id: i32, tribute: Tribute) {
     let conn = &mut establish_connection();
     let update_tribute = UpdateTribute {
         id: tribute_id,

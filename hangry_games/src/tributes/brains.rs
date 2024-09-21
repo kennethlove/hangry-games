@@ -1,4 +1,5 @@
 use rand::{thread_rng, Rng};
+use crate::areas::Area;
 use crate::tributes::actions::TributeAction;
 use crate::tributes::actors::Tribute;
 
@@ -30,10 +31,16 @@ impl TributeBrain {
 
     /// Decide on an action for the tribute to take
     /// First weighs any preferred actions, then decides based on current state
-    pub fn act(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
+    pub fn act(&mut self, tribute: &Tribute, nearby_tributes: usize, closed_areas: Vec<Area>) -> TributeAction {
         if tribute.health == 0 { return TributeAction::None; }
 
-        let action = self.decide_on_action(tribute, nearby_tributes.clone());
+        // If the tribute is in a closed area, move them.
+        if closed_areas.contains(tribute.area.as_ref().unwrap()) {
+            self.previous_actions.push(TributeAction::Move(None));
+            return TributeAction::Move(None);
+        }
+
+        let action = self.decide_on_action(tribute, nearby_tributes);
 
         // Try to get a different action?
 
@@ -51,7 +58,7 @@ impl TributeBrain {
     }
 
     /// The AI for a tribute. Automatic decisions based on current state.
-    fn decide_on_action(&mut self, tribute: &Tribute, nearby_tributes: Vec<Tribute>) -> TributeAction {
+    fn decide_on_action(&mut self, tribute: &Tribute, nearby_tributes: usize) -> TributeAction {
         // If the tribute isn't in the area, they do nothing
         if tribute.area.is_none() {
             return TributeAction::None;
@@ -70,7 +77,7 @@ impl TributeBrain {
             }
         }
 
-        match &nearby_tributes.len() {
+        match &nearby_tributes {
             0 => {
                 match tribute.health {
                     // health is low, rest

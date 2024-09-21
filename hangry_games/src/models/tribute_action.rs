@@ -40,6 +40,7 @@ impl TributeAction {
         let connection = &mut establish_connection();
         tribute_action::table
             .filter(tribute_action::tribute_id.eq(tribute_id))
+            .select(tribute_action::all_columns)
             .load(connection)
             .expect("Error loading tribute actions")
     }
