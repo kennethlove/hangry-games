@@ -1,11 +1,11 @@
-use std::str::FromStr;
 use crate::areas::Area;
 use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
+use std::str::FromStr;
 
-use super::actions::{AttackResult, AttackOutcome};
-use super::statuses::TributeStatus;
+use super::actions::{AttackOutcome, AttackResult};
 use super::brains::TributeBrain;
+use super::statuses::TributeStatus;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
@@ -103,7 +103,7 @@ impl Tribute {
 
     /// Consumes movement and removes hidden status.
     pub fn moves(&mut self) {
-        self.movement = std::cmp::max(0, self.movement - 25);
+        self.movement = std::cmp::max(0, self.movement - self.speed.unwrap());
         self.is_hidden = Some(false);
     }
 
@@ -144,7 +144,7 @@ impl Tribute {
     pub fn bleeds(&mut self) {
         if self.status == TributeStatus::Wounded {
             self.takes_physical_damage(2);
-            println!("{} bleeds from their wounds. {}/100", self.name, self.health);
+            println!("🩸 {} bleeds from their wounds. 💪 {}/100", self.name, self.health);
         }
     }
 
@@ -153,7 +153,7 @@ impl Tribute {
         match self.sanity {
             0..=9 => {
                 self.takes_mental_damage(1);
-                println!("{} suffers from loneliness and terror. {}/100", self.name, self.sanity);
+                println!("😭 {} suffers from loneliness and terror. 🧠 {}/100", self.name, self.sanity);
             },
             10..=100 => {
                 // Tribute is lonely and scared.
@@ -163,7 +163,7 @@ impl Tribute {
                     // Tribute is homesick as well.
                     self.takes_mental_damage(2);
                 }
-                println!("{} mentally suffers through the night. {}/100", self.name, self.sanity);
+                println!("😢 {} mentally suffers through the night. 🧠 {}/100", self.name, self.sanity);
             },
             _ => ()
         }
@@ -173,7 +173,7 @@ impl Tribute {
         let game = get_game_by_id(self.game_id.unwrap()).unwrap();
         match attack_contest(self.clone(), target.clone()) {
             AttackResult::AttackerWins => {
-                println!("{} attacks {}, and wins!", self.name, target.name);
+                println!("🔪 {} attacks {}, and wins!", self.name, target.name);
                 target.takes_physical_damage(self.strength.unwrap());
                 apply_violence_stress(self);
 
@@ -189,7 +189,7 @@ impl Tribute {
                 AttackOutcome::Wound(self.clone(), target.clone())
             }
             AttackResult::DefenderWins => {
-                println!("{} attacks {}, but loses!", self.name, target.name);
+                println!("🤣 {} attacks {}, but loses!", self.name, target.name);
                 self.takes_physical_damage(target.strength.unwrap());
                 apply_violence_stress(target);
 
@@ -205,7 +205,7 @@ impl Tribute {
                 AttackOutcome::Wound(target.clone(), self.clone())
             }
             AttackResult::Miss => {
-                println!("{} attacks {}, but misses!", self.name, target.name);
+                println!("👻 {} attacks {}, but misses!", self.name, target.name);
                 self.draws = Some(self.draws.unwrap() + 1);
                 target.draws = Some(target.draws.unwrap() + 1);
 
@@ -228,23 +228,33 @@ impl Tribute {
         let mut rng = thread_rng();
         let area = self.clone().area.unwrap();
 
-        if self.movement > 0 {
-            if let Some(area_string) = suggested_area {
-                let area = Area::from_str(area_string.as_str()).unwrap();
-                return TravelResult::Success(area);
-            }
-
-            let neighbors = area.neighbors();
-            let new_area = loop {
-                let new_area = neighbors.choose(&mut rng).unwrap();
-                if new_area == &area || closed_areas.contains(new_area) {
-                    continue;
+        match self.movement {
+            // No movement left, can't move
+            0 => TravelResult::Failure,
+            // Low movement, can only move to suggested area
+            1..=10 => {
+                if let Some(area_string) = suggested_area {
+                    let area = Area::from_str(area_string.as_str()).unwrap();
+                    return TravelResult::Success(area);
                 }
-                break new_area.clone();
-            };
-            TravelResult::Success(new_area)
-        } else {
-            TravelResult::Failure
+                TravelResult::Failure
+            },
+            // High movement, can move to any open neighbor or the suggested area
+            _ => {
+                if let Some(area_string) = suggested_area {
+                    let area = Area::from_str(area_string.as_str()).unwrap();
+                    return TravelResult::Success(area);
+                }
+                let neighbors = area.neighbors();
+                let new_area = loop {
+                    let new_area = neighbors.choose(&mut rng).unwrap();
+                    if new_area == &area || closed_areas.contains(new_area) {
+                        continue;
+                    }
+                    break new_area.clone();
+                };
+                TravelResult::Success(new_area)
+            }
         }
     }
 }

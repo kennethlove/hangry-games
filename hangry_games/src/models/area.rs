@@ -2,7 +2,7 @@ use crate::schema::area;
 use diesel::prelude::*;
 use crate::establish_connection;
 
-#[derive(Queryable, Selectable, Debug, Clone)]
+#[derive(Queryable, Selectable, Debug, Clone, Eq, PartialEq)]
 #[diesel(table_name = area)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Area {
@@ -67,10 +67,10 @@ pub fn get_area(name: &str) -> Area {
 }
 
 pub fn get_area_by_id(id: Option<i32>) -> Option<Area> {
-    let conn = &mut establish_connection();
     if id.is_none() {
         return None;
     }
+    let conn = &mut establish_connection();
     let area: Area = area::table
         .find(id?)
         .first::<Area>(conn)

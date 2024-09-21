@@ -18,6 +18,16 @@ diesel::table! {
 }
 
 diesel::table! {
+    area_event (id) {
+        id -> Int4,
+        #[max_length = 255]
+        name -> Varchar,
+        area_id -> Int4,
+        game_id -> Int4,
+    }
+}
+
+diesel::table! {
     game (id) {
         id -> Int4,
         name -> Text,
@@ -90,6 +100,8 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(area_event -> area (area_id));
+diesel::joinable!(area_event -> game (game_id));
 diesel::joinable!(items -> area (area_id));
 diesel::joinable!(items -> game (game_id));
 diesel::joinable!(tribute -> area (area_id));
@@ -100,6 +112,7 @@ diesel::joinable!(tribute_action -> tribute (tribute_id));
 diesel::allow_tables_to_appear_in_same_query!(
     action,
     area,
+    area_event,
     game,
     items,
     tribute,

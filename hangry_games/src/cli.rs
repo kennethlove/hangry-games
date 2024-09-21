@@ -133,10 +133,10 @@ pub fn parse() {
         Commands::ShowGames => {
             for _game in get_games() {
                 println!("{}, Day {}, Tributes {}/24 {}",
-                    _game.name,
-                    _game.day.unwrap_or(0),
-                    get_all_living_tributes(&_game).len(),
-                    if _game.ended_at.is_some() { "Closed" } else { "" }
+                         _game.name,
+                         _game.day.unwrap_or(0),
+                         get_all_living_tributes(&_game).len(),
+                         if _game.ended_at.is_some() { "Closed" } else { "" }
                 );
             }
         }
@@ -165,7 +165,7 @@ pub fn parse() {
             println!("Day {}", game.day.unwrap_or(0));
             println!("{} tributes left", living_tributes.len());
             for area in get_areas() {
-                let tributes = living_tributes.iter().filter(|t| t.area().unwrap().id == area.id).collect::<Vec<_>>();
+                let tributes = living_tributes.iter().filter(|t| t.area().is_some() && t.area().unwrap().id == area.id).collect::<Vec<_>>();
                 println!("{} tributes in {}", tributes.len(), area.name);
             }
             println!("Deaths");
@@ -183,15 +183,23 @@ pub fn parse() {
                 let last_action = last_actions.unwrap().last().unwrap();
                 let next_to_last_action = last_actions.unwrap().first().unwrap();
 
-                println!("{} is {}, {}/100, {}/100, ({:?}) -> ({:?})",
-                    tribute.name,
-                    tribute.status,
-                    tribute.health,
-                    tribute.sanity,
-                    next_to_last_action,
-                    last_action,
+                let area = match tribute.area() {
+                    Some(area) => area.name.clone(),
+                    None => "Unknown".to_string()
+                };
+                println!("{} is {}, {}/100, {}/100, in {}, ({}, {:?}) -> ({}, {:?})",
+                         tribute.name,
+                         tribute.status,
+                         tribute.health,
+                         tribute.sanity,
+                         area,
+                         next_to_last_action.action_id,
+                         next_to_last_action.target,
+                         last_action.action_id,
+                         last_action.target,
                 );
             }
+            println!("Closed areas: {:?}", game.closed_areas);
         }
         Commands::QuickStart => {
             let game = create_game();

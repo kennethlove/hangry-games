@@ -15,10 +15,10 @@ impl Display for Area {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Area::Cornucopia => write!(f, "The Cornucopia"),
-            Area::Northeast => write!(f, "North East"),
-            Area::Northwest => write!(f, "North West"),
-            Area::Southeast => write!(f, "South East"),
-            Area::Southwest => write!(f, "South West"),
+            Area::Northeast => write!(f, "Northeast"),
+            Area::Northwest => write!(f, "Northwest"),
+            Area::Southeast => write!(f, "Southeast"),
+            Area::Southwest => write!(f, "Southwest"),
         }
     }
 }
@@ -27,6 +27,7 @@ impl Area {
     pub fn from_str(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "the cornucopia" => Some(Area::Cornucopia),
+            "thecornucopia" => Some(Area::Cornucopia),
             "cornucopia" => Some(Area::Cornucopia),
             "north east" => Some(Area::Northeast),
             "northeast" => Some(Area::Northeast),
@@ -73,6 +74,16 @@ impl Area {
             4 => Area::Southwest,
             _ => Area::Cornucopia,
         }
+    }
+
+    pub fn random_open_area(closed_areas: Vec<Area>) -> Area {
+        let area = loop {
+            let random_area = Area::random();
+            if !closed_areas.contains(&random_area.clone()) {
+                break random_area;
+            }
+        };
+        area
     }
 }
 
