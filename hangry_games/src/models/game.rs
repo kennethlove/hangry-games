@@ -62,7 +62,8 @@ impl Game {
             .expect("Error updating game");
     }
 
-    pub fn set_day(&self, day_number: i32) {
+    pub fn set_day(&mut self, day_number: i32) {
+        self.day = Some(day_number);
         let connection = &mut establish_connection();
         diesel::update(game::table.find(self.id))
             .set(game::day.eq(Some(day_number)))
@@ -108,7 +109,7 @@ impl Game {
         self.do_area_event_cleanup();
 
         // Trigger any daytime events
-        if self.day > Some(2) && rng.gen_bool(1.0 / 4.0) {
+        if self.day > Some(2) && rng.gen_bool(1.0 / 1.0) {
             self.do_area_event();
         }
 
@@ -164,6 +165,8 @@ impl Game {
         // Handle closed areas
         for area_id in self.closed_areas.clone().unwrap_or(vec![]) {
             let area = get_area_by_id(area_id).unwrap();
+            let events = area.events(self.id);
+            let event = events.iter().last();
             let mut tributes = area.tributes(self.id);
             let tributes = tributes
                 .iter_mut()
@@ -176,7 +179,7 @@ impl Game {
                 tribute.health = 0;
                 tribute.status = TributeStatus::RecentlyDead.to_string();
                 tribute.is_hidden = Some(false);
-                tribute.killed_by = Some("The Gamemakers".to_string());
+                tribute.killed_by = Some(event.unwrap().name.clone());
                 update_tribute(tribute.id, tribute.clone());
             }
 
@@ -214,7 +217,12 @@ impl Game {
             println!("=== 🏆 The winner is {} ===", living_tributes[0].name);
             self.end();
             return;
+        } else if living_tributes.len() == 0 {
+            println!("=== 🎭 No one wins! ===");
+            self.end();
+            return;
         }
+
 
         // Make day announcements
         match self.day {

@@ -1,9 +1,9 @@
 use crate::establish_connection;
-use diesel::prelude::*;
 use crate::models::{Area, Game};
 use crate::schema::area_event;
+use diesel::prelude::*;
 
-#[derive(Queryable, Selectable, Debug, Associations)]
+#[derive(Queryable, Selectable, Debug, Associations, Clone)]
 #[diesel(table_name = area_event)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[diesel(belongs_to(Area, foreign_key = area_id))]

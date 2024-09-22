@@ -143,7 +143,7 @@ impl Tribute {
     /// Tribute is wounded, loses some health.
     pub fn bleeds(&mut self) {
         if self.status == TributeStatus::Wounded {
-            self.takes_physical_damage(2);
+            self.takes_physical_damage(1);
             println!("🩸 {} bleeds from their wounds. 💪 {}/100", self.name, self.health);
         }
     }
@@ -152,16 +152,17 @@ impl Tribute {
     pub fn suffers(&mut self) {
         match self.sanity {
             0..=9 => {
-                self.takes_mental_damage(1);
+                // as sanity decreases, mental damage increases
+                self.takes_mental_damage(3);
                 println!("😭 {} suffers from loneliness and terror. 🧠 {}/100", self.name, self.sanity);
             },
             10..=100 => {
                 // Tribute is lonely and scared.
                 self.takes_mental_damage(1);
                 let mut rng = thread_rng();
-                if rng.gen_bool(self.sanity as f64 / 100.0) {
+                if !rng.gen_bool(self.sanity as f64 / 100.0) {
                     // Tribute is homesick as well.
-                    self.takes_mental_damage(2);
+                    self.takes_mental_damage(1);
                 }
                 println!("😢 {} mentally suffers through the night. 🧠 {}/100", self.name, self.sanity);
             },
