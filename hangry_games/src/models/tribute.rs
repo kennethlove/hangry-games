@@ -379,7 +379,7 @@ pub fn bleed_tribute(tribute: Tribute) -> Tribute {
 
     if tribute.health == 0 {
         tribute.status = TributeStatus::RecentlyDead;
-        tribute.killed_by = Some("Blood loss".to_string());
+        tribute.killed_by = Some("blood loss".to_string());
         println!("🩸🩸🩸 {} dies by bleeding out", tribute.name);
     }
 
