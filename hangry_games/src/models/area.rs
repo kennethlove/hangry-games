@@ -1,6 +1,6 @@
+use crate::establish_connection;
 use crate::schema::area;
 use diesel::prelude::*;
-use crate::establish_connection;
 
 #[derive(Queryable, Selectable, Debug, Clone, Eq, PartialEq)]
 #[diesel(table_name = area)]
@@ -18,11 +18,19 @@ impl Area {
     }
 
     /// Get all the tributes in an area.
-    pub fn tributes(&self, game_id: i32) -> Vec<crate::models::Tribute> {
+    pub fn tributes(&self, game: i32) -> Vec<crate::models::Tribute> {
         let tributes = crate::models::get_all_tributes();
         tributes.into_iter()
-            .filter(|t| t.game_id == Some(game_id))
+            .filter(|t| t.game_id == Some(game))
             .filter(|t| t.area_id == Some(self.id))
+            .collect()
+    }
+
+    pub fn events(&self, game: i32) -> Vec<crate::models::AreaEvent> {
+        let events = crate::models::event::AreaEvent::get_all_for_game(game);
+        events.iter()
+            .filter(|ae| ae.area_id == self.id)
+            .cloned()
             .collect()
     }
 }
