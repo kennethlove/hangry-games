@@ -6,7 +6,6 @@ pub enum TributeStatus {
     #[default]
     Healthy,
     Wounded,
-    // Dying,
     Starving,
     Dehydrated,
     Sick,
@@ -19,14 +18,6 @@ pub enum TributeStatus {
     Broken,
     Infected,
     Drowned,
-    // Drunk,
-    // High,
-    // Insane,
-    // Hallucinating,
-    // Paralyzed,
-    // Asleep,
-    // Unconscious,
-    // Revived,
 }
 
 impl FromStr for TributeStatus {
@@ -37,7 +28,6 @@ impl FromStr for TributeStatus {
             "healthy" => Ok(TributeStatus::Healthy),
             "wounded" => Ok(TributeStatus::Wounded),
             "injured" => Ok(TributeStatus::Wounded),
-            // "dying" => Ok(TributeStatus::Dying),
             "starving" => Ok(TributeStatus::Starving),
             "dehydrated" => Ok(TributeStatus::Dehydrated),
             "sick" => Ok(TributeStatus::Sick),
@@ -53,14 +43,6 @@ impl FromStr for TributeStatus {
             "broken" => Ok(TributeStatus::Broken),
             "infected" => Ok(TributeStatus::Infected),
             "drowned" => Ok(TributeStatus::Drowned),
-            // "drunk" => Ok(TributeStatus::Drunk),
-            // "high" => Ok(TributeStatus::High),
-            // "insane" => Ok(TributeStatus::Insane),
-            // "hallucinating" => Ok(TributeStatus::Hallucinating),
-            // "paralyzed" => Ok(TributeStatus::Paralyzed),
-            // "asleep" => Ok(TributeStatus::Asleep),
-            // "unconscious" => Ok(TributeStatus::Unconscious),
-            // "revived" => Ok(TributeStatus::Revived),
             _ => Err(()),
         }
     }
@@ -71,7 +53,6 @@ impl Display for TributeStatus {
         match self {
             TributeStatus::Healthy => write!(f, "Healthy"),
             TributeStatus::Wounded => write!(f, "Wounded"),
-            // TributeStatus::Dying => write!(f, "Dying"),
             TributeStatus::Starving => write!(f, "Starving"),
             TributeStatus::Dehydrated => write!(f, "Dehydrated"),
             TributeStatus::Sick => write!(f, "Sick"),
@@ -84,14 +65,6 @@ impl Display for TributeStatus {
             TributeStatus::Broken => write!(f, "Broken"),
             TributeStatus::Infected => write!(f, "Infected"),
             TributeStatus::Drowned => write!(f, "Drowned"),
-            // TributeStatus::Drunk => write!(f, "Drunk"),
-            // TributeStatus::High => write!(f, "High"),
-            // TributeStatus::Insane => write!(f, "Insane"),
-            // TributeStatus::Hallucinating => write!(f, "Hallucinating"),
-            // TributeStatus::Paralyzed => write!(f, "Paralyzed"),
-            // TributeStatus::Asleep => write!(f, "Asleep"),
-            // TributeStatus::Unconscious => write!(f, "Unconscious"),
-            // TributeStatus::Revived => write!(f, "Revived"),
         }
     }
 }
