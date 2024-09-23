@@ -2,7 +2,7 @@ use super::actions::{AttackOutcome, AttackResult};
 use super::brains::TributeBrain;
 use super::statuses::TributeStatus;
 use crate::areas::Area;
-use crate::events::PlayerEvent;
+use crate::events::TributeEvent;
 use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
 use std::str::FromStr;
@@ -259,65 +259,76 @@ impl Tribute {
         }
     }
 
-    pub fn handle_event(&mut self, player_event: PlayerEvent) {
+    pub fn handle_event(&mut self, player_event: TributeEvent) {
         match player_event {
-            PlayerEvent::AnimalAttack(animal) => {
+            TributeEvent::AnimalAttack(animal) => {
                 let damage = animal.damage();
                 self.takes_physical_damage(damage);
                 println!("🐾 {} is attacked by {}, takes {} damage!", self.name, animal.plural(), damage);
             },
-            PlayerEvent::Dysentery => {
+            TributeEvent::Dysentery => {
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
+                self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
                 self.status = TributeStatus::Sick;
-                println!("🤒 {} contracts dysentery, loses strength", self.name);
+                println!("🤒 {} contracts dysentery, loses strength and speed", self.name);
             }
-            PlayerEvent::LightningStrike => {
+            TributeEvent::LightningStrike => {
                 self.takes_physical_damage(20);
                 self.status = TributeStatus::Electrocuted;
                 println!("🌩️ {} is struck by lightning, loses health", self.name);
             }
-            PlayerEvent::Hypothermia => {
+            TributeEvent::Hypothermia => {
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
                 self.status = TributeStatus::Frozen;
                 println!("🥶 {} suffers from hypothermia, loses speed.", self.name);
             }
-            PlayerEvent::HeatStroke => {
+            TributeEvent::HeatStroke => {
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
                 self.status = TributeStatus::Overheated;
                 println!("🥵 {} suffers from heat stroke, loses speed.", self.name);
             },
-            PlayerEvent::Dehydration => {
+            TributeEvent::Dehydration => {
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
                 self.status = TributeStatus::Dehydrated;
                 println!("🌵 {} is severely dehydrated, loses strength", self.name);
             },
-            PlayerEvent::Starvation => {
+            TributeEvent::Starvation => {
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
                 self.status = TributeStatus::Starving;
                 println!("🍴 {} is ravenously hungry, loses strength", self.name);
             },
-            PlayerEvent::Poisoning => {
+            TributeEvent::Poisoning => {
                 self.takes_mental_damage(5);
                 self.status = TributeStatus::Poisoned;
-                println!("🧪 {} is poisoned, loses sanity", self.name);
+                println!("🧪 {} eats something poisonous, loses sanity", self.name);
             },
-            PlayerEvent::BrokenBone => {
-                // For now, all bone breaks are leg bones
-                self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 5));
+            TributeEvent::BrokenBone => {
                 self.status = TributeStatus::Broken;
-                println!("🦴 {} breaks a bone, loses speed.", self.name);
+
+                // coin flip for which bone breaks
+                let leg_bone = thread_rng().gen_bool(0.5);
+
+                // TODO: Add in other bones? Ribs and skull make sense.
+
+                if leg_bone {
+                    self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 5));
+                    println!("🦴 {} injures their leg, loses speed.", self.name);
+                } else {
+                    self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 5));
+                    println!("🦴 {} injures their arm, loses strength.", self.name);
+                }
             },
-            PlayerEvent::Infection => {
+            TributeEvent::Infection => {
                 self.takes_physical_damage(2);
                 self.takes_mental_damage(2);
                 self.status = TributeStatus::Infected;
-                println!("🤢 {} has an infected wound, loses health and sanity", self.name);
+                println!("🤢 {} gets an infection, loses health and sanity", self.name);
             },
-            PlayerEvent::Drowning => {
+            TributeEvent::Drowning => {
                 self.takes_physical_damage(2);
                 self.takes_mental_damage(2);
                 self.status = TributeStatus::Drowned;
-                println!("🏊 {} drowns partially, loses health and sanity", self.name);
+                println!("🏊 {} partially drowns, loses health and sanity", self.name);
             },
         }
     }
@@ -336,6 +347,8 @@ fn apply_violence_stress(tribute: &mut Tribute) {
 fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
     let mut tribute1_roll = thread_rng().gen_range(1..=20); // Base roll
     tribute1_roll += tribute.strength.unwrap(); // Add strength
+
+    // Add luck in here?
 
     let mut tribute2_roll = thread_rng().gen_range(1..=20); // Base roll
     tribute2_roll += target.dexterity.unwrap(); // Add dexterity

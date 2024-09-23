@@ -1,6 +1,6 @@
 use super::get_area_by_id;
 use crate::establish_connection;
-use crate::events::PlayerEvent;
+use crate::events::TributeEvent;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::schema::tribute;
 use crate::tributes::actions::{AttackOutcome, TributeAction};
@@ -407,7 +407,7 @@ pub fn suffer_tribute(tribute: Tribute) -> Tribute {
 
 pub fn handle_tribute_event(tribute: Tribute) -> Tribute {
     let mut tribute = TributeActor::from(tribute);
-    let event = PlayerEvent::random();
+    let event = TributeEvent::random();
     tribute.handle_event(event.clone());
 
     if tribute.health == 0 {

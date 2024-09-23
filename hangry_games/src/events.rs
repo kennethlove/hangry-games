@@ -70,7 +70,7 @@ impl AreaEvent {
 }
 
 #[derive(Clone, Debug)]
-pub enum PlayerEvent {
+pub enum TributeEvent {
     AnimalAttack(Animal),
     Dysentery,
     LightningStrike,
@@ -84,7 +84,7 @@ pub enum PlayerEvent {
     Drowning,
 }
 
-impl FromStr for PlayerEvent {
+impl FromStr for TributeEvent {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -93,78 +93,78 @@ impl FromStr for PlayerEvent {
 
             let animal = Animal::from_str(animal_name.as_str());
             if animal.is_ok() {
-                return Ok(PlayerEvent::AnimalAttack(animal?))
+                return Ok(TributeEvent::AnimalAttack(animal?))
             };
         }
         match s {
-            "dysentery" => Ok(PlayerEvent::Dysentery),
-            "lightning strike" => Ok(PlayerEvent::LightningStrike),
-            "hypothermia" => Ok(PlayerEvent::Hypothermia),
-            "heat stroke" => Ok(PlayerEvent::HeatStroke),
-            "dehydration" => Ok(PlayerEvent::Dehydration),
-            "starvation" => Ok(PlayerEvent::Starvation),
-            "poisoning" => Ok(PlayerEvent::Poisoning),
-            "broken bone" => Ok(PlayerEvent::BrokenBone),
-            "infection" => Ok(PlayerEvent::Infection),
-            "drowning" => Ok(PlayerEvent::Drowning),
+            "dysentery" => Ok(TributeEvent::Dysentery),
+            "lightning strike" => Ok(TributeEvent::LightningStrike),
+            "hypothermia" => Ok(TributeEvent::Hypothermia),
+            "heat stroke" => Ok(TributeEvent::HeatStroke),
+            "dehydration" => Ok(TributeEvent::Dehydration),
+            "starvation" => Ok(TributeEvent::Starvation),
+            "poisoning" => Ok(TributeEvent::Poisoning),
+            "broken bone" => Ok(TributeEvent::BrokenBone),
+            "infection" => Ok(TributeEvent::Infection),
+            "drowning" => Ok(TributeEvent::Drowning),
             _ => Err(())
         }
     }
 }
 
-impl Display for PlayerEvent {
+impl Display for TributeEvent {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PlayerEvent::AnimalAttack(animal) => write!(f, "animal attack {}", animal),
-            PlayerEvent::Dysentery => write!(f, "dysentery"),
-            PlayerEvent::LightningStrike => write!(f, "lightning strike"),
-            PlayerEvent::Hypothermia => write!(f, "hypothermia"),
-            PlayerEvent::HeatStroke => write!(f, "heat stroke"),
-            PlayerEvent::Dehydration => write!(f, "dehydration"),
-            PlayerEvent::Starvation => write!(f, "starvation"),
-            PlayerEvent::Poisoning => write!(f, "poisoning"),
-            PlayerEvent::BrokenBone => write!(f, "broken bone"),
-            PlayerEvent::Infection => write!(f, "infection"),
-            PlayerEvent::Drowning => write!(f, "drowning"),
+            TributeEvent::AnimalAttack(animal) => write!(f, "animal attack {}", animal),
+            TributeEvent::Dysentery => write!(f, "dysentery"),
+            TributeEvent::LightningStrike => write!(f, "lightning strike"),
+            TributeEvent::Hypothermia => write!(f, "hypothermia"),
+            TributeEvent::HeatStroke => write!(f, "heat stroke"),
+            TributeEvent::Dehydration => write!(f, "dehydration"),
+            TributeEvent::Starvation => write!(f, "starvation"),
+            TributeEvent::Poisoning => write!(f, "poisoning"),
+            TributeEvent::BrokenBone => write!(f, "broken bone"),
+            TributeEvent::Infection => write!(f, "infection"),
+            TributeEvent::Drowning => write!(f, "drowning"),
         }
     }
 }
 
-impl PlayerEvent {
+impl TributeEvent {
     pub fn as_str(&self) -> &str {
         match self {
-            PlayerEvent::AnimalAttack(animal) => {
+            TributeEvent::AnimalAttack(animal) => {
                 let s = format!("animal attack {}", animal.as_str());
                 Box::leak(s.into_boxed_str())
             },
-            PlayerEvent::Dysentery => "dysentery",
-            PlayerEvent::LightningStrike =>"lightning strike",
-            PlayerEvent::Hypothermia => "hypothermia",
-            PlayerEvent::HeatStroke => "heat stroke",
-            PlayerEvent::Dehydration => "dehydration",
-            PlayerEvent::Starvation => "starvation",
-            PlayerEvent::Poisoning => "poisoning",
-            PlayerEvent::BrokenBone => "broken bone",
-            PlayerEvent::Infection => "infection",
-            PlayerEvent::Drowning => "drowning",
+            TributeEvent::Dysentery => "dysentery",
+            TributeEvent::LightningStrike =>"lightning strike",
+            TributeEvent::Hypothermia => "hypothermia",
+            TributeEvent::HeatStroke => "heat stroke",
+            TributeEvent::Dehydration => "dehydration",
+            TributeEvent::Starvation => "starvation",
+            TributeEvent::Poisoning => "poisoning",
+            TributeEvent::BrokenBone => "broken bone",
+            TributeEvent::Infection => "infection",
+            TributeEvent::Drowning => "drowning",
         }
     }
 
-    pub fn random() -> PlayerEvent {
+    pub fn random() -> TributeEvent {
         let mut rng = rand::thread_rng();
         let animal = Animal::random();
         let events = vec![
-            PlayerEvent::AnimalAttack(animal),
-            PlayerEvent::Dysentery,
-            PlayerEvent::LightningStrike,
-            PlayerEvent::Hypothermia,
-            PlayerEvent::HeatStroke,
-            PlayerEvent::Dehydration,
-            PlayerEvent::Starvation,
-            PlayerEvent::Poisoning,
-            PlayerEvent::BrokenBone,
-            PlayerEvent::Infection,
-            PlayerEvent::Drowning,
+            TributeEvent::AnimalAttack(animal),
+            TributeEvent::Dysentery,
+            TributeEvent::LightningStrike,
+            TributeEvent::Hypothermia,
+            TributeEvent::HeatStroke,
+            TributeEvent::Dehydration,
+            TributeEvent::Starvation,
+            TributeEvent::Poisoning,
+            TributeEvent::BrokenBone,
+            TributeEvent::Infection,
+            TributeEvent::Drowning,
         ];
         let index = rng.gen_range(0..events.len());
         events[index].clone()
