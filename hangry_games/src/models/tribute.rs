@@ -322,6 +322,13 @@ impl Tribute {
         let nearby_targets: Vec<Tribute> = nearby_tributes.clone().into_iter().map(|t| Tribute::from(t)).collect();
         nearby_targets
     }
+
+    pub fn is_alive(&self) -> bool {
+        match self.status.as_str() {
+            "Dead" | "RecentlyDead" => false,
+            _ => true
+        }
+    }
 }
 
 fn rest_tribute(tribute: Tribute) {
@@ -401,7 +408,13 @@ pub fn suffer_tribute(tribute: Tribute) -> Tribute {
 pub fn handle_tribute_event(tribute: Tribute) -> Tribute {
     let mut tribute = TributeActor::from(tribute);
     let event = PlayerEvent::random();
-    tribute.handle_event(event);
+    tribute.handle_event(event.clone());
+
+    if tribute.health == 0 {
+        tribute.status = TributeStatus::RecentlyDead;
+        tribute.killed_by = Some(event.to_string());
+        println!("💀 {} dies by {}", tribute.name, event.to_string());
+    }
 
     let tribute = Tribute::from(tribute);
     update_tribute(tribute.id, tribute.clone());

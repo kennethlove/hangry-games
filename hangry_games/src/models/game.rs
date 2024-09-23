@@ -120,8 +120,18 @@ impl Game {
         for mut tribute in living_tributes {
             if !rng.gen_bool(tribute.luck.unwrap_or(0) as f64 / 100.0) {
                 tribute = handle_tribute_event(tribute);
+                if !tribute.is_alive() {
+                    println!("{} dies.", tribute.name);
+                    continue
+                }
             }
+
             tribute = bleed_tribute(tribute);
+            if !tribute.is_alive() {
+                println!("{} dies.", tribute.name);
+                continue
+            }
+
             tribute.do_day();
         }
     }
