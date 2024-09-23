@@ -51,20 +51,20 @@ impl FromStr for TributeStatus {
 impl Display for TributeStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TributeStatus::Healthy => write!(f, "Healthy"),
-            TributeStatus::Wounded => write!(f, "Wounded"),
-            TributeStatus::Starving => write!(f, "Starving"),
-            TributeStatus::Dehydrated => write!(f, "Dehydrated"),
-            TributeStatus::Sick => write!(f, "Sick"),
-            TributeStatus::Poisoned => write!(f, "Poisoned"),
-            TributeStatus::RecentlyDead => write!(f, "RecentlyDead"),
-            TributeStatus::Dead => write!(f, "Dead"),
-            TributeStatus::Electrocuted => write!(f, "Electrocuted"),
-            TributeStatus::Frozen => write!(f, "Frozen"),
-            TributeStatus::Overheated => write!(f, "Overheated"),
-            TributeStatus::Broken => write!(f, "Broken"),
-            TributeStatus::Infected => write!(f, "Infected"),
-            TributeStatus::Drowned => write!(f, "Drowned"),
+            TributeStatus::Healthy => write!(f, "healthy"),
+            TributeStatus::Wounded => write!(f, "wounded"),
+            TributeStatus::Starving => write!(f, "starving"),
+            TributeStatus::Dehydrated => write!(f, "dehydrated"),
+            TributeStatus::Sick => write!(f, "sick"),
+            TributeStatus::Poisoned => write!(f, "poisoned"),
+            TributeStatus::RecentlyDead => write!(f, "recently dead"),
+            TributeStatus::Dead => write!(f, "dead"),
+            TributeStatus::Electrocuted => write!(f, "electrocuted"),
+            TributeStatus::Frozen => write!(f, "frozen"),
+            TributeStatus::Overheated => write!(f, "overheated"),
+            TributeStatus::Broken => write!(f, "broken"),
+            TributeStatus::Infected => write!(f, "infected"),
+            TributeStatus::Drowned => write!(f, "drowned"),
         }
     }
 }
