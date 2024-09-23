@@ -118,19 +118,14 @@ impl Game {
         // Run the tribute AI
         living_tributes.shuffle(&mut rng);
         for mut tribute in living_tributes {
+            // Use luck to decide if the tribute is caught by an event
             if !rng.gen_bool(tribute.luck.unwrap_or(0) as f64 / 100.0) {
                 tribute = handle_tribute_event(tribute);
-                if !tribute.is_alive() {
-                    println!("{} dies.", tribute.name);
-                    continue
-                }
+                if !tribute.is_alive() { continue }
             }
 
             tribute = bleed_tribute(tribute);
-            if !tribute.is_alive() {
-                println!("{} dies.", tribute.name);
-                continue
-            }
+            if !tribute.is_alive() { continue }
 
             tribute.do_day();
         }
