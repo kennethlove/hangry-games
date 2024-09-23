@@ -268,45 +268,55 @@ impl Tribute {
             },
             PlayerEvent::Dysentery => {
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
+                self.status = TributeStatus::Sick;
                 println!("🤒 {} contracts dysentery, loses strength", self.name);
             }
             PlayerEvent::LightningStrike => {
                 self.takes_physical_damage(20);
+                self.status = TributeStatus::Electrocuted;
                 println!("🌩️ {} is struck by lightning, loses health", self.name);
             }
             PlayerEvent::Hypothermia => {
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
+                self.status = TributeStatus::Frozen;
                 println!("🥶 {} suffers from hypothermia, loses speed.", self.name);
             }
             PlayerEvent::HeatStroke => {
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
+                self.status = TributeStatus::Overheated;
                 println!("🥵 {} suffers from heat stroke, loses speed.", self.name);
             },
             PlayerEvent::Dehydration => {
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
+                self.status = TributeStatus::Dehydrated;
                 println!("🌵 {} is severely dehydrated, loses strength", self.name);
             },
             PlayerEvent::Starvation => {
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
+                self.status = TributeStatus::Starving;
                 println!("🍴 {} is ravenously hungry, loses strength", self.name);
             },
             PlayerEvent::Poisoning => {
                 self.takes_mental_damage(5);
+                self.status = TributeStatus::Poisoned;
                 println!("🧪 {} is poisoned, loses sanity", self.name);
             },
             PlayerEvent::BrokenBone => {
                 // For now, all bone breaks are leg bones
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 5));
+                self.status = TributeStatus::Broken;
                 println!("🦴 {} breaks a bone, loses speed.", self.name);
             },
             PlayerEvent::Infection => {
                 self.takes_physical_damage(2);
                 self.takes_mental_damage(2);
+                self.status = TributeStatus::Infected;
                 println!("🤢 {} has an infected wound, loses health and sanity", self.name);
             },
             PlayerEvent::Drowning => {
                 self.takes_physical_damage(2);
                 self.takes_mental_damage(2);
+                self.status = TributeStatus::Drowned;
                 println!("🏊 {} drowns partially, loses health and sanity", self.name);
             },
         }
