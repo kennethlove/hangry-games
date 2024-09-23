@@ -1,11 +1,11 @@
-use crate::areas::Area;
-use crate::models::tribute::UpdateTribute;
-use rand::prelude::*;
-use std::str::FromStr;
-
 use super::actions::{AttackOutcome, AttackResult};
 use super::brains::TributeBrain;
 use super::statuses::TributeStatus;
+use crate::areas::Area;
+use crate::events::PlayerEvent;
+use crate::models::tribute::UpdateTribute;
+use rand::prelude::*;
+use std::str::FromStr;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
@@ -256,6 +256,59 @@ impl Tribute {
                 };
                 TravelResult::Success(new_area)
             }
+        }
+    }
+
+    pub fn handle_event(&mut self, player_event: PlayerEvent) {
+        match player_event {
+            PlayerEvent::AnimalAttack(animal) => {
+                let damage = animal.damage();
+                self.takes_physical_damage(damage);
+                println!("🐾 {} is attacked by {}, takes {} damage!", self.name, animal.plural(), damage);
+            },
+            PlayerEvent::Dysentery => {
+                self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
+                println!("🤒 {} contracts dysentery, loses strength", self.name);
+            }
+            PlayerEvent::LightningStrike => {
+                self.takes_physical_damage(20);
+                println!("🌩️ {} is struck by lightning, loses health", self.name);
+            }
+            PlayerEvent::Hypothermia => {
+                self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
+                println!("🥶 {} suffers from hypothermia, loses speed.", self.name);
+            }
+            PlayerEvent::HeatStroke => {
+                self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
+                println!("🥵 {} suffers from heat stroke, loses speed.", self.name);
+            },
+            PlayerEvent::Dehydration => {
+                self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
+                println!("🌵 {} is severely dehydrated, loses strength", self.name);
+            },
+            PlayerEvent::Starvation => {
+                self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
+                println!("🍴 {} is ravenously hungry, loses strength", self.name);
+            },
+            PlayerEvent::Poisoning => {
+                self.takes_mental_damage(5);
+                println!("🧪 {} is poisoned, loses sanity", self.name);
+            },
+            PlayerEvent::BrokenBone => {
+                // For now, all bone breaks are leg bones
+                self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 5));
+                println!("🦴 {} breaks a bone, loses speed.", self.name);
+            },
+            PlayerEvent::Infection => {
+                self.takes_physical_damage(2);
+                self.takes_mental_damage(2);
+                println!("🤢 {} has an infected wound, loses health and sanity", self.name);
+            },
+            PlayerEvent::Drowning => {
+                self.takes_physical_damage(2);
+                self.takes_mental_damage(2);
+                println!("🏊 {} drowns partially, loses health and sanity", self.name);
+            },
         }
     }
 }

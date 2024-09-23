@@ -1,6 +1,6 @@
 use crate::areas::Area;
 use crate::events::AreaEvent;
-use crate::models::{bleed_tribute, get_area_by_id, suffer_tribute, update_tribute, Tribute};
+use crate::models::{bleed_tribute, get_area_by_id, handle_tribute_event, suffer_tribute, update_tribute, Tribute};
 use crate::schema::game;
 use crate::tributes::statuses::TributeStatus;
 use crate::{establish_connection, models};
@@ -109,7 +109,7 @@ impl Game {
         self.do_area_event_cleanup();
 
         // Trigger any daytime events
-        if self.day > Some(2) && rng.gen_bool(1.0 / 1.0) {
+        if self.day > Some(2) && rng.gen_bool(1.0 / 4.0) {
             self.do_area_event();
         }
 
@@ -117,8 +117,11 @@ impl Game {
 
         // Run the tribute AI
         living_tributes.shuffle(&mut rng);
-        for tribute in living_tributes {
-            let mut tribute = bleed_tribute(tribute);
+        for mut tribute in living_tributes {
+            if !rng.gen_bool(tribute.luck.unwrap_or(0) as f64 / 100.0) {
+                tribute = handle_tribute_event(tribute);
+            }
+            tribute = bleed_tribute(tribute);
             tribute.do_day();
         }
     }
@@ -175,7 +178,7 @@ impl Game {
 
             let area_name = area.name.strip_prefix("The ").unwrap_or(area.name.as_str());
             for tribute in tributes {
-                println!("⚡ {} is trapped in the {}.", tribute.name, area_name);
+                println!("💥 {} is trapped in the {}.", tribute.name, area_name);
                 tribute.health = 0;
                 tribute.status = TributeStatus::RecentlyDead.to_string();
                 tribute.is_hidden = Some(false);

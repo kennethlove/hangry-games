@@ -1,5 +1,6 @@
 use super::get_area_by_id;
 use crate::establish_connection;
+use crate::events::PlayerEvent;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::schema::tribute;
 use crate::tributes::actions::{AttackOutcome, TributeAction};
@@ -391,6 +392,16 @@ pub fn bleed_tribute(tribute: Tribute) -> Tribute {
 pub fn suffer_tribute(tribute: Tribute) -> Tribute {
     let mut tribute = TributeActor::from(tribute);
     tribute.suffers();
+
+    let tribute = Tribute::from(tribute);
+    update_tribute(tribute.id, tribute.clone());
+    tribute
+}
+
+pub fn handle_tribute_event(tribute: Tribute) -> Tribute {
+    let mut tribute = TributeActor::from(tribute);
+    let event = PlayerEvent::random();
+    tribute.handle_event(event);
 
     let tribute = Tribute::from(tribute);
     update_tribute(tribute.id, tribute.clone());
