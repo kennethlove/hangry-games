@@ -110,7 +110,7 @@ impl Game {
         self.do_area_event_cleanup();
 
         // Trigger any daytime events
-        if self.day > Some(2) && rng.gen_bool(1.0 / 4.0) {
+        if self.day > Some(3) && rng.gen_bool(1.0 / 4.0) {
             self.do_area_event();
         }
 
@@ -221,6 +221,7 @@ impl Game {
                     tribute.status = TributeStatus::RecentlyDead.to_string();
                     tribute.is_hidden = Some(false);
                     tribute.killed_by = Some(event.name.clone());
+                    println!("🪦 {} died in the {}.", tribute.name, area_name);
                 }
                 update_tribute(tribute.id, tribute.clone());
             }

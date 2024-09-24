@@ -178,28 +178,19 @@ pub fn parse() {
             }
             println!("Statuses");
             for tribute in living_tributes {
-                let actions = tribute.tribute_actions();
-                let last_actions = actions.last_chunk::<2>();
-                let last_action = last_actions.unwrap().last().unwrap();
-                let next_to_last_action = last_actions.unwrap().first().unwrap();
-
                 let area = match tribute.area() {
                     Some(area) => area.name.clone(),
                     None => "Unknown".to_string()
                 };
-                println!("{} is {}, {}/100, {}/100, in {}, ({}, {:?}) -> ({}, {:?})",
-                         tribute.name,
-                         tribute.status,
-                         tribute.health,
-                         tribute.sanity,
-                         area,
-                         next_to_last_action.action_id,
-                         next_to_last_action.target,
-                         last_action.action_id,
-                         last_action.target,
+                println!("{} is {}, {}/100, {}/100, in {}, {:?}",
+                    tribute.name,
+                    tribute.status,
+                    tribute.health,
+                    tribute.sanity,
+                    area,
+                    tribute.status
                 );
             }
-            println!("Closed areas: {:?}", game.closed_areas);
         }
         Commands::QuickStart => {
             let game = create_game();
