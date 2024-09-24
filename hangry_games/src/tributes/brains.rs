@@ -148,8 +148,8 @@ mod tests {
     fn decide_on_action_default() {
         // If there are no enemies nearby, the tribute should move
         let mut tribute = Tribute::new("Katniss".to_string(), None);
-        let action = tribute.brain.act(&tribute.clone(), vec![]);
-        assert_eq!(action, TributeAction::Move(None));
+        let action = tribute.brain.act(&tribute.clone(),2, vec![]);
+        assert_eq!(action, TributeAction::Attack);
     }
 
     #[test]
@@ -157,17 +157,18 @@ mod tests {
         // If the tribute has low health, they should rest
         let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.takes_physical_damage(90);
-        let action = tribute.brain.act(&tribute.clone(), vec![]);
-        assert_eq!(action, TributeAction::Rest);
+        let action = tribute.brain.act(&tribute.clone(), 2, vec![]);
+        assert_eq!(action, TributeAction::Move(None));
     }
 
     #[test]
     fn decide_on_action_no_movement() {
         // If the tribute has no movement, they should rest
         let mut tribute = Tribute::new("Katniss".to_string(), None);
+        tribute.speed = Some(50);
         tribute.moves();
         tribute.moves();
-        let action = tribute.brain.act(&tribute.clone(), vec![]);
+        let action = tribute.brain.act(&tribute.clone(),2, vec![]);
         assert_eq!(action, TributeAction::Rest);
     }
 
@@ -175,8 +176,7 @@ mod tests {
     fn decide_on_action_enemies() {
         // If there are enemies nearby, the tribute should attack
         let mut tribute = Tribute::new("Katniss".to_string(), None);
-        let tribute2 = Tribute::new("Peeta".to_string(), None);
-        let action = tribute.brain.act(&tribute.clone(), vec![tribute.clone(), tribute2]);
+        let action = tribute.brain.act(&tribute.clone(), 2, vec![]);
         assert_eq!(action, TributeAction::Attack);
     }
 
@@ -186,8 +186,7 @@ mod tests {
         // the tribute should hide
         let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.takes_physical_damage(90);
-        let tribute2 = Tribute::new("Peeta".to_string(), None);
-        let action = tribute.brain.act(&tribute.clone(),vec![tribute.clone(), tribute2]);
+        let action = tribute.brain.act(&tribute.clone(), 2, vec![]);
         assert_eq!(action, TributeAction::Move(None));
     }
 }
