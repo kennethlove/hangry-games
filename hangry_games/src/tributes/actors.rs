@@ -108,8 +108,14 @@ impl Tribute {
     }
 
     /// Restores movement.
-    pub fn rests(&mut self) {
+    pub fn short_rests(&mut self) {
         self.movement = 100;
+    }
+
+    pub fn long_rests(&mut self) {
+        self.short_rests();
+        self.heals(5);
+        self.heals_mental_damage(5);
     }
 
     /// Marks the tribute as recently dead and reveals them.
@@ -579,7 +585,7 @@ mod tests {
         let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.moves();
         assert_eq!(tribute.movement, 50);
-        tribute.rests();
+        tribute.short_rests();
         assert_eq!(tribute.movement, 100);
     }
 
