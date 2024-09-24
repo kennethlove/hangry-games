@@ -238,9 +238,9 @@ impl Tribute {
         if closed_areas.contains(&crate::areas::Area::from(area.clone())) {
             tribute.takes_physical_damage(100);
             tribute.killed_by = Some(format!("🌋 {} waited too long in a closed area", tribute.name));
+            tribute.status = TributeStatus::RecentlyDead;
             let t = Self::from(tribute);
-            t.dies();
-            return t;
+            return t
         }
 
         // Get nearby tributes and targets
@@ -426,9 +426,9 @@ pub fn handle_tribute_event(tribute: Tribute) -> Tribute {
     tribute.handle_event(event.clone());
 
     if tribute.health == 0 {
-        tribute.status = TributeStatus::RecentlyDead;
         tribute.killed_by = Some(event.to_string());
         println!("💀 {} dies by {}", tribute.name, event.to_string());
+        tribute.status = TributeStatus::RecentlyDead;
     }
 
     let tribute = Tribute::from(tribute);
