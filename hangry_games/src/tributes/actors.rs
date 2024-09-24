@@ -114,7 +114,7 @@ impl Tribute {
 
     /// Marks the tribute as recently dead and reveals them.
     pub fn dies(&mut self) {
-        self.status = TributeStatus::RecentlyDead;
+        // self.status = TributeStatus::RecentlyDead;
         self.is_hidden = Some(false);
     }
 
@@ -259,52 +259,43 @@ impl Tribute {
         }
     }
 
-    pub fn handle_event(&mut self, player_event: TributeEvent) {
-        match player_event {
-            TributeEvent::AnimalAttack(animal) => {
-                let damage = animal.damage();
-                self.takes_physical_damage(damage);
-                println!("🐾 {} is attacked by {}, takes {} damage!", self.name, animal.plural(), damage);
+    pub fn process_status(&mut self) {
+        let status = self.status.clone();
+        match status {
+            TributeStatus::Wounded => {
+                self.takes_physical_damage(1);
+                println!("🩸 {} bleeds from their wounds. 💪 {}/100", self.name, self.health);
             },
-            TributeEvent::Dysentery => {
+            TributeStatus::Sick => {
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
-                self.status = TributeStatus::Sick;
                 println!("🤒 {} contracts dysentery, loses strength and speed", self.name);
-            }
-            TributeEvent::LightningStrike => {
+            },
+            TributeStatus::Electrocuted => {
                 self.takes_physical_damage(20);
-                self.status = TributeStatus::Electrocuted;
                 println!("🌩️ {} is struck by lightning, loses health", self.name);
-            }
-            TributeEvent::Hypothermia => {
+            },
+            TributeStatus::Frozen => {
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
-                self.status = TributeStatus::Frozen;
                 println!("🥶 {} suffers from hypothermia, loses speed.", self.name);
-            }
-            TributeEvent::HeatStroke => {
+            },
+            TributeStatus::Overheated => {
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
-                self.status = TributeStatus::Overheated;
                 println!("🥵 {} suffers from heat stroke, loses speed.", self.name);
             },
-            TributeEvent::Dehydration => {
+            TributeStatus::Dehydrated => {
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
-                self.status = TributeStatus::Dehydrated;
                 println!("🌵 {} is severely dehydrated, loses strength", self.name);
             },
-            TributeEvent::Starvation => {
+            TributeStatus::Starving => {
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
-                self.status = TributeStatus::Starving;
                 println!("🍴 {} is ravenously hungry, loses strength", self.name);
             },
-            TributeEvent::Poisoning => {
+            TributeStatus::Poisoned => {
                 self.takes_mental_damage(5);
-                self.status = TributeStatus::Poisoned;
                 println!("🧪 {} eats something poisonous, loses sanity", self.name);
             },
-            TributeEvent::BrokenBone => {
-                self.status = TributeStatus::Broken;
-
+            TributeStatus::Broken => {
                 // coin flip for which bone breaks
                 let leg_bone = thread_rng().gen_bool(0.5);
 
@@ -318,17 +309,68 @@ impl Tribute {
                     println!("🦴 {} injures their arm, loses strength.", self.name);
                 }
             },
-            TributeEvent::Infection => {
+            TributeStatus::Infected => {
                 self.takes_physical_damage(2);
                 self.takes_mental_damage(2);
-                self.status = TributeStatus::Infected;
                 println!("🤢 {} gets an infection, loses health and sanity", self.name);
             },
-            TributeEvent::Drowning => {
+            TributeStatus::Drowned => {
                 self.takes_physical_damage(2);
                 self.takes_mental_damage(2);
-                self.status = TributeStatus::Drowned;
                 println!("🏊 {} partially drowns, loses health and sanity", self.name);
+            },
+            TributeStatus::Mauled(animal) => {
+                let damage = animal.damage();
+                self.takes_physical_damage(damage);
+                println!("🐾 {} is attacked by {}, takes {} damage!", self.name, animal.plural(), damage);
+            },
+            TributeStatus::Burned => {
+                self.takes_physical_damage(5);
+                println!("🔥 {} gets burned, loses health", self.name);
+            }
+            _ => {
+                // self.suffers();
+            }
+        }
+    }
+
+    pub fn handle_event(&mut self, player_event: TributeEvent) {
+        match player_event {
+            TributeEvent::AnimalAttack(animal) => {
+                self.status = TributeStatus::Mauled(animal);
+            },
+            TributeEvent::Dysentery => {
+                self.status = TributeStatus::Sick;
+            }
+            TributeEvent::LightningStrike => {
+                self.status = TributeStatus::Electrocuted;
+            }
+            TributeEvent::Hypothermia => {
+                self.status = TributeStatus::Frozen;
+            }
+            TributeEvent::HeatStroke => {
+                self.status = TributeStatus::Overheated;
+            },
+            TributeEvent::Dehydration => {
+                self.status = TributeStatus::Dehydrated;
+            },
+            TributeEvent::Starvation => {
+                self.status = TributeStatus::Starving;
+            },
+            TributeEvent::Poisoning => {
+                self.status = TributeStatus::Poisoned;
+            },
+            TributeEvent::BrokenBone => {
+                self.status = TributeStatus::Broken;
+            },
+            TributeEvent::Infection => {
+                self.status = TributeStatus::Infected;
+            },
+            TributeEvent::Drowning => {
+                self.status = TributeStatus::Drowned;
+            },
+            TributeEvent::Burn => {
+                self.status = TributeStatus::Burned;
             },
         }
     }

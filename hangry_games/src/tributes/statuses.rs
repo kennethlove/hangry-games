@@ -1,5 +1,6 @@
 use std::fmt::Display;
 use std::str::FromStr;
+use crate::animals::Animal;
 
 #[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub enum TributeStatus {
@@ -18,12 +19,22 @@ pub enum TributeStatus {
     Broken,
     Infected,
     Drowned,
+    Burned,
+    Buried,
+    Mauled(Animal),
 }
 
 impl FromStr for TributeStatus {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.to_lowercase().as_str().contains("mauled") {
+            let animal_name = s.split_whitespace().skip(1).map(|s| s.to_string()).collect::<Vec<String>>().join(" ");
+            let animal = Animal::from_str(animal_name.as_str());
+            if animal.is_ok() {
+                return Ok(TributeStatus::Mauled(animal?))
+            };
+        }
         match s.to_lowercase().as_str() {
             "healthy" => Ok(TributeStatus::Healthy),
             "wounded" => Ok(TributeStatus::Wounded),
@@ -43,6 +54,8 @@ impl FromStr for TributeStatus {
             "broken" => Ok(TributeStatus::Broken),
             "infected" => Ok(TributeStatus::Infected),
             "drowned" => Ok(TributeStatus::Drowned),
+            "burned" => Ok(TributeStatus::Burned),
+            "buried" => Ok(TributeStatus::Buried),
             _ => Err(()),
         }
     }
@@ -65,6 +78,9 @@ impl Display for TributeStatus {
             TributeStatus::Broken => write!(f, "broken"),
             TributeStatus::Infected => write!(f, "infected"),
             TributeStatus::Drowned => write!(f, "drowned"),
+            TributeStatus::Burned => write!(f, "burned"),
+            TributeStatus::Buried => write!(f, "buried"),
+            TributeStatus::Mauled(animal) => write!(f, "mauled {}", animal.to_string()),
         }
     }
 }

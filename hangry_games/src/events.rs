@@ -11,6 +11,7 @@ pub enum AreaEvent {
     Avalanche,
     Blizzard,
     Landslide,
+    Heatwave,
 }
 
 impl FromStr for AreaEvent {
@@ -24,6 +25,7 @@ impl FromStr for AreaEvent {
             "avalanche" => Ok(AreaEvent::Avalanche),
             "blizzard" => Ok(AreaEvent::Blizzard),
             "landslide" => Ok(AreaEvent::Landslide),
+            "heatwave" => Ok(AreaEvent::Heatwave),
             _ => Err(()),
         }
     }
@@ -38,6 +40,7 @@ impl Display for AreaEvent {
             AreaEvent::Avalanche => write!(f, "avalanche"),
             AreaEvent::Blizzard => write!(f, "blizzard"),
             AreaEvent::Landslide => write!(f, "landslide"),
+            AreaEvent::Heatwave => write!(f, "heatwave"),
         }
     }
 }
@@ -51,6 +54,7 @@ impl AreaEvent {
             AreaEvent::Avalanche => "avalanche",
             AreaEvent::Blizzard => "blizzard",
             AreaEvent::Landslide => "landslide",
+            AreaEvent::Heatwave => "heatwave",
         }
     }
 
@@ -63,6 +67,7 @@ impl AreaEvent {
             AreaEvent::Avalanche,
             AreaEvent::Blizzard,
             AreaEvent::Landslide,
+            AreaEvent::Heatwave,
         ];
         let index = rng.gen_range(0..events.len());
         events[index].clone()
@@ -82,6 +87,7 @@ pub enum TributeEvent {
     BrokenBone,
     Infection,
     Drowning,
+    Burn,
 }
 
 impl FromStr for TributeEvent {
@@ -107,6 +113,7 @@ impl FromStr for TributeEvent {
             "broken bone" => Ok(TributeEvent::BrokenBone),
             "infection" => Ok(TributeEvent::Infection),
             "drowning" => Ok(TributeEvent::Drowning),
+            "burn" => Ok(TributeEvent::Burn),
             _ => Err(())
         }
     }
@@ -126,6 +133,7 @@ impl Display for TributeEvent {
             TributeEvent::BrokenBone => write!(f, "broken bone"),
             TributeEvent::Infection => write!(f, "infection"),
             TributeEvent::Drowning => write!(f, "drowning"),
+            TributeEvent::Burn => write!(f, "burn"),
         }
     }
 }
@@ -147,6 +155,7 @@ impl TributeEvent {
             TributeEvent::BrokenBone => "broken bone",
             TributeEvent::Infection => "infection",
             TributeEvent::Drowning => "drowning",
+            TributeEvent::Burn => "burn",
         }
     }
 
@@ -165,6 +174,7 @@ impl TributeEvent {
             TributeEvent::BrokenBone,
             TributeEvent::Infection,
             TributeEvent::Drowning,
+            TributeEvent::Burn,
         ];
         let index = rng.gen_range(0..events.len());
         events[index].clone()

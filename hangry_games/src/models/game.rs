@@ -1,6 +1,7 @@
+use std::str::FromStr;
 use crate::areas::Area;
 use crate::events::AreaEvent;
-use crate::models::{bleed_tribute, get_area_by_id, handle_tribute_event, suffer_tribute, update_tribute, Tribute};
+use crate::models::{get_area_by_id, handle_tribute_event, process_tribute_status, suffer_tribute, update_tribute, Tribute};
 use crate::schema::game;
 use crate::tributes::statuses::TributeStatus;
 use crate::{establish_connection, models};
@@ -124,7 +125,8 @@ impl Game {
                 if !tribute.is_alive() { continue }
             }
 
-            tribute = bleed_tribute(tribute);
+            // tribute = bleed_tribute(tribute);
+            tribute = process_tribute_status(tribute);
             if !tribute.is_alive() { continue }
 
             tribute.do_day();
@@ -173,21 +175,53 @@ impl Game {
         // Handle closed areas
         for area_id in self.closed_areas.clone().unwrap_or(vec![]) {
             let area = get_area_by_id(area_id).unwrap();
+            let area_name = area.name.strip_prefix("The ").unwrap_or(area.name.as_str());
+
             let events = area.events(self.id);
-            let event = events.iter().last();
+            let event = events.iter().last().unwrap();
+
             let mut tributes = area.tributes(self.id);
             let tributes = tributes
                 .iter_mut()
                 .filter(|t| t.day_killed.is_none())
                 .collect::<Vec<_>>();
 
-            let area_name = area.name.strip_prefix("The ").unwrap_or(area.name.as_str());
             for tribute in tributes {
                 println!("💥 {} is trapped in the {}.", tribute.name, area_name);
-                tribute.health = 0;
-                tribute.status = TributeStatus::RecentlyDead.to_string();
-                tribute.is_hidden = Some(false);
-                tribute.killed_by = Some(event.unwrap().name.clone());
+
+                if rng.gen_bool(tribute.luck.unwrap_or(0) as f64 / 100.0) {
+                    // If the tribute is lucky
+                    let area_event = AreaEvent::from_str(&event.name).unwrap();
+                    match area_event {
+                        AreaEvent::Wildfire => {
+                            tribute.status = TributeStatus::Burned.to_string()
+                        }
+                        AreaEvent::Flood => {
+                            tribute.status = TributeStatus::Drowned.to_string()
+                        }
+                        AreaEvent::Earthquake => {
+                            tribute.status = TributeStatus::Buried.to_string()
+                        }
+                        AreaEvent::Avalanche => {
+                            tribute.status = TributeStatus::Buried.to_string()
+                        }
+                        AreaEvent::Blizzard => {
+                            tribute.status = TributeStatus::Frozen.to_string()
+                        }
+                        AreaEvent::Landslide => {
+                            tribute.status = TributeStatus::Buried.to_string()
+                        }
+                        AreaEvent::Heatwave => {
+                            tribute.status = TributeStatus::Overheated.to_string()
+                        }
+                    };
+                } else {
+                    // If the tribute is not
+                    tribute.health = 0;
+                    tribute.status = TributeStatus::RecentlyDead.to_string();
+                    tribute.is_hidden = Some(false);
+                    tribute.killed_by = Some(event.name.clone());
+                }
                 update_tribute(tribute.id, tribute.clone());
             }
 

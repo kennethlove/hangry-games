@@ -2,7 +2,7 @@ use rand::Rng;
 use std::fmt::Display;
 use std::str::FromStr;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Animal {
     Squirrel,
     Bear,

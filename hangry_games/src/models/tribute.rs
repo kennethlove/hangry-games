@@ -405,6 +405,21 @@ pub fn suffer_tribute(tribute: Tribute) -> Tribute {
     tribute
 }
 
+pub fn process_tribute_status(tribute: Tribute) -> Tribute {
+    let mut tribute = TributeActor::from(tribute);
+    tribute.process_status();
+
+    if tribute.health == 0 {
+        tribute.killed_by = Some(tribute.status.to_string());
+        println!("💀 {} dies from {}", tribute.name, tribute.status);
+        tribute.status = TributeStatus::RecentlyDead;
+    }
+
+    let tribute = Tribute::from(tribute);
+    update_tribute(tribute.id, tribute.clone());
+    tribute
+}
+
 pub fn handle_tribute_event(tribute: Tribute) -> Tribute {
     let mut tribute = TributeActor::from(tribute);
     let event = TributeEvent::random();
