@@ -81,9 +81,9 @@ impl Tribute {
         self.health = std::cmp::max(0, self.health - damage);
         self.status = TributeStatus::Wounded;
 
-        if self.health == 0 {
-            self.dies();
-        }
+        // if self.health == 0 {
+        //     self.dies();
+        // }
     }
 
     /// Reduces mental health.
@@ -114,7 +114,7 @@ impl Tribute {
 
     /// Marks the tribute as recently dead and reveals them.
     pub fn dies(&mut self) {
-        // self.status = TributeStatus::RecentlyDead;
+        self.status = TributeStatus::RecentlyDead;
         self.is_hidden = Some(false);
     }
 
@@ -176,7 +176,12 @@ impl Tribute {
             AttackResult::AttackerWins => {
                 println!("🔪 {} attacks {}, and wins!", self.name, target.name);
                 target.takes_physical_damage(self.strength.unwrap());
-                apply_violence_stress(self);
+
+                if target.health <= 0 {
+                    target.status = TributeStatus::RecentlyDead;
+                } else {
+                    apply_violence_stress(self);
+                }
 
                 if target.status == TributeStatus::RecentlyDead {
                     self.kills = Some(self.kills.unwrap() + 1);
@@ -192,7 +197,12 @@ impl Tribute {
             AttackResult::DefenderWins => {
                 println!("🤣 {} attacks {}, but loses!", self.name, target.name);
                 self.takes_physical_damage(target.strength.unwrap());
-                apply_violence_stress(target);
+
+                if self.health <= 0 {
+                    self.status = TributeStatus::RecentlyDead;
+                } else {
+                    apply_violence_stress(target);
+                }
 
                 if self.status == TributeStatus::RecentlyDead {
                     target.kills = Some(target.kills.unwrap() + 1);
