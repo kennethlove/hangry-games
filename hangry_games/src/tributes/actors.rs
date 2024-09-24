@@ -1,11 +1,11 @@
-use crate::areas::Area;
-use crate::models::tribute::UpdateTribute;
-use rand::prelude::*;
-use std::str::FromStr;
-
 use super::actions::{AttackOutcome, AttackResult};
 use super::brains::TributeBrain;
 use super::statuses::TributeStatus;
+use crate::areas::Area;
+use crate::events::TributeEvent;
+use crate::models::tribute::UpdateTribute;
+use rand::prelude::*;
+use std::str::FromStr;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
@@ -114,7 +114,7 @@ impl Tribute {
 
     /// Marks the tribute as recently dead and reveals them.
     pub fn dies(&mut self) {
-        self.status = TributeStatus::RecentlyDead;
+        // self.status = TributeStatus::RecentlyDead;
         self.is_hidden = Some(false);
     }
 
@@ -258,6 +258,122 @@ impl Tribute {
             }
         }
     }
+
+    pub fn process_status(&mut self) {
+        let status = self.status.clone();
+        match status {
+            TributeStatus::Wounded => {
+                self.takes_physical_damage(1);
+                println!("🩸 {} bleeds from their wounds. 💪 {}/100", self.name, self.health);
+            },
+            TributeStatus::Sick => {
+                self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
+                self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
+                println!("🤒 {} contracts dysentery, loses strength and speed", self.name);
+            },
+            TributeStatus::Electrocuted => {
+                self.takes_physical_damage(20);
+                println!("🌩️ {} is struck by lightning, loses health", self.name);
+            },
+            TributeStatus::Frozen => {
+                self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
+                println!("🥶 {} suffers from hypothermia, loses speed.", self.name);
+            },
+            TributeStatus::Overheated => {
+                self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
+                println!("🥵 {} suffers from heat stroke, loses speed.", self.name);
+            },
+            TributeStatus::Dehydrated => {
+                self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
+                println!("🌵 {} is severely dehydrated, loses strength", self.name);
+            },
+            TributeStatus::Starving => {
+                self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
+                println!("🍴 {} is ravenously hungry, loses strength", self.name);
+            },
+            TributeStatus::Poisoned => {
+                self.takes_mental_damage(5);
+                println!("🧪 {} eats something poisonous, loses sanity", self.name);
+            },
+            TributeStatus::Broken => {
+                // coin flip for which bone breaks
+                let leg_bone = thread_rng().gen_bool(0.5);
+
+                // TODO: Add in other bones? Ribs and skull make sense.
+
+                if leg_bone {
+                    self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 5));
+                    println!("🦴 {} injures their leg, loses speed.", self.name);
+                } else {
+                    self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 5));
+                    println!("🦴 {} injures their arm, loses strength.", self.name);
+                }
+            },
+            TributeStatus::Infected => {
+                self.takes_physical_damage(2);
+                self.takes_mental_damage(2);
+                println!("🤢 {} gets an infection, loses health and sanity", self.name);
+            },
+            TributeStatus::Drowned => {
+                self.takes_physical_damage(2);
+                self.takes_mental_damage(2);
+                println!("🏊 {} partially drowns, loses health and sanity", self.name);
+            },
+            TributeStatus::Mauled(animal) => {
+                let damage = animal.damage();
+                self.takes_physical_damage(damage);
+                println!("🐾 {} is attacked by {}, takes {} damage!", self.name, animal.plural(), damage);
+            },
+            TributeStatus::Burned => {
+                self.takes_physical_damage(5);
+                println!("🔥 {} gets burned, loses health", self.name);
+            }
+            _ => {
+                // self.suffers();
+            }
+        }
+    }
+
+    pub fn handle_event(&mut self, player_event: TributeEvent) {
+        match player_event {
+            TributeEvent::AnimalAttack(animal) => {
+                self.status = TributeStatus::Mauled(animal);
+            },
+            TributeEvent::Dysentery => {
+                self.status = TributeStatus::Sick;
+            }
+            TributeEvent::LightningStrike => {
+                self.status = TributeStatus::Electrocuted;
+            }
+            TributeEvent::Hypothermia => {
+                self.status = TributeStatus::Frozen;
+            }
+            TributeEvent::HeatStroke => {
+                self.status = TributeStatus::Overheated;
+            },
+            TributeEvent::Dehydration => {
+                self.status = TributeStatus::Dehydrated;
+            },
+            TributeEvent::Starvation => {
+                self.status = TributeStatus::Starving;
+            },
+            TributeEvent::Poisoning => {
+                self.status = TributeStatus::Poisoned;
+            },
+            TributeEvent::BrokenBone => {
+                self.status = TributeStatus::Broken;
+            },
+            TributeEvent::Infection => {
+                self.status = TributeStatus::Infected;
+            },
+            TributeEvent::Drowning => {
+                self.status = TributeStatus::Drowned;
+            },
+            TributeEvent::Burn => {
+                self.status = TributeStatus::Burned;
+            },
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -273,6 +389,8 @@ fn apply_violence_stress(tribute: &mut Tribute) {
 fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
     let mut tribute1_roll = thread_rng().gen_range(1..=20); // Base roll
     tribute1_roll += tribute.strength.unwrap(); // Add strength
+
+    // Add luck in here?
 
     let mut tribute2_roll = thread_rng().gen_range(1..=20); // Base roll
     tribute2_roll += target.dexterity.unwrap(); // Add dexterity

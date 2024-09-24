@@ -1,54 +1,61 @@
 use std::fmt::Display;
 use std::str::FromStr;
+use crate::animals::Animal;
 
 #[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub enum TributeStatus {
     #[default]
     Healthy,
     Wounded,
-    // Dying,
-    // Starving,
-    // Dehydrated,
-    // Sick,
-    // Poisoned,
+    Starving,
+    Dehydrated,
+    Sick,
+    Poisoned,
     RecentlyDead,
     Dead,
-    // Drunk,
-    // High,
-    // Insane,
-    // Hallucinating,
-    // Paralyzed,
-    // Asleep,
-    // Unconscious,
-    // Revived,
+    Electrocuted,
+    Frozen,
+    Overheated,
+    Broken,
+    Infected,
+    Drowned,
+    Burned,
+    Buried,
+    Mauled(Animal),
 }
 
 impl FromStr for TributeStatus {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.to_lowercase().as_str().contains("mauled") {
+            let animal_name = s.split_whitespace().skip(1).map(|s| s.to_string()).collect::<Vec<String>>().join(" ");
+            let animal = Animal::from_str(animal_name.as_str());
+            if animal.is_ok() {
+                return Ok(TributeStatus::Mauled(animal?))
+            };
+        }
         match s.to_lowercase().as_str() {
             "healthy" => Ok(TributeStatus::Healthy),
             "wounded" => Ok(TributeStatus::Wounded),
             "injured" => Ok(TributeStatus::Wounded),
-            // "dying" => Ok(TributeStatus::Dying),
-            // "starving" => Ok(TributeStatus::Starving),
-            // "dehydrated" => Ok(TributeStatus::Dehydrated),
-            // "sick" => Ok(TributeStatus::Sick),
-            // "poisoned" => Ok(TributeStatus::Poisoned),
+            "starving" => Ok(TributeStatus::Starving),
+            "dehydrated" => Ok(TributeStatus::Dehydrated),
+            "sick" => Ok(TributeStatus::Sick),
+            "poisoned" => Ok(TributeStatus::Poisoned),
             "recently-dead" => Ok(TributeStatus::RecentlyDead),
             "recently_dead" => Ok(TributeStatus::RecentlyDead),
             "recently dead" => Ok(TributeStatus::RecentlyDead),
             "recentlydead" => Ok(TributeStatus::RecentlyDead),
             "dead" => Ok(TributeStatus::Dead),
-            // "drunk" => Ok(TributeStatus::Drunk),
-            // "high" => Ok(TributeStatus::High),
-            // "insane" => Ok(TributeStatus::Insane),
-            // "hallucinating" => Ok(TributeStatus::Hallucinating),
-            // "paralyzed" => Ok(TributeStatus::Paralyzed),
-            // "asleep" => Ok(TributeStatus::Asleep),
-            // "unconscious" => Ok(TributeStatus::Unconscious),
-            // "revived" => Ok(TributeStatus::Revived),
+            "electrocuted" => Ok(TributeStatus::Electrocuted),
+            "frozen" => Ok(TributeStatus::Frozen),
+            "overheated" => Ok(TributeStatus::Overheated),
+            "broken" => Ok(TributeStatus::Broken),
+            "infected" => Ok(TributeStatus::Infected),
+            "drowned" => Ok(TributeStatus::Drowned),
+            "burned" => Ok(TributeStatus::Burned),
+            "buried" => Ok(TributeStatus::Buried),
             _ => Err(()),
         }
     }
@@ -57,23 +64,23 @@ impl FromStr for TributeStatus {
 impl Display for TributeStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TributeStatus::Healthy => write!(f, "Healthy"),
-            TributeStatus::Wounded => write!(f, "Wounded"),
-            // TributeStatus::Dying => write!(f, "Dying"),
-            // TributeStatus::Starving => write!(f, "Starving"),
-            // TributeStatus::Dehydrated => write!(f, "Dehydrated"),
-            // TributeStatus::Sick => write!(f, "Sick"),
-            // TributeStatus::Poisoned => write!(f, "Poisoned"),
-            TributeStatus::RecentlyDead => write!(f, "RecentlyDead"),
-            TributeStatus::Dead => write!(f, "Dead"),
-            // TributeStatus::Drunk => write!(f, "Drunk"),
-            // TributeStatus::High => write!(f, "High"),
-            // TributeStatus::Insane => write!(f, "Insane"),
-            // TributeStatus::Hallucinating => write!(f, "Hallucinating"),
-            // TributeStatus::Paralyzed => write!(f, "Paralyzed"),
-            // TributeStatus::Asleep => write!(f, "Asleep"),
-            // TributeStatus::Unconscious => write!(f, "Unconscious"),
-            // TributeStatus::Revived => write!(f, "Revived"),
+            TributeStatus::Healthy => write!(f, "healthy"),
+            TributeStatus::Wounded => write!(f, "wounded"),
+            TributeStatus::Starving => write!(f, "starving"),
+            TributeStatus::Dehydrated => write!(f, "dehydrated"),
+            TributeStatus::Sick => write!(f, "sick"),
+            TributeStatus::Poisoned => write!(f, "poisoned"),
+            TributeStatus::RecentlyDead => write!(f, "recently dead"),
+            TributeStatus::Dead => write!(f, "dead"),
+            TributeStatus::Electrocuted => write!(f, "electrocuted"),
+            TributeStatus::Frozen => write!(f, "frozen"),
+            TributeStatus::Overheated => write!(f, "overheated"),
+            TributeStatus::Broken => write!(f, "broken"),
+            TributeStatus::Infected => write!(f, "infected"),
+            TributeStatus::Drowned => write!(f, "drowned"),
+            TributeStatus::Burned => write!(f, "burned"),
+            TributeStatus::Buried => write!(f, "buried"),
+            TributeStatus::Mauled(animal) => write!(f, "mauled {}", animal.to_string()),
         }
     }
 }
