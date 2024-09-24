@@ -1,5 +1,6 @@
 use super::get_area_by_id;
 use crate::establish_connection;
+use crate::events::TributeEvent;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::schema::tribute;
 use crate::tributes::actions::{AttackOutcome, TributeAction};
@@ -321,6 +322,13 @@ impl Tribute {
         let nearby_targets: Vec<Tribute> = nearby_tributes.clone().into_iter().map(|t| Tribute::from(t)).collect();
         nearby_targets
     }
+
+    pub fn is_alive(&self) -> bool {
+        match self.status.as_str() {
+            "Dead" | "RecentlyDead" => false,
+            _ => true
+        }
+    }
 }
 
 fn rest_tribute(tribute: Tribute) {
@@ -391,6 +399,37 @@ pub fn bleed_tribute(tribute: Tribute) -> Tribute {
 pub fn suffer_tribute(tribute: Tribute) -> Tribute {
     let mut tribute = TributeActor::from(tribute);
     tribute.suffers();
+
+    let tribute = Tribute::from(tribute);
+    update_tribute(tribute.id, tribute.clone());
+    tribute
+}
+
+pub fn process_tribute_status(tribute: Tribute) -> Tribute {
+    let mut tribute = TributeActor::from(tribute);
+    tribute.process_status();
+
+    if tribute.health == 0 {
+        tribute.killed_by = Some(tribute.status.to_string());
+        println!("💀 {} dies from {}", tribute.name, tribute.status);
+        tribute.status = TributeStatus::RecentlyDead;
+    }
+
+    let tribute = Tribute::from(tribute);
+    update_tribute(tribute.id, tribute.clone());
+    tribute
+}
+
+pub fn handle_tribute_event(tribute: Tribute) -> Tribute {
+    let mut tribute = TributeActor::from(tribute);
+    let event = TributeEvent::random();
+    tribute.handle_event(event.clone());
+
+    if tribute.health == 0 {
+        tribute.status = TributeStatus::RecentlyDead;
+        tribute.killed_by = Some(event.to_string());
+        println!("💀 {} dies by {}", tribute.name, event.to_string());
+    }
 
     let tribute = Tribute::from(tribute);
     update_tribute(tribute.id, tribute.clone());
