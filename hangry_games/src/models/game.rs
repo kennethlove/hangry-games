@@ -375,6 +375,7 @@ pub fn get_dead_tributes(game: &Game) -> Vec<Tribute> {
     let conn = &mut establish_connection();
     tribute::table
         .select(tribute::all_columns)
+        .order(tribute::day_killed.asc())
         .filter(tribute::game_id.eq(game.id))
         .filter(tribute::status.eq(TributeStatus::Dead.to_string()))
         .filter(tribute::day_killed.is_not_null())
@@ -387,6 +388,7 @@ pub fn get_recently_dead_tributes(game: &Game) -> Vec<Tribute> {
     let conn = &mut establish_connection();
     tribute::table
         .select(tribute::all_columns)
+        .order(tribute::day_killed.asc())
         .filter(tribute::game_id.eq(game.id))
         .filter(
             tribute::status.eq_any(vec![
