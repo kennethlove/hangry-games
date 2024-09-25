@@ -6,6 +6,7 @@ use crate::events::TributeEvent;
 use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
 use std::str::FromStr;
+use crate::models::LogEntry;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
@@ -146,6 +147,10 @@ impl Tribute {
         if self.status == TributeStatus::Wounded {
             self.takes_physical_damage(1);
             println!("🩸 {} bleeds from their wounds.", self.name);
+            LogEntry::create(
+                self.game_id.unwrap(),
+                format!("🩸 {} bleeds from their wounds.", self.name)
+            );
         }
     }
 
@@ -259,7 +264,7 @@ impl Tribute {
         match status {
             TributeStatus::Wounded => {
                 self.takes_physical_damage(1);
-                println!("🩸 {} bleeds from their wounds. 💪 {}/100", self.name, self.health);
+                println!("🩸 {} bleeds from their wounds.", self.name);
             },
             TributeStatus::Sick => {
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
@@ -324,9 +329,7 @@ impl Tribute {
                 self.takes_physical_damage(5);
                 println!("🔥 {} gets burned, loses health", self.name);
             }
-            _ => {
-                // self.suffers();
-            }
+            _ => {}
         }
     }
 
@@ -416,15 +419,15 @@ pub fn pick_target(tribute: TributeModel, targets: Vec<Tribute>) -> Option<Tribu
     match targets.len() {
         0 => { // there are no other targets
             match tribute.sanity {
-                0..=9 => {
+                0..=9 => { // attempt suicide
                     println!("{} attempts suicide.", tribute.name);
                     Some(tribute.into())
-                }, // attempt suicide
+                },
                 10..=19 => match thread_rng().gen_bool(0.2) {
-                    true => {
+                    true => { // attemp suicide
                         println!("{} attempts suicide.", tribute.name);
                         Some(tribute.into())
-                    }, // attempt suicide
+                    },
                     false => None, // Attack no one
                 },
                 _ => None, // Attack no one

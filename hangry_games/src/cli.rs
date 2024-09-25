@@ -182,7 +182,7 @@ pub fn parse() {
                     Some(area) => area.name.clone(),
                     None => "Unknown".to_string()
                 };
-                println!("{} is {}, {}/100, {}/100, in {}, {:?}",
+                println!("{} is {}, {}/100, {}/100, in {}, {}",
                     tribute.name,
                     tribute.status,
                     tribute.health,
