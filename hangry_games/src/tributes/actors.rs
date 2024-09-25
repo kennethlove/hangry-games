@@ -315,9 +315,10 @@ impl Tribute {
                 println!("🏊 {} partially drowns, loses health and sanity", self.name);
             },
             TributeStatus::Mauled(animal) => {
-                let damage = animal.damage();
+                let number_of_animals = thread_rng().gen_range(2..=5);
+                let damage = animal.damage() * number_of_animals;
                 self.takes_physical_damage(damage);
-                println!("🐾 {} is attacked by {}, takes {} damage!", self.name, animal.plural(), damage);
+                println!("🐾 {} is attacked by {} {}, takes {} damage!", self.name, number_of_animals, animal.plural(), damage);
             },
             TributeStatus::Burned => {
                 self.takes_physical_damage(5);
