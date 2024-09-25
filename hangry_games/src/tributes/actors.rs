@@ -147,10 +147,6 @@ impl Tribute {
         if self.status == TributeStatus::Wounded {
             self.takes_physical_damage(1);
             println!("🩸 {} bleeds from their wounds.", self.name);
-            LogEntry::create(
-                self.game_id.unwrap(),
-                format!("🩸 {} bleeds from their wounds.", self.name)
-            );
         }
     }
 
