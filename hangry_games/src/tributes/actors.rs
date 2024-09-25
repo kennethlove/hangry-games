@@ -79,11 +79,6 @@ impl Tribute {
     /// Reduces health, triggers death if health reaches 0.
     pub fn takes_physical_damage(&mut self, damage: i32) {
         self.health = std::cmp::max(0, self.health - damage);
-        self.status = TributeStatus::Wounded;
-
-        // if self.health == 0 {
-        //     self.dies();
-        // }
     }
 
     /// Reduces mental health.
@@ -150,30 +145,15 @@ impl Tribute {
     pub fn bleeds(&mut self) {
         if self.status == TributeStatus::Wounded {
             self.takes_physical_damage(1);
-            println!("🩸 {} bleeds from their wounds. 💪 {}/100", self.name, self.health);
+            println!("🩸 {} bleeds from their wounds.", self.name);
         }
     }
 
     /// Tribute is lonely/homesick/etc., loses some sanity.
     pub fn suffers(&mut self) {
-        match self.sanity {
-            0..=9 => {
-                // as sanity decreases, mental damage increases
-                self.takes_mental_damage(3);
-                println!("😭 {} suffers from loneliness and terror. 🧠 {}/100", self.name, self.sanity);
-            },
-            10..=100 => {
-                // Tribute is lonely and scared.
-                self.takes_mental_damage(1);
-                let mut rng = thread_rng();
-                if !rng.gen_bool(self.sanity as f64 / 100.0) {
-                    // Tribute is homesick as well.
-                    self.takes_mental_damage(1);
-                }
-                println!("😢 {} mentally suffers through the night. 🧠 {}/100", self.name, self.sanity);
-            },
-            _ => ()
-        }
+        let terror = (self.sanity as f64 / 100.0) * 5.0;
+        self.takes_mental_damage(terror.round() as i32);
+        println!("😭 {} suffers from loneliness and terror.", self.name);
     }
 
     pub fn attacks(&mut self, target: &mut Tribute) -> AttackOutcome {
@@ -185,16 +165,16 @@ impl Tribute {
 
                 if target.health <= 0 {
                     target.status = TributeStatus::RecentlyDead;
-                } else {
-                    apply_violence_stress(self);
                 }
 
+                self.wins = Some(self.wins.unwrap_or(0) + 1);
+                apply_violence_stress(self);
+
                 if target.status == TributeStatus::RecentlyDead {
-                    self.kills = Some(self.kills.unwrap() + 1);
-                    self.wins = Some(self.wins.unwrap() + 1);
+                    self.kills = Some(self.kills.unwrap_or(0) + 1);
                     target.killed_by = Some(self.name.clone());
                     target.day_killed = Some(game.day.unwrap());
-                    target.defeats = Some(target.defeats.unwrap() + 1);
+                    target.defeats = Some(target.defeats.unwrap_or(0) + 1);
                     return AttackOutcome::Kill(self.clone(), target.clone());
                 }
                 target.status = TributeStatus::Wounded;
@@ -206,13 +186,12 @@ impl Tribute {
 
                 if self.health <= 0 {
                     self.status = TributeStatus::RecentlyDead;
-                } else {
-                    apply_violence_stress(target);
                 }
+                target.wins = Some(target.wins.unwrap() + 1);
+                apply_violence_stress(target);
 
                 if self.status == TributeStatus::RecentlyDead {
                     target.kills = Some(target.kills.unwrap() + 1);
-                    target.wins = Some(target.wins.unwrap() + 1);
                     self.killed_by = Some(target.name.clone());
                     self.day_killed = Some(game.day.unwrap());
                     self.defeats = Some(self.defeats.unwrap() + 1);
@@ -399,7 +378,19 @@ pub enum TravelResult {
 }
 
 fn apply_violence_stress(tribute: &mut Tribute) {
-    tribute.takes_mental_damage(20);
+    let kills = tribute.kills.unwrap_or(0);
+    let wins = tribute.wins.unwrap_or(0);
+    let sanity = tribute.sanity;
+    let mut terror = 20.0;
+
+    if kills + wins > 0 {
+        terror = (100.0 / (kills + wins) as f64) * (sanity as f64 / 100.0) / 2.0;
+    }
+
+    if terror.round() > 0.0 {
+        tribute.takes_mental_damage(terror.round() as i32);
+        println!("😱 {} is terrified by the violence, loses {} sanity.", tribute.name, terror.round() as i32);
+    }
 }
 
 fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
@@ -570,7 +561,6 @@ mod tests {
         let mut tribute = Tribute::new("Katniss".to_string(), None);
         tribute.takes_physical_damage(10);
         assert_eq!(tribute.health, 90);
-        assert_eq!(tribute.status, TributeStatus::Wounded);
     }
 
     #[test]
@@ -583,17 +573,11 @@ mod tests {
     #[test]
     fn moves_and_rests() {
         let mut tribute = Tribute::new("Katniss".to_string(), None);
+        tribute.speed = Some(50);
         tribute.moves();
         assert_eq!(tribute.movement, 50);
         tribute.short_rests();
         assert_eq!(tribute.movement, 100);
-    }
-
-    #[test]
-    fn takes_damage_and_dies() {
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
-        tribute.takes_physical_damage(100);
-        assert_eq!(tribute.status, TributeStatus::RecentlyDead);
     }
 
     #[test]

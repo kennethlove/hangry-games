@@ -237,7 +237,8 @@ impl Tribute {
 
         if closed_areas.contains(&crate::areas::Area::from(area.clone())) {
             tribute.takes_physical_damage(100);
-            tribute.killed_by = Some(format!("🌋 {} waited too long in a closed area", tribute.name));
+            tribute.killed_by = Some(format!("{} didn't escape the closed area", tribute.name));
+            println!("🌋 {} waited too long in a closed area", tribute.name);
             tribute.status = TributeStatus::RecentlyDead;
             let t = Self::from(tribute);
             return t
