@@ -105,10 +105,12 @@ impl Tribute {
 
     /// Restores movement.
     pub fn short_rests(&mut self) {
+        println!("💤 {} rests", self.name);
         self.movement = 100;
     }
 
     pub fn long_rests(&mut self) {
+        println!("💤 {} rests and recovers a little health and sanity", self.name);
         self.short_rests();
         self.heals(5);
         self.heals_mental_damage(5);
@@ -135,19 +137,12 @@ impl Tribute {
     /// Hides the tribute from view.
     pub fn hides(&mut self) {
         self.is_hidden = Some(true);
+        println!("🫥 {} tries to hide", self.name);
     }
 
     /// Reveals the tribute to view.
     pub fn reveals(&mut self) {
         self.is_hidden = Some(false);
-    }
-
-    /// Tribute is wounded, loses some health.
-    pub fn bleeds(&mut self) {
-        if self.status == TributeStatus::Wounded {
-            self.takes_physical_damage(1);
-            println!("🩸 {} bleeds from their wounds.", self.name);
-        }
     }
 
     /// Tribute is lonely/homesick/etc., loses some sanity.
@@ -224,23 +219,39 @@ impl Tribute {
     pub fn travels(&self, closed_areas: Vec<Area>, suggested_area: Option<String>) -> TravelResult {
         let mut rng = thread_rng();
         let area = self.clone().area.unwrap();
+        let failure_msg = format!("😴 {} is too tired to move from {}, rests instead", self.name, area);
+        let success_msg = "🚶{tribute} moves from {area} to {new_area}";
 
         match self.movement {
             // No movement left, can't move
-            0 => TravelResult::Failure,
+            0 => {
+                println!("{}", failure_msg);
+                TravelResult::Failure
+            },
             // Low movement, can only move to suggested area
             1..=10 => {
                 if let Some(area_string) = suggested_area {
-                    let area = Area::from_str(area_string.as_str()).unwrap();
-                    return TravelResult::Success(area);
+                    let new_area = Area::from_str(area_string.as_str()).unwrap();
+                    println!("{}", success_msg
+                        .replace("{tribute}", self.name.as_str())
+                        .replace("{area}", area.as_str())
+                        .replace("{new_area}", new_area.as_str())
+                    );
+                    return TravelResult::Success(new_area);
                 }
+                println!("{}", failure_msg);
                 TravelResult::Failure
             },
             // High movement, can move to any open neighbor or the suggested area
             _ => {
                 if let Some(area_string) = suggested_area {
-                    let area = Area::from_str(area_string.as_str()).unwrap();
-                    return TravelResult::Success(area);
+                    let new_area = Area::from_str(area_string.as_str()).unwrap();
+                    println!("{}", success_msg
+                        .replace("{tribute}", self.name.as_str())
+                        .replace("{area}", area.as_str())
+                        .replace("{new_area}", new_area.as_str())
+                    );
+                    return TravelResult::Success(new_area);
                 }
                 let neighbors = area.neighbors();
                 let new_area = loop {
@@ -250,6 +261,11 @@ impl Tribute {
                     }
                     break new_area.clone();
                 };
+                println!("{}", success_msg
+                    .replace("{tribute}", self.name.as_str())
+                    .replace("{area}", area.as_str())
+                    .replace("{new_area}", new_area.as_str())
+                );
                 TravelResult::Success(new_area)
             }
         }
@@ -327,12 +343,18 @@ impl Tribute {
             }
             _ => {}
         }
+
+        if self.health <= 0 {
+            println!("💀 {} dies from {}", self.name, self.status);
+            self.killed_by = Some(self.status.to_string());
+            self.status = TributeStatus::RecentlyDead;
+        }
     }
 
     pub fn handle_event(&mut self, player_event: TributeEvent) {
         match player_event {
-            TributeEvent::AnimalAttack(animal) => {
-                self.status = TributeStatus::Mauled(animal);
+            TributeEvent::AnimalAttack(ref animal) => {
+                self.status = TributeStatus::Mauled(animal.clone());
             },
             TributeEvent::Dysentery => {
                 self.status = TributeStatus::Sick;
@@ -367,6 +389,11 @@ impl Tribute {
             TributeEvent::Burn => {
                 self.status = TributeStatus::Burned;
             },
+        }
+        if self.health <= 0 {
+            println!("💀 {} dies by {}", self.name, player_event.clone());
+            self.killed_by = Some(self.status.to_string());
+            self.status = TributeStatus::RecentlyDead;
         }
     }
 }

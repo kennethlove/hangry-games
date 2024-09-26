@@ -339,7 +339,6 @@ fn rest_tribute(tribute: Tribute) {
     tribute.long_rests();
 
     update_tribute(tribute.id.unwrap(), Tribute::from(tribute.clone()));
-    println!("💤 {} rests and recovers a little", tribute.name);
 }
 
 
@@ -357,11 +356,9 @@ fn move_tribute(tribute: Tribute, area: Option<String>) {
         TravelResult::Success(area) => {
             tribute.moves();
             tribute.changes_area(area.clone());
-            println!("🚶{} moves from {} to {}", tribute.name, tribute_area.as_str(), &area.as_str());
         }
         TravelResult::Failure => {
             tribute.short_rests();
-            println!("😴 {} is too tired to move from {}, rests instead", tribute.name, tribute_area.as_str());
         }
     }
 
@@ -376,7 +373,6 @@ fn hide_tribute(tribute: Tribute) {
     hidden_tribute.short_rests();
 
     update_tribute(tribute.id, Tribute::from(hidden_tribute));
-    println!("🫥 {} tries to hide", tribute.name);
 }
 
 pub fn suffer_tribute(tribute: Tribute) -> Tribute {
@@ -392,12 +388,6 @@ pub fn process_tribute_status(tribute: Tribute) -> Tribute {
     let mut tribute = TributeActor::from(tribute);
     tribute.process_status();
 
-    if tribute.health == 0 {
-        tribute.killed_by = Some(tribute.status.to_string());
-        println!("💀 {} dies from {}", tribute.name, tribute.status);
-        tribute.status = TributeStatus::RecentlyDead;
-    }
-
     let tribute = Tribute::from(tribute);
     update_tribute(tribute.id, tribute.clone());
     tribute
@@ -407,12 +397,6 @@ pub fn handle_tribute_event(tribute: Tribute) -> Tribute {
     let mut tribute = TributeActor::from(tribute);
     let event = TributeEvent::random();
     tribute.handle_event(event.clone());
-
-    if tribute.health == 0 {
-        tribute.killed_by = Some(event.to_string());
-        println!("💀 {} dies by {}", tribute.name, event.to_string());
-        tribute.status = TributeStatus::RecentlyDead;
-    }
 
     let tribute = Tribute::from(tribute);
     update_tribute(tribute.id, tribute.clone());
