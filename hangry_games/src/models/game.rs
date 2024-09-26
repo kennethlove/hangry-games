@@ -125,7 +125,6 @@ impl Game {
                 if !tribute.is_alive() { continue }
             }
 
-            // tribute = bleed_tribute(tribute);
             tribute = process_tribute_status(tribute);
             if !tribute.is_alive() { continue }
 
