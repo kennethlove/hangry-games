@@ -171,9 +171,11 @@ impl Tribute {
                     target.killed_by = Some(self.name.clone());
                     target.day_killed = Some(game.day.unwrap());
                     target.defeats = Some(target.defeats.unwrap_or(0) + 1);
+                    println!("☠️ {} kills {}", self.name, target.name);
                     return AttackOutcome::Kill(self.clone(), target.clone());
                 }
                 target.status = TributeStatus::Wounded;
+                println!("🤕 {} wounds {}", self.name, target.name);
                 AttackOutcome::Wound(self.clone(), target.clone())
             }
             AttackResult::DefenderWins => {
@@ -191,9 +193,11 @@ impl Tribute {
                     self.killed_by = Some(target.name.clone());
                     self.day_killed = Some(game.day.unwrap());
                     self.defeats = Some(self.defeats.unwrap() + 1);
+                    println!("☠️ {} kills {}", target.name, self.name);
                     return AttackOutcome::Kill(target.clone(), self.clone());
                 }
                 self.status = TributeStatus::Wounded;
+                println!("🤕 {} wounds {}", target.name, self.name);
                 AttackOutcome::Wound(target.clone(), self.clone())
             }
             AttackResult::Miss => {
