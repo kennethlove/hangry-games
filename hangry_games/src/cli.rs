@@ -1,6 +1,9 @@
 use crate::models::{create_area, create_game, create_tribute, get_action, get_all_tributes, get_area, get_areas, get_game, get_games, get_recently_dead_tributes, get_tribute, place_tribute_in_area};
 use clap::{Parser, Subcommand};
 use crate::models::game::{fill_tributes, get_all_living_tributes, get_dead_tributes, get_game_tributes};
+use std::fs;
+use std::io::Write;
+use std::path::Path;
 
 #[derive(Debug, Parser)]
 #[command(version, about, long_about = None)]
@@ -32,6 +35,7 @@ enum Commands {
     OpenArea { game_id: String, area_id: String },
     QuickStart,
     RunFullGame { game_id: String },
+    LogTributes { game_id: String }
 }
 
 pub fn parse() {
@@ -206,6 +210,28 @@ pub fn parse() {
                 game.run_next_day();
             }
             game.end();
+        }
+        Commands::LogTributes { game_id } => {
+            // Set outbound file path
+            let filepath = "log/output.txt";
+            let parent_dir = Path::new(filepath).parent().unwrap();
+            if !parent_dir.exists() {
+                fs::create_dir_all(parent_dir).expect("Failed to create directory.")
+            }
+            println!{"Parent dir set: {}", parent_dir.display()};
+
+            // Query game for tributes
+            let game = get_game(&game_id).expect("Game not found");
+            let tributes = get_game_tributes(&game);
+
+            let mut f = fs::File::create(filepath).expect("File could not be created.");
+
+            // Write tributes to file
+            for tribute in tributes {
+                if let Err(e) = writeln!(&mut f, "{}: {}", tribute.id, tribute.name) {
+                    println!("Error: {}", e.to_string());
+                }
+            }
         }
     }
 }
