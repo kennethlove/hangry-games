@@ -12,3 +12,6 @@ target/
 # IDE settings don't need to be tracked
 .idea/
 .vscode/
+
+# Ignore logfile from log_tributes CLI
+./hangry_games/log
