@@ -556,17 +556,7 @@ fn attack_target(attacker: Tribute, victim: Tribute) {
     let mut victim = TributeActor::from(victim.clone());
 
     // Mutates attacker and victim
-    match TributeActor::attacks(&mut attacker, &mut victim) {
-        AttackOutcome::Kill(attacker, victim) => {
-            println!("☠️ {} kills {}", attacker.name, victim.name);
-        }
-        AttackOutcome::Wound(attacker, victim) => {
-            println!("🤕 {} wounds {}", attacker.name, victim.name);
-        }
-        AttackOutcome::Miss(attacker, victim) => {
-            println!("💨 {} misses {}", attacker.name, victim.name);
-        }
-    }
+    TributeActor::attacks(&mut attacker, &mut victim);
 
     let attacker = Tribute::from(attacker);
     let victim = Tribute::from(victim);
