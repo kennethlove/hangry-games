@@ -11,6 +11,7 @@ use fake::locales::EN;
 use fake::Fake;
 use rand::seq::SliceRandom;
 use rand::Rng;
+use crate::tributes::actions::TributeAction;
 
 #[derive(Queryable, Selectable, Clone, Debug)]
 #[diesel(table_name = game)]
@@ -125,10 +126,28 @@ impl Game {
                 if !tribute.is_alive() { continue }
             }
 
-            tribute = process_tribute_status(tribute);
-            if !tribute.is_alive() { continue }
+            use crate::tributes::actors::Tribute as TributeActor;
+            let mut tribute = TributeActor::from(tribute.clone());
 
-            tribute.do_day();
+            match self.day {
+                Some(1) => {
+                    tribute.brain.set_preferred_action(TributeAction::Move(None), 0.5);
+                }
+                Some(3) => {
+                    tribute.brain.set_preferred_action(
+                        TributeAction::Move(
+                            Some(Area::Cornucopia.to_string())
+                        ),
+                        0.75
+                    );
+                }
+                _ => {}
+            }
+
+            let closed_areas: Vec<Area> = self.closed_areas.clone().unwrap_or(vec![]).iter()
+                .map(|a| Area::from(get_area_by_id(*a).unwrap()))
+                .collect();
+            tribute.do_day(closed_areas, );
         }
     }
 

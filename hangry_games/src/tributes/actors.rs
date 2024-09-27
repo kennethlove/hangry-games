@@ -1,4 +1,4 @@
-use super::actions::{AttackOutcome, AttackResult};
+use super::actions::{AttackOutcome, AttackResult, TributeAction};
 use super::brains::TributeBrain;
 use super::statuses::TributeStatus;
 use crate::areas::Area;
@@ -420,6 +420,69 @@ impl Tribute {
             println!("💀 {} dies by {}", self.name, player_event.clone());
             self.killed_by = Some(self.status.to_string());
             self.status = TributeStatus::RecentlyDead;
+        }
+    }
+
+    pub fn do_day(&mut self, closed_areas: Vec<Area>, suggested_area: Option<String>) -> Tribute {
+        self.process_status();
+        if self.status == TributeStatus::RecentlyDead {
+            println!("😱 {} is dead!", self.name);
+            return self.clone();
+        }
+
+        let area = self.area.clone().unwrap();
+        if closed_areas.contains(&area) {
+            self.travels(closed_areas.clone(), suggested_area);
+            return self.clone();
+        }
+
+        let game = get_game_by_id(self.game_id.unwrap()).unwrap();
+        let nearby_tributes = game.living_tributes().iter()
+            .filter(|t| t.area().is_some())
+            .map(|t| Tribute::from(t))
+            .cloned()
+            .filter(|t| t.area.unwrap() == area)
+            .collect::<Vec<_>>();
+
+        let action = self.brain.act(self, nearby_tributes.len(), closed_areas.clone());
+
+        match action {
+            TributeAction::Move(area) => {
+                self.travels(closed_areas.clone(), area);
+            },
+            TributeAction::Hide => {
+                self.hides();
+            },
+            TributeAction::Rest => {
+                self.short_rests();
+            },
+            TributeAction::Attack(target) => {
+                let mut target = target.unwrap();
+                if target.is_visible() {
+                    self.attacks(&mut target);
+                } else {
+                    println!("🤔 {} can't attack {}, they're hidden", self.name, target.name);
+                }
+            },
+            TributeAction::Event(event) => {
+                self.handle_event(event);
+            },
+            TributeAction::None => {
+                self.short_rests();
+            }
+        }
+
+        match self.status {
+            _ => {
+                match self.travels(closed_areas.clone(), suggested_area) {
+                    TravelResult::Success(area) => {
+                        self.changes_area(area);
+                    },
+                    TravelResult::Failure => {
+                        self.short_rests();
+                    }
+                }
+            }
         }
     }
 }

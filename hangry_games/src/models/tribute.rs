@@ -345,7 +345,6 @@ fn rest_tribute(tribute: Tribute) {
 fn move_tribute(tribute: Tribute, area: Option<String>) {
     let mut tribute = TributeActor::from(tribute);
     let game = get_game_by_id(tribute.game_id.unwrap()).unwrap();
-    let tribute_area = tribute.clone().area.unwrap();
 
     let closed_areas: Vec<crate::areas::Area> = game.closed_areas.clone().unwrap_or(vec![]).iter()
         .map(|id| get_area_by_id(*id))
