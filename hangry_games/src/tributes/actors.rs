@@ -226,6 +226,37 @@ impl Tribute {
         let failure_msg = format!("😴 {} is too tired to move from {}, rests instead", self.name, area);
         let success_msg = "🚶{tribute} moves from {area} to {new_area}";
 
+        let suggested_area = {
+            let suggested_area = suggested_area.clone();
+            if suggested_area.is_some() {
+                let suggested_area = Area::from_str(suggested_area.unwrap().as_str()).unwrap();
+                if closed_areas.contains(&suggested_area) {
+                    None
+                } else {
+                    Some(suggested_area)
+                }
+            } else {
+                None
+            }
+        };
+
+        if suggested_area.is_some() && suggested_area.clone().unwrap() == area {
+            println!("🤔 {} is already in the suggested area, stays put", self.name);
+            return TravelResult::Failure;
+        }
+
+        let handle_suggested_area = || -> TravelResult {
+            if suggested_area.is_some() {
+                println!("{}", success_msg
+                    .replace("{tribute}", self.name.as_str())
+                    .replace("{area}", area.as_str())
+                    .replace("{new_area}", suggested_area.clone().unwrap().as_str())
+                );
+                return TravelResult::Success(suggested_area.unwrap());
+            }
+            TravelResult::Failure
+        };
+
         match self.movement {
             // No movement left, can't move
             0 => {
@@ -234,28 +265,19 @@ impl Tribute {
             },
             // Low movement, can only move to suggested area
             1..=10 => {
-                if let Some(area_string) = suggested_area {
-                    let new_area = Area::from_str(area_string.as_str()).unwrap();
-                    println!("{}", success_msg
-                        .replace("{tribute}", self.name.as_str())
-                        .replace("{area}", area.as_str())
-                        .replace("{new_area}", new_area.as_str())
-                    );
-                    return TravelResult::Success(new_area);
+                match handle_suggested_area() {
+                    TravelResult::Success(area) => TravelResult::Success(area),
+                    TravelResult::Failure => {
+                        println!("{}", failure_msg);
+                        TravelResult::Failure
+                    }
                 }
-                println!("{}", failure_msg);
-                TravelResult::Failure
             },
             // High movement, can move to any open neighbor or the suggested area
             _ => {
-                if let Some(area_string) = suggested_area {
-                    let new_area = Area::from_str(area_string.as_str()).unwrap();
-                    println!("{}", success_msg
-                        .replace("{tribute}", self.name.as_str())
-                        .replace("{area}", area.as_str())
-                        .replace("{new_area}", new_area.as_str())
-                    );
-                    return TravelResult::Success(new_area);
+                match handle_suggested_area() {
+                    TravelResult::Success(area) => return TravelResult::Success(area),
+                    TravelResult::Failure => ()
                 }
                 let neighbors = area.neighbors();
                 let new_area = loop {
