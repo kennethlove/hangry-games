@@ -3,10 +3,10 @@ use super::brains::TributeBrain;
 use super::statuses::TributeStatus;
 use crate::areas::Area;
 use crate::events::TributeEvent;
+use crate::models;
 use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
 use std::str::FromStr;
-use crate::models::LogEntry;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
@@ -423,67 +423,95 @@ impl Tribute {
         }
     }
 
-    pub fn do_day(&mut self, closed_areas: Vec<Area>, suggested_area: Option<String>) -> Tribute {
+    pub fn do_day(&mut self, suggested_action: Option<TributeAction>, probability: Option<f64>) -> Tribute {
         self.process_status();
+        // Tribute died to the day's events.
         if self.status == TributeStatus::RecentlyDead {
             println!("😱 {} is dead!", self.name);
             return self.clone();
         }
 
+        let game = get_game_by_id(self.game_id.unwrap()).unwrap();
         let area = self.area.clone().unwrap();
+        let closed_areas = game.closed_areas().clone();
+
+        // Area is closed, tribute must move.
         if closed_areas.contains(&area) {
-            self.travels(closed_areas.clone(), suggested_area);
+            self.travels(closed_areas.clone(), None);
             return self.clone();
         }
 
-        let game = get_game_by_id(self.game_id.unwrap()).unwrap();
-        let nearby_tributes = game.living_tributes().iter()
-            .filter(|t| t.area().is_some())
-            .map(|t| Tribute::from(t))
-            .cloned()
-            .filter(|t| t.area.unwrap() == area)
-            .collect::<Vec<_>>();
+        let brain = &mut self.brain.clone();
 
-        let action = self.brain.act(self, nearby_tributes.len(), closed_areas.clone());
-
-        match action {
-            TributeAction::Move(area) => {
-                self.travels(closed_areas.clone(), area);
-            },
-            TributeAction::Hide => {
-                self.hides();
-            },
-            TributeAction::Rest => {
-                self.short_rests();
-            },
-            TributeAction::Attack(target) => {
-                let mut target = target.unwrap();
-                if target.is_visible() {
-                    self.attacks(&mut target);
-                } else {
-                    println!("🤔 {} can't attack {}, they're hidden", self.name, target.name);
-                }
-            },
-            TributeAction::Event(event) => {
-                self.handle_event(event);
-            },
-            TributeAction::None => {
-                self.short_rests();
-            }
+        if suggested_action.is_some() {
+            brain.set_preferred_action(suggested_action.unwrap(), probability.unwrap());
         }
 
-        match self.status {
-            _ => {
-                match self.travels(closed_areas.clone(), suggested_area) {
+        let nearby_tributes = game.clone().living_tributes().iter()
+            .filter(|t| t.area().is_some())
+            .map(|t| Tribute::from(t.clone()))
+            .filter(|t| t.clone().area.unwrap() == area)
+            .collect::<Vec<_>>();
+
+        let action = brain.act(self, nearby_tributes.len(), closed_areas.clone());
+
+        match &action {
+            TributeAction::Move(area) => {
+                match self.travels(closed_areas.clone(), area.clone()) {
                     TravelResult::Success(area) => {
-                        self.changes_area(area);
+                        self.changes_area(area.clone());
+                        self.take_action(action.clone(), Some(area.clone().to_string()));
                     },
                     TravelResult::Failure => {
                         self.short_rests();
+                        self.take_action(action.clone(), None);
                     }
                 }
+            },
+            TributeAction::Hide => {
+                self.hides();
+                self.take_action(action, None);
+            },
+            TributeAction::Rest => {
+                self.short_rests();
+                self.take_action(action, None);
+            },
+            TributeAction::Attack => {
+                let target = pick_target(self.clone().into(), nearby_tributes.clone());
+                let mut target = target.unwrap();
+                if target.is_visible() {
+                    self.attacks(&mut target);
+                    self.take_action(action, Some(target.clone().name));
+                } else {
+                    println!("🤔 {} can't attack {}, they're hidden", self.name, target.name);
+                    self.take_action(TributeAction::Hide, None);
+                }
+            },
+            TributeAction::None => {
+                self.short_rests();
+                self.take_action(action, None);
+            }
+            _ => {
+                println!("⛔ {} does nothing", self.name);
+                self.take_action(action, None);
             }
         }
+
+        self.clone()
+    }
+
+    fn take_action(&self, action: TributeAction, target: Option<String>) {
+        use models::tribute_action::take_action;
+        use models::action::get_action;
+
+        let tribute = TributeModel::from(self.clone());
+        let action = Action::from(get_action(action.as_str()));
+        take_action(&tribute, &action, target);
+    }
+
+    pub fn do_night(&mut self, suggested_action: Option<TributeAction>, probablity: Option<f64>) -> Tribute {
+
+        self.clone()
     }
 }
 
@@ -580,9 +608,9 @@ impl Default for Tribute {
     }
 }
 
-use crate::models::{get_area, get_game_by_id, Tribute as TributeModel};
+use crate::models::{get_area, get_game_by_id, Action, Tribute as TributeModel};
 impl From<TributeModel> for Tribute {
-    fn from(tribute: crate::models::tribute::Tribute) -> Self {
+    fn from(tribute: models::tribute::Tribute) -> Self {
         use crate::areas::Area;
         use crate::tributes::actions::TributeAction;
 
