@@ -1,5 +1,6 @@
 use crate::establish_connection;
 use crate::models::{Action, LogEntry, Tribute};
+use crate::schema::action;
 use crate::schema::tribute_action;
 use diesel::prelude::*;
 
@@ -43,6 +44,14 @@ impl TributeAction {
             .select(tribute_action::all_columns)
             .load(connection)
             .expect("Error loading tribute actions")
+    }
+
+    pub fn action(&self) -> Action {
+        let connection = &mut establish_connection();
+        action::table.filter(action::id.eq(self.action_id))
+            .select(action::all_columns)
+            .first(connection)
+            .expect("Error loading action")
     }
 }
 

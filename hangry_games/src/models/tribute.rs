@@ -3,7 +3,7 @@ use crate::establish_connection;
 use crate::events::TributeEvent;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::schema::tribute;
-use crate::tributes::actions::{AttackOutcome, TributeAction};
+use crate::tributes::actions::TributeAction;
 use crate::tributes::actors::pick_target;
 use crate::tributes::actors::{TravelResult, Tribute as TributeActor};
 use crate::tributes::statuses::TributeStatus;
@@ -128,92 +128,6 @@ impl Tribute {
             ))
             .execute(connection)
             .expect("Error killing tribute");
-    }
-
-    pub fn do_day(&mut self) -> Self {
-        if self.health == 0 {
-            println!("😱 {} is dead!", self.name);
-            self.status = TributeStatus::RecentlyDead.to_string();
-            return self.clone();
-        }
-
-        let area = self.area().unwrap();
-
-        // Create Tribute struct
-        let mut tribute = TributeActor::from(self.clone());
-
-        // Get game
-        let game = get_game_by_id(self.game_id.unwrap()).unwrap();
-
-        // Get Brain struct
-        let mut brain = tribute.brain.clone();
-
-        // Day 1, prefer to move
-        if game.day == Some(1) {
-            brain.set_preferred_action(TributeAction::Move(None), 0.5);
-        }
-
-        // Day 3 is the Feast, prefer move to the Cornucopia
-        if game.day == Some(3) {
-            brain.set_preferred_action(
-                TributeAction::Move(
-                    Some(crate::areas::Area::Cornucopia.to_string())
-                ),
-               0.75
-            );
-        }
-
-        // Get nearby targets
-        let nearby_targets = Self::get_nearby_targets(area.clone(), self.game_id.unwrap());
-        let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
-            .filter(|t| t.id != self.id)
-            .map(|t| TributeActor::from(t.clone()))
-            .collect::<Vec<_>>();
-
-        // Collect the closed areas
-        let closed_areas: Vec<crate::areas::Area> = game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).iter()
-            .map(|id| get_area_by_id(*id).unwrap())
-            .map(|a| crate::areas::Area::from(a))
-            .collect::<Vec<_>>();
-
-        // Decide the next logical action
-        brain.act(&mut tribute, nearby_targets.len(), closed_areas.clone());
-        let mut target = None;
-
-        match brain.last_action() {
-            TributeAction::Move(area) => {
-                if area.is_some() {
-                    target = Some(area.clone().unwrap().as_str().to_string());
-                    move_tribute(tribute.into(), Some(area.unwrap().as_str().to_string()));
-                } else {
-                    move_tribute(tribute.into(), None);
-                }
-            }
-            TributeAction::Hide => {
-                hide_tribute(Tribute::from(tribute));
-            }
-            TributeAction::Rest | TributeAction::None => {
-                rest_tribute(tribute.into());
-            }
-            TributeAction::Attack => {
-                if let Some(victim) = pick_target(self.clone(), nearby_targets) {
-                    let victim = Tribute::from(victim);
-                    target = Some(victim.name.clone());
-                    attack_target(self.clone(), victim.clone());
-                }
-            }
-            _ => {
-                println!("{} does nothing", self.name);
-            }
-        }
-
-        // Find the action model instance
-        let last_action = crate::models::action::get_action(brain.last_action().as_str());
-
-        // Connect Tribute to Action
-        tribute_action::take_action(&self.clone(), &last_action, target);
-
-        self.clone()
     }
 
     pub fn do_night(&mut self) -> Self {

@@ -1,8 +1,8 @@
-use std::str::FromStr;
 use crate::areas::Area;
 use crate::events::AreaEvent;
-use crate::models::{get_area_by_id, handle_tribute_event, process_tribute_status, suffer_tribute, update_tribute, Tribute};
+use crate::models::{get_area_by_id, handle_tribute_event, suffer_tribute, update_tribute, Tribute};
 use crate::schema::game;
+use crate::tributes::actions::TributeAction;
 use crate::tributes::statuses::TributeStatus;
 use crate::{establish_connection, models};
 use diesel::prelude::*;
@@ -11,7 +11,7 @@ use fake::locales::EN;
 use fake::Fake;
 use rand::seq::SliceRandom;
 use rand::Rng;
-use crate::tributes::actions::TributeAction;
+use std::str::FromStr;
 
 #[derive(Queryable, Selectable, Clone, Debug)]
 #[diesel(table_name = game)]
@@ -131,23 +131,15 @@ impl Game {
 
             match self.day {
                 Some(1) => {
-                    tribute.brain.set_preferred_action(TributeAction::Move(None), 0.5);
+                    tribute.do_day(Some(TributeAction::Move(None)), Some(0.5));
                 }
                 Some(3) => {
-                    tribute.brain.set_preferred_action(
-                        TributeAction::Move(
-                            Some(Area::Cornucopia.to_string())
-                        ),
-                        0.75
-                    );
+                    tribute.do_day(Some(TributeAction::Move(Some(Area::Cornucopia.to_string()))), Some(0.75));
                 }
-                _ => {}
-            }
-
-            let closed_areas: Vec<Area> = self.closed_areas.clone().unwrap_or(vec![]).iter()
-                .map(|a| Area::from(get_area_by_id(*a).unwrap()))
-                .collect();
-            tribute.do_day(closed_areas, );
+                _ => {
+                    tribute.do_day(None, None);
+                }
+            };
         }
     }
 
@@ -312,6 +304,13 @@ impl Game {
         self.do_night();
 
         self.do_deaths();
+    }
+
+    pub fn closed_areas(&self) -> Vec<Area> {
+        self.clone().closed_areas.unwrap_or(vec![])
+            .iter()
+            .map(|a| { Area::from_str(&get_area_by_id(*a).unwrap().name).unwrap() })
+            .collect::<Vec<Area>>()
     }
 }
 #[derive(Insertable, Debug)]
