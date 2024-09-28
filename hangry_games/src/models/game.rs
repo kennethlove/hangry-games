@@ -1,8 +1,9 @@
 use crate::areas::Area;
 use crate::events::AreaEvent;
-use crate::models::{get_area_by_id, handle_tribute_event, suffer_tribute, update_tribute, Tribute};
+use crate::models::{get_area_by_id, handle_tribute_event, update_tribute, Tribute};
 use crate::schema::game;
 use crate::tributes::actions::TributeAction;
+use crate::tributes::actors::Tribute as TributeActor;
 use crate::tributes::statuses::TributeStatus;
 use crate::{establish_connection, models};
 use diesel::prelude::*;
@@ -158,8 +159,14 @@ impl Game {
         // Run the tribute AI
         living_tributes.shuffle(&mut rng);
         for mut tribute in living_tributes {
-            tribute = suffer_tribute(tribute);
-            tribute.do_night();
+            // Use luck to decide if the tribute is caught by an event
+            if !rng.gen_bool(tribute.luck.unwrap_or(0) as f64 / 100.0) {
+                tribute = handle_tribute_event(tribute);
+                if !tribute.is_alive() { continue }
+            }
+
+            let mut tribute = TributeActor::from(tribute.clone());
+            tribute.do_night(None, None);
         }
     }
 

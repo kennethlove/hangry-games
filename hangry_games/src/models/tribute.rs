@@ -239,8 +239,8 @@ impl Tribute {
     }
 
     pub fn is_alive(&self) -> bool {
-        match self.status.as_str() {
-            "Dead" | "RecentlyDead" => false,
+        match self.status.to_lowercase().as_str() {
+            "dead" | "recentlydead" => false,
             _ => true
         }
     }
