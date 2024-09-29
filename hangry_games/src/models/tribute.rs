@@ -3,8 +3,6 @@ use crate::establish_connection;
 use crate::events::TributeEvent;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::schema::tribute;
-use crate::tributes::actions::TributeAction;
-use crate::tributes::actors::pick_target;
 use crate::tributes::actors::{TravelResult, Tribute as TributeActor};
 use crate::tributes::statuses::TributeStatus;
 use diesel::prelude::*;
@@ -128,92 +126,6 @@ impl Tribute {
             ))
             .execute(connection)
             .expect("Error killing tribute");
-    }
-
-    pub fn do_night(&mut self) -> Self {
-        if self.health == 0 {
-            println!("😱 {} is dead", self.name);
-            self.status = TributeStatus::RecentlyDead.to_string();
-            return self.clone();
-        }
-
-        // Create Tribute struct
-        let mut tribute = TributeActor::from(self.clone());
-
-        let game = get_game_by_id(self.game_id.unwrap()).expect("Couldn't get game");
-        let area = get_area_by_id(self.area_id).expect("Couldn't get area");
-
-        // Collect the closed areas
-        let closed_areas: Vec<crate::areas::Area> = game.closed_areas.unwrap_or(Vec::<Option<i32>>::new()).iter()
-            .map(|id| get_area_by_id(*id).unwrap())
-            .map(|a| crate::areas::Area::from(a))
-            .collect::<Vec<_>>();
-
-        if closed_areas.contains(&crate::areas::Area::from(area.clone())) {
-            tribute.takes_physical_damage(100);
-            tribute.killed_by = Some(format!("{} didn't escape the closed area", tribute.name));
-            println!("🌋 {} waited too long in a closed area", tribute.name);
-            tribute.status = TributeStatus::RecentlyDead;
-            let t = Self::from(tribute);
-            return t
-        }
-
-        // Get nearby tributes and targets
-        let nearby_targets = Self::get_nearby_targets(area.clone(), self.game_id.unwrap());
-        let nearby_targets: Vec<TributeActor> = nearby_targets.iter()
-            .filter(|t| t.id != self.id)
-            .map(|t| TributeActor::from(t.clone()))
-            .collect::<Vec<_>>();
-
-        // Get Brain struct
-        let mut brain = tribute.brain.clone();
-
-        // Decide the next logical action
-        brain.act(&mut tribute, nearby_targets.len(), closed_areas.clone());
-        let mut target = None;
-
-        match brain.last_action() {
-            TributeAction::Move(area) => {
-                if area.is_some() {
-                    target = Some(area.clone().unwrap().as_str().to_string());
-                    move_tribute(tribute.into(), area);
-                } else {
-                    move_tribute(tribute.into(), None);
-                }
-            }
-            TributeAction::Attack => {
-                // How brave does the tribute feel at night?
-                let mut rng = thread_rng();
-                let bravery = self.bravery.unwrap();
-                let bravado: u32 = rng.gen_range(0..=100);
-                let brave_enough = bravado + bravery as u32 > 50;
-
-                if let Some(victim) = pick_target(self.clone(), nearby_targets) {
-                    let victim = Tribute::from(victim);
-                    if brave_enough == true {
-                        target = Some(victim.name.clone());
-                        attack_target(self.clone(), victim.clone());
-                    } else {
-                        println!("😨 {} is too scared to attack {}", self.name, victim.name);
-                    }
-                }
-            }
-            TributeAction::Hide => {
-                hide_tribute(Tribute::from(tribute));
-            }
-            _ => {
-                println!("{} does nothing", self.name);
-                rest_tribute(tribute.into());
-            }
-        }
-
-        // Find the action model instance
-        let last_action = crate::models::action::get_action(brain.last_action().as_str());
-
-        // Connect Tribute to Action
-        tribute_action::take_action(&self.clone(), &last_action, target);
-
-        self.clone()
     }
 
     fn get_nearby_tributes(area: Area, game_id: i32) -> Vec<TributeActor> {
