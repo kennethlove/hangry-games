@@ -202,7 +202,7 @@ fn hide_tribute(tribute: Tribute) {
 
 pub fn suffer_tribute(tribute: Tribute) -> Tribute {
     let mut tribute = TributeActor::from(tribute);
-    tribute.suffers();
+    tribute.nighttime_terror();
 
     let tribute = Tribute::from(tribute);
     update_tribute(tribute.id, tribute.clone());

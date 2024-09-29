@@ -128,28 +128,33 @@ impl Game {
             // Use luck to decide if the tribute is caught by an event
             if !rng.gen_bool(tribute.luck.unwrap_or(0) as f64 / 100.0) {
                 tribute = handle_tribute_event(tribute);
-                if !tribute.is_alive() { continue }
             }
+
+            if !tribute.is_alive() {
+                update_tribute(tribute.id, tribute);
+                continue
+            };
 
             let mut tribute = TributeActor::from(tribute.clone());
 
             match (self.day, day) {
                 (Some(1), true) => {
-                    tribute.do_day(Some(TributeAction::Move(None)), Some(0.5));
+                    tribute.do_day_night(Some(TributeAction::Move(None)), Some(0.5), day);
                 }
                 (Some(3), true) => {
-                    tribute.do_day(Some(TributeAction::Move(Some(Area::Cornucopia.to_string()))), Some(0.75));
+                    tribute.do_day_night(
+                        Some(TributeAction::Move(Some(Area::Cornucopia.to_string()))),
+                        Some(0.75),
+                        day
+                    );
                 }
                 (_, true) => {
-                    tribute.do_day(None, None);
+                    tribute.do_day_night(None, None, day);
                 }
                 (_, false) => {
-                    tribute.do_night(None, None);
+                    tribute.do_day_night(None, None, day);
                 }
             };
-
-            let tribute = Tribute::from(tribute.clone());
-            update_tribute(tribute.id, tribute);
         }
     }
 
