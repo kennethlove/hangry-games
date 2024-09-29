@@ -539,7 +539,6 @@ impl Tribute {
             .filter(|t| t.is_alive())
             .map(|t| Tribute::from(t.clone()))
             .collect::<Vec<_>>();
-        // dbg!(&area_tributes);
 
         let action = brain.act(self, area_tributes.len(), closed_areas.clone());
 
