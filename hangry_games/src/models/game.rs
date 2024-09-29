@@ -106,14 +106,18 @@ impl Game {
             .expect("Error updating game");
     }
 
-    pub fn do_day(&mut self) {
+    pub fn do_day_night(&mut self, day: bool) {
         let mut rng = rand::thread_rng();
+        let day_freq = 1.0 / 4.0;
+        let night_freq = 1.0 / 8.0;
 
         self.do_area_event_cleanup();
 
-        // Trigger any daytime events
-        if self.day > Some(3) && rng.gen_bool(1.0 / 4.0) {
-            self.do_area_event();
+        // Trigger any events
+        if self.day > Some(3) || !day {
+            if rng.gen_bool(if day { day_freq } else { night_freq }) {
+                self.do_area_event();
+            }
         }
 
         let mut living_tributes = get_all_living_tributes(&self);
@@ -127,46 +131,25 @@ impl Game {
                 if !tribute.is_alive() { continue }
             }
 
-            use crate::tributes::actors::Tribute as TributeActor;
             let mut tribute = TributeActor::from(tribute.clone());
 
-            match self.day {
-                Some(1) => {
+            match (self.day, day) {
+                (Some(1), true) => {
                     tribute.do_day(Some(TributeAction::Move(None)), Some(0.5));
                 }
-                Some(3) => {
+                (Some(3), true) => {
                     tribute.do_day(Some(TributeAction::Move(Some(Area::Cornucopia.to_string()))), Some(0.75));
                 }
-                _ => {
+                (_, true) => {
                     tribute.do_day(None, None);
                 }
+                (_, false) => {
+                    tribute.do_night(None, None);
+                }
             };
-        }
-    }
 
-    pub fn do_night(&mut self) {
-        let mut rng = rand::thread_rng();
-
-        self.do_area_event_cleanup();
-
-        // Trigger any nighttime events
-        if rng.gen_bool(1.0 / 8.0) {
-            self.do_area_event();
-        }
-
-        let mut living_tributes = get_all_living_tributes(&self);
-
-        // Run the tribute AI
-        living_tributes.shuffle(&mut rng);
-        for mut tribute in living_tributes {
-            // Use luck to decide if the tribute is caught by an event
-            if !rng.gen_bool(tribute.luck.unwrap_or(0) as f64 / 100.0) {
-                tribute = handle_tribute_event(tribute);
-                if !tribute.is_alive() { continue }
-            }
-
-            let mut tribute = TributeActor::from(tribute.clone());
-            tribute.do_night(None, None);
+            let tribute = Tribute::from(tribute.clone());
+            update_tribute(tribute.id, tribute);
         }
     }
 
@@ -303,12 +286,13 @@ impl Game {
                  if living_tributes.len() == 1 { "s" } else { "" }
         );
 
-        self.do_day();
+        // Run the day
+        self.do_day_night(true);
 
         self.do_deaths();
 
         println!("=== 🌙 Night {} begins ===", day);
-        self.do_night();
+        self.do_day_night(false);
 
         self.do_deaths();
     }
