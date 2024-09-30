@@ -200,15 +200,6 @@ fn hide_tribute(tribute: Tribute) {
     update_tribute(tribute.id, Tribute::from(hidden_tribute));
 }
 
-pub fn suffer_tribute(tribute: Tribute) -> Tribute {
-    let mut tribute = TributeActor::from(tribute);
-    tribute.nighttime_terror();
-
-    let tribute = Tribute::from(tribute);
-    update_tribute(tribute.id, tribute.clone());
-    tribute
-}
-
 pub fn process_tribute_status(tribute: Tribute) -> Tribute {
     let mut tribute = TributeActor::from(tribute);
     tribute.process_status();
