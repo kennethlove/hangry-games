@@ -1,6 +1,7 @@
 use crate::models::game::{fill_tributes, get_all_living_tributes, get_dead_tributes, get_game_tributes};
 use crate::models::{create_area, create_game, create_tribute, get_action, get_all_tributes, get_area, get_areas, get_game, get_games, get_recently_dead_tributes, get_tribute, place_tribute_in_area};
 use clap::{Parser, Subcommand};
+use crate::games::Game;
 use std::fs;
 use std::io::Write;
 use std::path::Path;
@@ -156,7 +157,7 @@ pub fn parse() {
                 return;
             }
 
-            game.run_next_day();
+            Game::from(game).run_next_day();
         }
         Commands::EndGame { game_id } => {
             let game = get_game(&game_id).expect("Game not found");
@@ -207,8 +208,9 @@ pub fn parse() {
         Commands::RunFullGame { game_id } => {
             let mut game = get_game(&game_id).expect("Game not found");
             game.start();
-            while game.living_tributes().len() > 1 {
-                game.run_next_day();
+            let mut game_actor = Game::from(game.clone());
+            while game_actor.living_tributes().len() > 1 {
+                game_actor.run_next_day();
             }
             game.end();
         }
