@@ -1,7 +1,12 @@
 use std::fmt::Display;
+use std::str::FromStr;
 use rand::Rng;
+use crate::events::AreaEvent;
 use crate::models;
-use crate::models::get_game_by_id;
+use crate::models::{get_game_by_id, update_tribute};
+use crate::models::tribute::Tribute as ModelTribute;
+use crate::tributes::actors::Tribute;
+use crate::tributes::statuses::TributeStatus;
 
 #[derive(Clone, Default, Debug, Eq, PartialEq)]
 pub enum Area {
@@ -100,6 +105,70 @@ impl Area {
         let model_area = models::Area::from(area.clone());
         models::AreaEvent::create(event.to_string(), model_area.id, game.id);
         game.close_area(&model_area);
+    }
+
+    pub fn clean_up_area_events(game_id: i32) {
+        let mut rng = rand::thread_rng();
+        let mut game = get_game_by_id(game_id).expect("Game doesn't exist");
+        let closed_areas = game.closed_areas();
+        for area in closed_areas {
+            let model_area = models::Area::from(area.clone());
+            let events = model_area.events(game.id);
+            let last_event = events.iter().last().unwrap();
+            let mut tributes = model_area.tributes(game.id);
+            let tributes = tributes
+                .iter_mut()
+                .filter(|t| t.day_killed.is_none())
+                .map(|t| Tribute::from(t.clone()))
+                .collect::<Vec<_>>();
+            let area_name = area.as_str().strip_prefix("The ").unwrap_or(area.as_str());
+
+            for mut tribute in tributes {
+                println!("💥 {} is trapped in the {}.", tribute.name, area_name);
+
+                if rng.gen_bool(tribute.luck.unwrap_or(0) as f64 / 100.0) {
+                    // If the tribute is lucky, they're just harmed by the event
+                    let area_event = AreaEvent::from_str(&last_event.name).unwrap();
+                    match area_event {
+                        AreaEvent::Wildfire => {
+                            tribute.status = TributeStatus::Burned
+                        }
+                        AreaEvent::Flood => {
+                            tribute.status = TributeStatus::Drowned
+                        }
+                        AreaEvent::Earthquake => {
+                            tribute.status = TributeStatus::Buried
+                        }
+                        AreaEvent::Avalanche => {
+                            tribute.status = TributeStatus::Buried
+                        }
+                        AreaEvent::Blizzard => {
+                            tribute.status = TributeStatus::Frozen
+                        }
+                        AreaEvent::Landslide => {
+                            tribute.status = TributeStatus::Buried
+                        }
+                        AreaEvent::Heatwave => {
+                            tribute.status = TributeStatus::Overheated
+                        }
+                    };
+                } else {
+                    // If the tribute is unlucky, they die
+                    tribute.health = 0;
+                    tribute.status = TributeStatus::RecentlyDead;
+                    tribute.is_hidden = Some(false);
+                    tribute.killed_by = Some(last_event.name.clone());
+                    println!("🪦 {} died in the {}.", tribute.name, area_name);
+                }
+                update_tribute(tribute.id.unwrap(), ModelTribute::from(tribute.clone()));
+            }
+
+            // Re-open the area?
+            if rng.gen_bool(0.5) {
+                println!("=== 🔔 The Gamemakers open the {} ===", area_name);
+                game.open_area(&model_area);
+            }
+        }
     }
 }
 
