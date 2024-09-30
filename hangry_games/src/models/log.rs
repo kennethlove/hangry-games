@@ -1,5 +1,6 @@
-use crate::{establish_connection, models};
 use crate::schema::log_entry;
+use crate::schema::tribute_action::dsl::tribute_action;
+use crate::{establish_connection, models};
 use diesel::prelude::*;
 use models::get_game_by_id;
 
@@ -72,8 +73,19 @@ impl LogEntry {
 pub fn get_log_entry_by_id(id: i32) -> Option<LogEntry> {
     let connection = &mut establish_connection();
     log_entry::table.find(id)
+        .select(log_entry::all_columns)
+        .inner_join(tribute_action)
         .first(connection)
         .optional()
         .expect("Error loading log entry")
 }
 
+pub fn get_logs_for_game(id: i32) -> Vec<LogEntry> {
+    let connection = &mut establish_connection();
+    log_entry::table
+        .filter(log_entry::game_id.eq(id))
+        .select(log_entry::all_columns)
+        .inner_join(tribute_action)
+        .load(connection)
+        .expect("Error loading log entries")
+}
