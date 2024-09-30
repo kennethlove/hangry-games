@@ -111,7 +111,8 @@ impl Game {
         let day_freq = 1.0 / 4.0;
         let night_freq = 1.0 / 8.0;
 
-        self.do_area_event_cleanup();
+        // self.do_area_event_cleanup();
+        Area::clean_up_area_events(self.id);
 
         // Trigger any events
         if self.day > Some(3) || !day {
@@ -155,71 +156,6 @@ impl Game {
                     tribute.do_day_night(None, None, day);
                 }
             };
-        }
-    }
-
-    fn do_area_event_cleanup(&mut self) {
-        let mut rng = rand::thread_rng();
-
-        // Handle closed areas
-        for area_id in self.closed_areas.clone().unwrap_or(vec![]) {
-            let area = get_area_by_id(area_id).unwrap();
-            let area_name = area.name.strip_prefix("The ").unwrap_or(area.name.as_str());
-
-            let events = area.events(self.id);
-            let event = events.iter().last().unwrap();
-
-            let mut tributes = area.tributes(self.id);
-            let tributes = tributes
-                .iter_mut()
-                .filter(|t| t.day_killed.is_none())
-                .collect::<Vec<_>>();
-
-            for tribute in tributes {
-                println!("💥 {} is trapped in the {}.", tribute.name, area_name);
-
-                if rng.gen_bool(tribute.luck.unwrap_or(0) as f64 / 100.0) {
-                    // If the tribute is lucky
-                    let area_event = AreaEvent::from_str(&event.name).unwrap();
-                    match area_event {
-                        AreaEvent::Wildfire => {
-                            tribute.status = TributeStatus::Burned.to_string()
-                        }
-                        AreaEvent::Flood => {
-                            tribute.status = TributeStatus::Drowned.to_string()
-                        }
-                        AreaEvent::Earthquake => {
-                            tribute.status = TributeStatus::Buried.to_string()
-                        }
-                        AreaEvent::Avalanche => {
-                            tribute.status = TributeStatus::Buried.to_string()
-                        }
-                        AreaEvent::Blizzard => {
-                            tribute.status = TributeStatus::Frozen.to_string()
-                        }
-                        AreaEvent::Landslide => {
-                            tribute.status = TributeStatus::Buried.to_string()
-                        }
-                        AreaEvent::Heatwave => {
-                            tribute.status = TributeStatus::Overheated.to_string()
-                        }
-                    };
-                } else {
-                    // If the tribute is not
-                    tribute.health = 0;
-                    tribute.status = TributeStatus::RecentlyDead.to_string();
-                    tribute.is_hidden = Some(false);
-                    tribute.killed_by = Some(event.name.clone());
-                    println!("🪦 {} died in the {}.", tribute.name, area_name);
-                }
-                update_tribute(tribute.id, tribute.clone());
-            }
-
-            // Re-open area?
-            if rng.gen_bool(0.5) {
-                println!("=== 🔔 The Gamemakers open the {} ===", area_name);
-                self.open_area(&area);
-            }
         }
     }
 
