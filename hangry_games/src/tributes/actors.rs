@@ -156,7 +156,11 @@ impl Tribute {
         let game = get_game_by_id(self.game_id.unwrap()).unwrap();
         match attack_contest(self.clone(), target.clone()) {
             AttackResult::AttackerWins => {
-                println!("🔪 {} attacks {}, and wins!", self.name, target.name);
+                if self == target {
+                    println!("🤦 {} harms themself!", self.name);
+                } else {
+                    println!("🔪 {} attacks {}, and wins!", self.name, target.name);
+                }
                 target.takes_physical_damage(self.strength.unwrap());
 
                 if target.health <= 0 {
@@ -179,7 +183,11 @@ impl Tribute {
                 AttackOutcome::Wound(self.clone(), target.clone())
             }
             AttackResult::DefenderWins => {
-                println!("🤣 {} attacks {}, but loses!", self.name, target.name);
+                if target == self {
+                    println!("🤦 {} harms themself!", self.name);
+                } else {
+                    println!("🤣 {} attacks {}, but loses!", self.name, target.name);
+                }
                 self.takes_physical_damage(target.strength.unwrap());
 
                 if self.health <= 0 {
