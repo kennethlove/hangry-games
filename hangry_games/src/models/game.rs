@@ -1,17 +1,12 @@
 use crate::areas::Area;
-use crate::events::AreaEvent;
-use crate::models::{get_area_by_id, handle_tribute_event, update_tribute, Tribute};
+use crate::models::{get_area_by_id, Tribute};
 use crate::schema::game;
-use crate::tributes::actions::TributeAction;
-use crate::tributes::actors::Tribute as TributeActor;
 use crate::tributes::statuses::TributeStatus;
 use crate::{establish_connection, models};
 use diesel::prelude::*;
 use fake::faker::name::raw::Name;
 use fake::locales::EN;
 use fake::Fake;
-use rand::seq::SliceRandom;
-use rand::Rng;
 use std::str::FromStr;
 
 #[derive(Queryable, Selectable, Clone, Debug)]

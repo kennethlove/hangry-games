@@ -47,7 +47,7 @@ impl Game {
         get_all_living_tributes(&game).iter().map(|t| Tribute::from(t.clone())).collect()
     }
 
-    pub fn run_next_day(&mut self) {
+    pub fn run_day_night_cycle(&mut self) {
         let mut game = get_game(self.name.as_str()).expect("Error loading game");
         self.day = Some(self.day.unwrap_or(0) + 1);
         game.set_day(self.day.unwrap());
@@ -93,14 +93,14 @@ impl Game {
         self.do_day_night_cycle(true);
 
         // Clean up any deaths
-        self.clean_up_deaths();
+        self.clean_up_recent_deaths();
 
         // Run the night
         println!("=== 🌙 Night {} begins ===", self.day.unwrap());
         self.do_day_night_cycle(false);
 
         // Clean up any deaths
-        self.clean_up_deaths();
+        self.clean_up_recent_deaths();
 
     }
 
@@ -156,22 +156,18 @@ impl Game {
                     tribute.do_day_night(None, None, day);
                 }
             };
-
-            update_tribute(tribute.id.unwrap(), TributeModel::from(tribute));
         }
 
     }
-    pub fn clean_up_deaths(&self) {
+    pub fn clean_up_recent_deaths(&self) {
         let game = get_game(self.name.as_str()).expect("Error loading game");
         let dead_tributes = get_recently_dead_tributes(&game);
-        let dead_tributes: Vec<Tribute> = dead_tributes.iter().cloned().map(Tribute::from).collect();
 
         println!("=== 💀 {} tribute{} died ===", dead_tributes.len(), if dead_tributes.len() == 1 { "" } else { "s" });
 
-        for mut tribute in dead_tributes {
+        for tribute in dead_tributes {
             tribute.dies();
             println!("🪦 {}", tribute.name);
-            update_tribute(tribute.id.unwrap(), TributeModel::from(tribute));
         }
     }
 }
