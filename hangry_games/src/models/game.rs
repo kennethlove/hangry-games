@@ -116,7 +116,7 @@ impl Game {
         // Trigger any events
         if self.day > Some(3) || !day {
             if rng.gen_bool(if day { day_freq } else { night_freq }) {
-                self.do_area_event();
+                Area::do_area_event(self.id);
             }
         }
 
@@ -156,22 +156,6 @@ impl Game {
                 }
             };
         }
-    }
-
-    fn do_area_event(&mut self) {
-        // Event happens
-        let event = AreaEvent::random();
-        let closed_areas = self.closed_areas.clone().unwrap_or(vec![]);
-        let closed_areas = closed_areas.iter()
-            .map(|a| get_area_by_id(*a))
-            .map(|a| Area::from(a.unwrap()))
-            .collect::<Vec<_>>();
-        let area = Area::random_open_area(closed_areas);
-        let model_area = models::Area::from(area.clone());
-        println!("=== ⚠️ A(n) {} has occurred in {} ===", event, area);
-        models::AreaEvent::create(event.to_string(), model_area.id, self.id);
-        println!("=== 🔔 The Gamemakers close the {} ===", model_area.name);
-        self.close_area(&model_area);
     }
 
     fn do_area_event_cleanup(&mut self) {
