@@ -100,7 +100,6 @@ impl Area {
         let area = Area::random_open_area(closed_areas);
 
         println!("=== ⚠️ A(n) {} has occurred in {} ===", event, area);
-        println!("=== 🔔 The Gamemakers close the {} ===", area);
 
         let model_area = models::Area::from(area.clone());
         models::AreaEvent::create(event.to_string(), model_area.id, game.id);
@@ -164,7 +163,7 @@ impl Area {
 
             // Re-open the area?
             if rng.gen_bool(0.5) {
-                println!("=== 🔔 The Gamemakers open the {} ===", area_name);
+                println!("=== 🔔 The {} is habitable again ===", area_name);
                 game.open_area(&model_area);
             }
         }
