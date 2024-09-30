@@ -147,7 +147,7 @@ pub fn parse() {
             game.start();
         }
         Commands::RunNextDay { game_id } => {
-            let mut game = get_game(&game_id).expect("Game not found");
+            let game = get_game(&game_id).expect("Game not found");
             if game.ended_at.is_some() {
                 println!("Game is already over");
                 return;
@@ -202,7 +202,7 @@ pub fn parse() {
             game.start();
         }
         Commands::RunFullGame { game_id } => {
-            let mut game = get_game(&game_id).expect("Game not found");
+            let game = get_game(&game_id).expect("Game not found");
             game.start();
             let mut game_actor = Game::from(game.clone());
             while game_actor.living_tributes().len() > 1 {
