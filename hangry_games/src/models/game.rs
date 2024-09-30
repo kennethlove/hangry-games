@@ -308,6 +308,10 @@ impl Game {
             .map(|a| { Area::from_str(&get_area_by_id(*a).unwrap().name).unwrap() })
             .collect::<Vec<Area>>()
     }
+
+    pub fn logs(&self) -> Vec<models::LogEntry> {
+        models::log::get_logs_for_game(self.id)
+    }
 }
 #[derive(Insertable, Debug)]
 #[diesel(table_name = game)]
