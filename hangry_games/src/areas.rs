@@ -1,5 +1,7 @@
 use std::fmt::Display;
 use rand::Rng;
+use crate::models;
+use crate::models::get_game_by_id;
 
 #[derive(Clone, Default, Debug, Eq, PartialEq)]
 pub enum Area {
@@ -84,6 +86,20 @@ impl Area {
             }
         };
         area
+    }
+
+    pub fn do_area_event(game_id: i32) {
+        let event = crate::events::AreaEvent::random();
+        let mut game = get_game_by_id(game_id).expect("Game doesn't exist");
+        let closed_areas = game.closed_areas();
+        let area = Area::random_open_area(closed_areas);
+
+        println!("=== ⚠️ A(n) {} has occurred in {} ===", event, area);
+        println!("=== 🔔 The Gamemakers close the {} ===", area);
+
+        let model_area = models::Area::from(area.clone());
+        models::AreaEvent::create(event.to_string(), model_area.id, game.id);
+        game.close_area(&model_area);
     }
 }
 
