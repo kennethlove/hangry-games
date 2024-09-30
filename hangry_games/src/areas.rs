@@ -154,9 +154,8 @@ impl Area {
                     };
                 } else {
                     // If the tribute is unlucky, they die
+                    tribute.dies();
                     tribute.health = 0;
-                    tribute.status = TributeStatus::RecentlyDead;
-                    tribute.is_hidden = Some(false);
                     tribute.killed_by = Some(last_event.name.clone());
                     println!("🪦 {} died in the {}.", tribute.name, area_name);
                 }

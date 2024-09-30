@@ -157,7 +157,7 @@ pub fn parse() {
                 return;
             }
 
-            Game::from(game).run_next_day();
+            Game::from(game).run_day_night_cycle();
         }
         Commands::EndGame { game_id } => {
             let game = get_game(&game_id).expect("Game not found");
@@ -210,7 +210,7 @@ pub fn parse() {
             game.start();
             let mut game_actor = Game::from(game.clone());
             while game_actor.living_tributes().len() > 1 {
-                game_actor.run_next_day();
+                game_actor.run_day_night_cycle();
             }
             game.end();
         }

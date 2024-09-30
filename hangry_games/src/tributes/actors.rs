@@ -432,8 +432,9 @@ impl Tribute {
 
         // Tribute died to the period's events.
         if self.status == TributeStatus::RecentlyDead {
+            self.status = TributeStatus::Dead;
             println!("😱 {} is dead!", self.name);
-            update_tribute(self.id.unwrap(), self.clone().into());
+            TributeModel::from(self.clone()).dies();
             return self.clone();
         }
 
@@ -505,7 +506,7 @@ impl Tribute {
             }
         }
 
-        update_tribute(self.id.unwrap(), self.clone().into());
+        update_tribute(self.id.unwrap(), TributeModel::from(self.clone()));
         self.clone()
     }
 
