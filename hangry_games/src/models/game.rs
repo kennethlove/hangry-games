@@ -7,7 +7,6 @@ use diesel::prelude::*;
 use fake::faker::name::raw::Name;
 use fake::locales::EN;
 use fake::Fake;
-use std::str::FromStr;
 
 #[derive(Queryable, Selectable, Clone, Debug)]
 #[diesel(table_name = game)]

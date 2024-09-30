@@ -3,7 +3,7 @@ use std::str::FromStr;
 use rand::prelude::SliceRandom;
 use rand::Rng;
 use crate::areas::Area;
-use crate::models::{create_game, get_all_living_tributes, get_recently_dead_tributes, handle_tribute_event, update_tribute, Tribute as TributeModel};
+use crate::models::{create_game, get_all_living_tributes, get_recently_dead_tributes, handle_tribute_event, update_tribute};
 use crate::models::game::{Game as GameModel, get_game};
 use crate::tributes::actions::TributeAction;
 use crate::tributes::actors::Tribute;
