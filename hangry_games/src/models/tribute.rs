@@ -3,10 +3,9 @@ use crate::establish_connection;
 use crate::events::TributeEvent;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::schema::tribute;
-use crate::tributes::actors::{TravelResult, Tribute as TributeActor};
+use crate::tributes::actors::Tribute as TributeActor;
 use crate::tributes::statuses::TributeStatus;
 use diesel::prelude::*;
-use rand::prelude::*;
 
 #[derive(Queryable, Selectable, Debug, Clone, Associations)]
 #[diesel(table_name = tribute)]
@@ -128,76 +127,12 @@ impl Tribute {
             .expect("Error killing tribute");
     }
 
-    fn get_nearby_tributes(area: Area, game_id: i32) -> Vec<TributeActor> {
-        // Get nearby tributes
-        let area_tributes = area.tributes(game_id);
-        let living_tributes = area_tributes.iter()
-            .filter(|t|
-                t.status != TributeStatus::RecentlyDead.to_string() &&
-                t.status != TributeStatus::Dead.to_string() &&
-                t.health > 0
-            );
-        let nearby_tributes: Vec<TributeActor> = living_tributes.clone()
-            .map(|t| TributeActor::from(t.clone()))
-            .filter(|t| t.is_visible())
-            .collect();
-        nearby_tributes
-    }
-
-    fn get_nearby_targets(area: Area, game_id: i32) -> Vec<Tribute> {
-        let nearby_tributes = Self::get_nearby_tributes(area, game_id);
-        let nearby_targets: Vec<Tribute> = nearby_tributes.clone().into_iter().map(|t| Tribute::from(t)).collect();
-        nearby_targets
-    }
-
     pub fn is_alive(&self) -> bool {
         match self.status.to_lowercase().as_str() {
             "dead" | "recentlydead" => false,
             _ => true
         }
     }
-}
-
-fn rest_tribute(tribute: Tribute) {
-    let mut tribute = TributeActor::from(tribute);
-
-    // Long rest the tribute
-    tribute.long_rests();
-
-    update_tribute(tribute.id.unwrap(), Tribute::from(tribute.clone()));
-}
-
-
-fn move_tribute(tribute: Tribute, area: Option<String>) {
-    let mut tribute = TributeActor::from(tribute);
-    let game = get_game_by_id(tribute.game_id.unwrap()).unwrap();
-
-    let closed_areas: Vec<crate::areas::Area> = game.closed_areas.clone().unwrap_or(vec![]).iter()
-        .map(|id| get_area_by_id(*id))
-        .map(|a| a.unwrap())
-        .map(crate::areas::Area::from)
-        .collect();
-    match &tribute.travels(closed_areas.clone(), area) {
-        TravelResult::Success(area) => {
-            tribute.moves();
-            tribute.changes_area(area.clone());
-        }
-        TravelResult::Failure => {
-            tribute.short_rests();
-        }
-    }
-
-    let tribute_instance = Tribute::from(tribute.clone());
-    // save tribute_instance
-    update_tribute(tribute.id.unwrap(), tribute_instance.clone());
-}
-
-fn hide_tribute(tribute: Tribute) {
-    let mut hidden_tribute = TributeActor::from(tribute.clone());
-    hidden_tribute.hides();
-    hidden_tribute.short_rests();
-
-    update_tribute(tribute.id, Tribute::from(hidden_tribute));
 }
 
 pub fn process_tribute_status(tribute: Tribute) -> Tribute {
@@ -365,19 +300,6 @@ pub fn get_tribute(name: &str) -> Tribute {
         .first::<Tribute>(conn)
         .expect("Error loading tribute");
     tribute
-}
-
-fn attack_target(attacker: Tribute, victim: Tribute) {
-    let mut attacker = TributeActor::from(attacker.clone());
-    let mut victim = TributeActor::from(victim.clone());
-
-    // Mutates attacker and victim
-    TributeActor::attacks(&mut attacker, &mut victim);
-
-    let attacker = Tribute::from(attacker);
-    let victim = Tribute::from(victim);
-    update_tribute(attacker.id, attacker);
-    update_tribute(victim.id, victim);
 }
 
 pub fn update_tribute(tribute_id: i32, tribute: Tribute) {
