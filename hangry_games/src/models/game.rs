@@ -111,6 +111,7 @@ impl Game {
         models::log::get_logs_for_game(self.id)
     }
 }
+
 #[derive(Insertable, Debug)]
 #[diesel(table_name = game)]
 pub struct NewGame<'a> {
