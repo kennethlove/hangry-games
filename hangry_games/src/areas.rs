@@ -1,12 +1,12 @@
-use std::fmt::Display;
-use std::str::FromStr;
-use rand::Rng;
 use crate::events::AreaEvent;
 use crate::models;
-use crate::models::{get_game_by_id, update_tribute};
 use crate::models::tribute::Tribute as ModelTribute;
+use crate::models::{get_game_by_id, update_tribute};
 use crate::tributes::actors::Tribute;
 use crate::tributes::statuses::TributeStatus;
+use rand::Rng;
+use std::fmt::Display;
+use std::str::FromStr;
 
 #[derive(Clone, Default, Debug, Eq, PartialEq)]
 pub enum Area {
@@ -170,7 +170,7 @@ impl Area {
     }
 }
 
-use super::models::area::Area as AreaModel;
+use crate::models::area::Area as AreaModel;
 impl From<AreaModel> for Area {
     fn from(area: AreaModel) -> Self {
         Self::from_str(area.name.as_str()).unwrap_or(Area::Cornucopia)
