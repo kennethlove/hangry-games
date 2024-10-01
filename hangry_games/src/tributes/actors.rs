@@ -546,7 +546,7 @@ fn apply_violence_stress(tribute: &mut Tribute) {
 
     if terror.round() > 0.0 {
         tribute.takes_mental_damage(terror.round() as i32);
-        println!("😱 {} is terrified by the violence, loses {} sanity.", tribute.name, terror.round() as i32);
+        println!("😱 {} is horrified by the violence, loses {} sanity.", tribute.name, terror.round() as i32);
     }
 }
 
