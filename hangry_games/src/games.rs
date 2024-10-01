@@ -122,8 +122,16 @@ impl Game {
 
         // Get all the remaining tributes to run their appropriate actions
         let mut living_tributes = get_all_living_tributes(&game);
-        living_tributes.shuffle(&mut rng);
 
+        // If there are too few tributes, close an area or two
+        if living_tributes.len() > 1 && living_tributes.len() < 7 {
+            Area::do_area_event(self.id.unwrap());
+            if rng.gen_bool(living_tributes.len() as f64 / 12.0) {
+                Area::do_area_event(self.id.unwrap());
+            }
+        }
+
+        living_tributes.shuffle(&mut rng);
         for mut tribute in living_tributes {
             // Use luck to decide if the tribute is caught by an event
             if !rng.gen_bool(tribute.luck.unwrap_or(0) as f64 / 100.0) {
