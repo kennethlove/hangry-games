@@ -1,12 +1,12 @@
-use std::fmt::Display;
-use std::str::FromStr;
-use rand::prelude::SliceRandom;
-use rand::Rng;
 use crate::areas::Area;
+use crate::models::game::{get_game, Game as GameModel};
 use crate::models::{create_game, get_all_living_tributes, get_recently_dead_tributes, handle_tribute_event, update_tribute};
-use crate::models::game::{Game as GameModel, get_game};
 use crate::tributes::actions::TributeAction;
 use crate::tributes::actors::Tribute;
+use rand::prelude::SliceRandom;
+use rand::Rng;
+use std::fmt::Display;
+use std::str::FromStr;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Game {
@@ -48,7 +48,7 @@ impl Game {
     }
 
     pub fn run_day_night_cycle(&mut self) {
-        let mut game = get_game(self.name.as_str()).expect("Error loading game");
+        let game = get_game(self.name.as_str()).expect("Error loading game");
         self.day = Some(self.day.unwrap_or(0) + 1);
         game.set_day(self.day.unwrap());
 
