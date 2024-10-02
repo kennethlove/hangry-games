@@ -93,6 +93,13 @@ impl Area {
         area
     }
 
+    pub fn tributes(&self, game_id: i32) -> Vec<Tribute> {
+        let area = models::Area::from(self.clone());
+        area.tributes(game_id).iter()
+            .map(|t| Tribute::from(t.clone()))
+            .collect()
+    }
+
     pub fn do_area_event(game_id: i32) {
         let event = crate::events::AreaEvent::random();
         let mut game = get_game_by_id(game_id).expect("Game doesn't exist");
