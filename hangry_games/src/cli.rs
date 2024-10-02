@@ -1,6 +1,7 @@
+use crate::models::game::{fill_tributes, get_all_living_tributes, get_dead_tributes, get_game_tributes};
 use crate::models::{create_area, create_game, create_tribute, get_action, get_all_tributes, get_area, get_areas, get_game, get_games, get_recently_dead_tributes, get_tribute, place_tribute_in_area};
 use clap::{Parser, Subcommand};
-use crate::models::game::{fill_tributes, get_all_living_tributes, get_dead_tributes, get_game_tributes};
+use crate::games::Game;
 use std::fs;
 use std::io::Write;
 use std::path::Path;
@@ -35,6 +36,7 @@ enum Commands {
     OpenArea { game_id: String, area_id: String },
     QuickStart,
     RunFullGame { game_id: String },
+    ShowGameLog { game_id: String },
     LogTributes { game_id: String }
 }
 
@@ -149,13 +151,13 @@ pub fn parse() {
             game.start();
         }
         Commands::RunNextDay { game_id } => {
-            let mut game = get_game(&game_id).expect("Game not found");
+            let game = get_game(&game_id).expect("Game not found");
             if game.ended_at.is_some() {
                 println!("Game is already over");
                 return;
             }
 
-            game.run_next_day();
+            Game::from(game).run_day_night_cycle();
         }
         Commands::EndGame { game_id } => {
             let game = get_game(&game_id).expect("Game not found");
@@ -186,7 +188,7 @@ pub fn parse() {
                     Some(area) => area.name.clone(),
                     None => "Unknown".to_string()
                 };
-                println!("{} is {}, {}/100, {}/100, in {}, {:?}",
+                println!("{} is {}, {}/100, {}/100, in {}, {}",
                     tribute.name,
                     tribute.status,
                     tribute.health,
@@ -204,12 +206,19 @@ pub fn parse() {
             game.start();
         }
         Commands::RunFullGame { game_id } => {
-            let mut game = get_game(&game_id).expect("Game not found");
+            let game = get_game(&game_id).expect("Game not found");
             game.start();
-            while game.living_tributes().len() > 1 {
-                game.run_next_day();
+            let mut game_actor = Game::from(game.clone());
+            while game_actor.living_tributes().len() > 1 {
+                game_actor.run_day_night_cycle();
             }
             game.end();
+        }
+        Commands::ShowGameLog { game_id } => {
+            let game = get_game(&game_id).expect("Game not found");
+            for log in game.logs() {
+                println!("{:?}", log);
+            }
         }
         Commands::LogTributes { game_id } => {
             // Set outbound file path

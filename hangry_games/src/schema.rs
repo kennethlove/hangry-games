@@ -39,6 +39,18 @@ diesel::table! {
 }
 
 diesel::table! {
+    log_entry (id) {
+        id -> Int4,
+        created_at -> Timestamp,
+        game_id -> Int4,
+        day -> Int4,
+        message -> Text,
+        tribute_action_id -> Nullable<Int4>,
+        area_id -> Nullable<Int4>,
+    }
+}
+
+diesel::table! {
     tribute (id) {
         id -> Int4,
         #[max_length = 255]
@@ -84,6 +96,9 @@ diesel::table! {
 
 diesel::joinable!(area_event -> area (area_id));
 diesel::joinable!(area_event -> game (game_id));
+diesel::joinable!(log_entry -> area (area_id));
+diesel::joinable!(log_entry -> game (game_id));
+diesel::joinable!(log_entry -> tribute_action (tribute_action_id));
 diesel::joinable!(tribute -> area (area_id));
 diesel::joinable!(tribute -> game (game_id));
 diesel::joinable!(tribute_action -> action (action_id));
@@ -94,6 +109,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     area,
     area_event,
     game,
+    log_entry,
     tribute,
     tribute_action,
 );
