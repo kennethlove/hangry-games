@@ -59,8 +59,7 @@ impl Game {
             .expect("Error updating game");
     }
 
-    pub fn set_day(&mut self, day_number: i32) {
-        self.day = Some(day_number);
+    pub fn set_day(&self, day_number: i32) {
         let connection = &mut establish_connection();
         diesel::update(game::table.find(self.id))
             .set(game::day.eq(Some(day_number)))
