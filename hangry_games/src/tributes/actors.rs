@@ -147,9 +147,21 @@ impl Tribute {
 
     /// Tribute is lonely/homesick/etc., loses some sanity.
     pub fn suffers(&mut self) {
-        let terror = (self.sanity as f64 / 100.0) * 5.0;
-        self.takes_mental_damage(terror.round() as i32);
-        println!("😭 {} suffers from loneliness and terror.", self.name);
+        let game = get_game_by_id(self.game_id.unwrap()).unwrap();
+        let district_mates = get_all_living_tributes(&game).iter()
+            .filter(|t| t.district == self.district)
+            .filter(|t| self.area == Some(Area::from(get_area_by_id(t.area_id).unwrap())))
+            .count() as f64;
+
+        let loneliness = self.bravery.unwrap_or(0) as f64 / 100.0;  // how lonely is the tribute?
+        let terror = (self.sanity as f64 / 100.0) * game.day.unwrap() as f64; // how scared are they?
+        let connectedness = district_mates * loneliness;
+        let terror = terror - connectedness;
+
+        if terror.round() > 1.0 {
+            self.takes_mental_damage(terror.round() as i32);
+            println!("😭 {} suffers from loneliness and terror.", self.name);
+        }
     }
 
     pub fn attacks(&mut self, target: &mut Tribute) -> AttackOutcome {
@@ -621,7 +633,7 @@ impl Default for Tribute {
     }
 }
 
-use crate::models::{get_area, get_game_by_id, update_tribute, Action, Tribute as TributeModel};
+use crate::models::{get_all_living_tributes, get_area, get_area_by_id, get_game_by_id, update_tribute, Action, Tribute as TributeModel};
 impl From<TributeModel> for Tribute {
     fn from(tribute: models::tribute::Tribute) -> Self {
         use crate::areas::Area;
