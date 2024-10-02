@@ -300,6 +300,14 @@ impl Tribute {
                     TravelResult::Failure => ()
                 }
                 let neighbors = area.neighbors();
+                for area in &neighbors {
+                    if area.tributes(self.game_id.unwrap()).iter()
+                        .filter(|t| t.district == self.district)
+                        .count() > 0 {
+                        println!("🫡 {} follows their district mate to {}", self.name, area);
+                        return TravelResult::Success(area.clone());
+                    }
+                }
                 let new_area = loop {
                     let new_area = neighbors.choose(&mut rng).unwrap();
                     if new_area == &area || closed_areas.contains(new_area) {
