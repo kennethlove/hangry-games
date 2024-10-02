@@ -1,6 +1,5 @@
 use super::get_area_by_id;
 use crate::establish_connection;
-use crate::events::TributeEvent;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::schema::tribute;
 use crate::tributes::actors::Tribute as TributeActor;
@@ -126,23 +125,6 @@ impl Tribute {
             .execute(connection)
             .expect("Error killing tribute");
     }
-
-    pub fn is_alive(&self) -> bool {
-        match self.status.to_lowercase().as_str() {
-            "dead" | "recentlydead" => false,
-            _ => true
-        }
-    }
-}
-
-pub fn handle_tribute_event(tribute: Tribute) -> Tribute {
-    let mut tribute = TributeActor::from(tribute);
-    let event = TributeEvent::random();
-    tribute.handle_event(event.clone());
-
-    let tribute = Tribute::from(tribute);
-    update_tribute(tribute.id, tribute.clone());
-    tribute
 }
 
 impl From<crate::tributes::actors::Tribute> for Tribute {
