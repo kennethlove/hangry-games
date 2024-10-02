@@ -1,5 +1,6 @@
 use crate::establish_connection;
-use crate::models::{Action, Tribute};
+use crate::models::{Action, LogEntry, Tribute};
+use crate::schema::action;
 use crate::schema::tribute_action;
 use diesel::prelude::*;
 
@@ -44,8 +45,23 @@ impl TributeAction {
             .load(connection)
             .expect("Error loading tribute actions")
     }
+
+    pub fn action(&self) -> Action {
+        let connection = &mut establish_connection();
+        action::table.filter(action::id.eq(self.action_id))
+            .select(action::all_columns)
+            .first(connection)
+            .expect("Error loading action")
+    }
 }
 
 pub fn take_action(tribute: &Tribute, action: &Action, target: Option<String>) -> TributeAction {
-    TributeAction::create(tribute.id, action.id, target)
+    let tribute_action = TributeAction::create(tribute.id, action.id, target.clone());
+    LogEntry::create_full_log(
+        tribute.game_id.unwrap(),
+        format!("{}: {} -> {}", tribute.name, action.name, target.unwrap_or("None".to_string())),
+        Some(tribute_action.id),
+        Some(tribute.area_id.unwrap()),
+    );
+    tribute_action
 }

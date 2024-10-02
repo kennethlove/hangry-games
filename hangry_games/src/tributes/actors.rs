@@ -1,8 +1,9 @@
-use super::actions::{AttackOutcome, AttackResult};
+use super::actions::{AttackOutcome, AttackResult, TributeAction};
 use super::brains::TributeBrain;
 use super::statuses::TributeStatus;
 use crate::areas::Area;
 use crate::events::TributeEvent;
+use crate::models;
 use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
 use std::str::FromStr;
@@ -104,10 +105,12 @@ impl Tribute {
 
     /// Restores movement.
     pub fn short_rests(&mut self) {
+        println!("💤 {} rests", self.name);
         self.movement = 100;
     }
 
     pub fn long_rests(&mut self) {
+        println!("💤 {} rests and recovers a little health and sanity", self.name);
         self.short_rests();
         self.heals(5);
         self.heals_mental_damage(5);
@@ -134,19 +137,12 @@ impl Tribute {
     /// Hides the tribute from view.
     pub fn hides(&mut self) {
         self.is_hidden = Some(true);
+        println!("🫥 {} tries to hide", self.name);
     }
 
     /// Reveals the tribute to view.
     pub fn reveals(&mut self) {
         self.is_hidden = Some(false);
-    }
-
-    /// Tribute is wounded, loses some health.
-    pub fn bleeds(&mut self) {
-        if self.status == TributeStatus::Wounded {
-            self.takes_physical_damage(1);
-            println!("🩸 {} bleeds from their wounds.", self.name);
-        }
     }
 
     /// Tribute is lonely/homesick/etc., loses some sanity.
@@ -160,7 +156,11 @@ impl Tribute {
         let game = get_game_by_id(self.game_id.unwrap()).unwrap();
         match attack_contest(self.clone(), target.clone()) {
             AttackResult::AttackerWins => {
-                println!("🔪 {} attacks {}, and wins!", self.name, target.name);
+                if self == target {
+                    println!("🤦 {} harms themself!", self.name);
+                } else {
+                    println!("🔪 {} attacks {}, and wins!", self.name, target.name);
+                }
                 target.takes_physical_damage(self.strength.unwrap());
 
                 if target.health <= 0 {
@@ -175,13 +175,19 @@ impl Tribute {
                     target.killed_by = Some(self.name.clone());
                     target.day_killed = Some(game.day.unwrap());
                     target.defeats = Some(target.defeats.unwrap_or(0) + 1);
+                    println!("☠️ {} kills {}", self.name, target.name);
                     return AttackOutcome::Kill(self.clone(), target.clone());
                 }
                 target.status = TributeStatus::Wounded;
+                println!("🤕 {} wounds {}", self.name, target.name);
                 AttackOutcome::Wound(self.clone(), target.clone())
             }
             AttackResult::DefenderWins => {
-                println!("🤣 {} attacks {}, but loses!", self.name, target.name);
+                if target == self {
+                    println!("🤦 {} harms themself!", self.name);
+                } else {
+                    println!("🤣 {} attacks {}, but loses!", self.name, target.name);
+                }
                 self.takes_physical_damage(target.strength.unwrap());
 
                 if self.health <= 0 {
@@ -195,9 +201,11 @@ impl Tribute {
                     self.killed_by = Some(target.name.clone());
                     self.day_killed = Some(game.day.unwrap());
                     self.defeats = Some(self.defeats.unwrap() + 1);
+                    println!("☠️ {} kills {}", target.name, self.name);
                     return AttackOutcome::Kill(target.clone(), self.clone());
                 }
                 self.status = TributeStatus::Wounded;
+                println!("🤕 {} wounds {}", target.name, self.name);
                 AttackOutcome::Wound(target.clone(), self.clone())
             }
             AttackResult::Miss => {
@@ -223,23 +231,61 @@ impl Tribute {
     pub fn travels(&self, closed_areas: Vec<Area>, suggested_area: Option<String>) -> TravelResult {
         let mut rng = thread_rng();
         let area = self.clone().area.unwrap();
+        let failure_msg = format!("😴 {} is too tired to move from {}, rests instead", self.name, area);
+        let success_msg = "🚶{tribute} moves from {area} to {new_area}";
+
+        let suggested_area = {
+            let suggested_area = suggested_area.clone();
+            if suggested_area.is_some() {
+                let suggested_area = Area::from_str(suggested_area.unwrap().as_str()).unwrap();
+                if closed_areas.contains(&suggested_area) {
+                    None
+                } else {
+                    Some(suggested_area)
+                }
+            } else {
+                None
+            }
+        };
+
+        if suggested_area.is_some() && suggested_area.clone().unwrap() == area {
+            println!("🤔 {} is already in the suggested area, stays put", self.name);
+            return TravelResult::Failure;
+        }
+
+        let handle_suggested_area = || -> TravelResult {
+            if suggested_area.is_some() {
+                println!("{}", success_msg
+                    .replace("{tribute}", self.name.as_str())
+                    .replace("{area}", area.as_str())
+                    .replace("{new_area}", suggested_area.clone().unwrap().as_str())
+                );
+                return TravelResult::Success(suggested_area.unwrap());
+            }
+            TravelResult::Failure
+        };
 
         match self.movement {
             // No movement left, can't move
-            0 => TravelResult::Failure,
+            0 => {
+                println!("{}", failure_msg);
+                TravelResult::Failure
+            },
             // Low movement, can only move to suggested area
             1..=10 => {
-                if let Some(area_string) = suggested_area {
-                    let area = Area::from_str(area_string.as_str()).unwrap();
-                    return TravelResult::Success(area);
+                match handle_suggested_area() {
+                    TravelResult::Success(area) => TravelResult::Success(area),
+                    TravelResult::Failure => {
+                        println!("{}", failure_msg);
+                        TravelResult::Failure
+                    }
                 }
-                TravelResult::Failure
             },
             // High movement, can move to any open neighbor or the suggested area
             _ => {
-                if let Some(area_string) = suggested_area {
-                    let area = Area::from_str(area_string.as_str()).unwrap();
-                    return TravelResult::Success(area);
+                match handle_suggested_area() {
+                    TravelResult::Success(area) => return TravelResult::Success(area),
+                    TravelResult::Failure => ()
                 }
                 let neighbors = area.neighbors();
                 let new_area = loop {
@@ -249,6 +295,11 @@ impl Tribute {
                     }
                     break new_area.clone();
                 };
+                println!("{}", success_msg
+                    .replace("{tribute}", self.name.as_str())
+                    .replace("{area}", area.as_str())
+                    .replace("{new_area}", new_area.as_str())
+                );
                 TravelResult::Success(new_area)
             }
         }
@@ -259,7 +310,7 @@ impl Tribute {
         match status {
             TributeStatus::Wounded => {
                 self.takes_physical_damage(1);
-                println!("🩸 {} bleeds from their wounds. 💪 {}/100", self.name, self.health);
+                println!("🩸 {} bleeds from their wounds.", self.name);
             },
             TributeStatus::Sick => {
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
@@ -324,16 +375,20 @@ impl Tribute {
                 self.takes_physical_damage(5);
                 println!("🔥 {} gets burned, loses health", self.name);
             }
-            _ => {
-                // self.suffers();
-            }
+            _ => {}
+        }
+
+        if self.health <= 0 {
+            println!("💀 {} dies from {}", self.name, self.status);
+            self.killed_by = Some(self.status.to_string());
+            self.status = TributeStatus::RecentlyDead;
         }
     }
 
     pub fn handle_event(&mut self, player_event: TributeEvent) {
         match player_event {
-            TributeEvent::AnimalAttack(animal) => {
-                self.status = TributeStatus::Mauled(animal);
+            TributeEvent::AnimalAttack(ref animal) => {
+                self.status = TributeStatus::Mauled(animal.clone());
             },
             TributeEvent::Dysentery => {
                 self.status = TributeStatus::Sick;
@@ -369,6 +424,107 @@ impl Tribute {
                 self.status = TributeStatus::Burned;
             },
         }
+        if self.health <= 0 {
+            println!("💀 {} dies by {}", self.name, player_event.clone());
+            self.killed_by = Some(self.status.to_string());
+            self.status = TributeStatus::RecentlyDead;
+        }
+    }
+
+    pub fn do_day_night(&mut self, suggested_action: Option<TributeAction>, probability: Option<f64>, day: bool) -> Tribute {
+        // Update the tribute based on the period's events.
+        self.process_status();
+
+        // Nighttime terror
+        if !day { self.suffers(); }
+
+        // Tribute died to the period's events.
+        if self.status == TributeStatus::RecentlyDead {
+            self.status = TributeStatus::Dead;
+            println!("😱 {} is dead!", self.name);
+            TributeModel::from(self.clone()).dies();
+            return self.clone();
+        }
+
+        let game = get_game_by_id(self.game_id.unwrap()).unwrap();
+        let area = self.area.clone().unwrap();
+        let closed_areas = game.closed_areas().clone();
+
+        // Area is closed, tribute must move.
+        if closed_areas.contains(&area) {
+            self.travels(closed_areas.clone(), None);
+            update_tribute(self.id.unwrap(), self.clone().into());
+            return self.clone();
+        }
+
+        let brain = &mut self.brain.clone();
+
+        if suggested_action.is_some() {
+            brain.set_preferred_action(suggested_action.unwrap(), probability.unwrap());
+        }
+
+        let nearby_tributes = game.clone().living_tributes().iter()
+            .filter(|t| t.area().is_some())
+            .map(|t| Tribute::from(t.clone()))
+            .filter(|t| t.clone().area.unwrap() == area)
+            .collect::<Vec<_>>();
+
+        let action = brain.act(self, nearby_tributes.len(), closed_areas.clone());
+
+        match &action {
+            TributeAction::Move(area) => {
+                match self.travels(closed_areas.clone(), area.clone()) {
+                    TravelResult::Success(area) => {
+                        self.changes_area(area.clone());
+                        self.take_action(action.clone(), Some(area.clone().to_string()));
+                    },
+                    TravelResult::Failure => {
+                        self.short_rests();
+                        self.take_action(action.clone(), None);
+                    }
+                }
+            },
+            TributeAction::Hide => {
+                self.hides();
+                self.take_action(action, None);
+            },
+            TributeAction::Rest => {
+                self.short_rests();
+                self.take_action(action, None);
+            },
+            TributeAction::Attack => {
+                let target = pick_target(self.clone().into(), nearby_tributes.clone());
+                if let Some(mut target) = target {
+                    if target.is_visible() {
+                        self.attacks(&mut target);
+                        self.take_action(action, Some(target.clone().name));
+                    } else {
+                        println!("🤔 {} can't attack {}, they're hidden", self.name, target.name);
+                        self.take_action(TributeAction::Hide, None);
+                    }
+                }
+            },
+            TributeAction::None => {
+                self.short_rests();
+                self.take_action(action, None);
+            }
+            _ => {
+                println!("⛔ {} does nothing", self.name);
+                self.take_action(action, None);
+            }
+        }
+
+        update_tribute(self.id.unwrap(), TributeModel::from(self.clone()));
+        self.clone()
+    }
+
+    fn take_action(&self, action: TributeAction, target: Option<String>) {
+        use models::tribute_action::take_action;
+        use models::action::get_action;
+
+        let tribute = TributeModel::from(self.clone());
+        let action = Action::from(get_action(action.as_str()));
+        take_action(&tribute, &action, target);
     }
 }
 
@@ -390,7 +546,7 @@ fn apply_violence_stress(tribute: &mut Tribute) {
 
     if terror.round() > 0.0 {
         tribute.takes_mental_damage(terror.round() as i32);
-        println!("😱 {} is terrified by the violence, loses {} sanity.", tribute.name, terror.round() as i32);
+        println!("😱 {} is horrified by the violence, loses {} sanity.", tribute.name, terror.round() as i32);
     }
 }
 
@@ -416,15 +572,15 @@ pub fn pick_target(tribute: TributeModel, targets: Vec<Tribute>) -> Option<Tribu
     match targets.len() {
         0 => { // there are no other targets
             match tribute.sanity {
-                0..=9 => {
+                0..=9 => { // attempt suicide
                     println!("{} attempts suicide.", tribute.name);
                     Some(tribute.into())
-                }, // attempt suicide
+                },
                 10..=19 => match thread_rng().gen_bool(0.2) {
-                    true => {
+                    true => { // attemp suicide
                         println!("{} attempts suicide.", tribute.name);
                         Some(tribute.into())
-                    }, // attempt suicide
+                    },
                     false => None, // Attack no one
                 },
                 _ => None, // Attack no one
@@ -465,9 +621,9 @@ impl Default for Tribute {
     }
 }
 
-use crate::models::{get_area, get_game_by_id, Tribute as TributeModel};
+use crate::models::{get_area, get_game_by_id, update_tribute, Action, Tribute as TributeModel};
 impl From<TributeModel> for Tribute {
-    fn from(tribute: crate::models::tribute::Tribute) -> Self {
+    fn from(tribute: models::tribute::Tribute) -> Self {
         use crate::areas::Area;
         use crate::tributes::actions::TributeAction;
 
