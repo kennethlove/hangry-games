@@ -1,7 +1,6 @@
 use crate::areas::Area;
 use crate::models::game::{get_game, Game as GameModel};
 use crate::models::{create_game, get_all_living_tributes, get_recently_dead_tributes, update_tribute};
-use crate::models::tribute::Tribute as TributeModel;
 use crate::tributes::actions::TributeAction;
 use crate::tributes::actors::Tribute;
 use rand::prelude::SliceRandom;
@@ -9,6 +8,7 @@ use rand::Rng;
 use std::fmt::Display;
 use std::str::FromStr;
 use crate::events::TributeEvent;
+use crate::tributes::statuses::TributeStatus;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Game {
@@ -145,26 +145,24 @@ impl Game {
 
             // If the event killed the tribute, move on
             if !tribute.is_alive() {
-                update_tribute(tribute.id.unwrap(), TributeModel::from(tribute));
+                dbg!("tribute event killed tribute");
+                tribute.status = TributeStatus::RecentlyDead;
                 continue
             };
 
             match (self.day, day) {
                 (Some(1), true) => {
-                    tribute = tribute.do_day_night(Some(TributeAction::Move(None)), Some(0.5), day);
+                    tribute.do_day_night(Some(TributeAction::Move(None)), Some(0.5), day);
                 }
                 (Some(3), true) => {
-                    tribute = tribute.do_day_night(
+                    tribute.do_day_night(
                         Some(TributeAction::Move(Some(Area::Cornucopia.to_string()))),
                         Some(0.75),
                         day
                     );
                 }
-                (_, true) => {
-                    tribute = tribute.do_day_night(None, None, day);
-                }
-                (_, false) => {
-                    tribute = tribute.do_day_night(None, None, day);
+                (_, _) => {
+                    tribute.do_day_night(None, None, day);
                 }
             };
             update_tribute(tribute.id.unwrap(), tribute.into());

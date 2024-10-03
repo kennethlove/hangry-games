@@ -124,8 +124,8 @@ impl Tribute {
 
     pub fn is_alive(&self) -> bool {
         match (self.status.clone(), self.health) {
-            (TributeStatus::Dead, 0) => false,
-            (TributeStatus::RecentlyDead, 0) => false,
+            (_, 0) => false,
+            (TributeStatus::RecentlyDead | TributeStatus::Dead, _) => false,
             _ => true,
         }
     }
@@ -191,7 +191,7 @@ impl Tribute {
                     target.killed_by = Some(self.name.clone());
                     target.day_killed = Some(game.day.unwrap());
                     target.defeats = Some(target.defeats.unwrap_or(0) + 1);
-                    println!("☠️ {} kills {}", self.name, target.name);
+                    println!("☠️ {} successfully kills {}", self.name, target.name);
                     return AttackOutcome::Kill(self.clone(), target.clone());
                 }
                 target.status = TributeStatus::Wounded;
@@ -211,7 +211,7 @@ impl Tribute {
                     self.killed_by = Some(target.name.clone());
                     self.day_killed = Some(game.day.unwrap());
                     self.defeats = Some(self.defeats.unwrap() + 1);
-                    println!("☠️ {} kills {}", target.name, self.name);
+                    println!("☠️ {} accidentally kills {}", target.name, self.name);
                     return AttackOutcome::Kill(target.clone(), self.clone());
                 }
                 self.status = TributeStatus::Wounded;
@@ -401,7 +401,6 @@ impl Tribute {
             self.killed_by = Some(self.status.to_string());
             self.status = TributeStatus::RecentlyDead;
         }
-        update_tribute(self.id.unwrap(), self.clone().into());
     }
 
     pub fn handle_event(&mut self, player_event: TributeEvent) {
@@ -448,21 +447,23 @@ impl Tribute {
             self.killed_by = Some(self.status.to_string());
             self.status = TributeStatus::RecentlyDead;
         }
-        update_tribute(self.id.unwrap(), self.clone().into());
     }
 
     pub fn do_day_night(&mut self, suggested_action: Option<TributeAction>, probability: Option<f64>, day: bool) -> Tribute {
+        if !self.is_alive() {
+            println!("‼️ {} is already dead!", self.name);
+            return self.clone();
+        }
+
         // Update the tribute based on the period's events.
         self.process_status();
 
         // Nighttime terror
-        if !day { self.suffers(); }
+        if !day && self.is_alive() { self.suffers(); }
 
         // Tribute died to the period's events.
         if self.status == TributeStatus::RecentlyDead || self.health <= 0 {
-            self.status = TributeStatus::Dead;
-            println!("😱 {} is dead!", self.name);
-            TributeModel::from(self.clone()).dies();
+            println!("❗️ {} is dead!", self.name);
             return self.clone();
         }
 
@@ -473,7 +474,6 @@ impl Tribute {
         // Area is closed, tribute must move.
         if closed_areas.contains(&area) {
             self.travels(closed_areas.clone(), None);
-            update_tribute(self.id.unwrap(), self.clone().into());
             return self.clone();
         }
 
@@ -516,10 +516,14 @@ impl Tribute {
                 let target = pick_target(self.clone().into());
                 if let Some(mut target) = target {
                     if target.is_visible() {
-                        self.attacks(&mut target);
+                        match self.attacks(&mut target) {
+                            AttackOutcome::Kill(_attacker, mut target) => {
+                                target.dies();
+                                update_tribute(target.id.unwrap(), target.clone().into());
+                            },
+                            _ => ()
+                        }
                         self.take_action(action, Some(target.clone().name));
-                        update_tribute(target.id.unwrap(), target.clone().into());
-                        update_tribute(self.id.unwrap(), self.clone().into());
                     } else {
                         println!("🤔 {} can't attack {}, they're hidden", self.name, target.name);
                         self.take_action(TributeAction::Hide, None);
@@ -536,7 +540,6 @@ impl Tribute {
             }
         }
 
-        update_tribute(self.id.unwrap(), TributeModel::from(self.clone()));
         self.clone()
     }
 
@@ -718,6 +721,14 @@ impl Into<UpdateTribute> for Tribute {
             defeats: self.defeats,
             draws: self.draws,
             games: self.games,
+            bravery: self.bravery,
+            loyalty: self.loyalty,
+            speed: self.speed,
+            intelligence: self.intelligence,
+            persuasion: self.persuasion,
+            luck: self.luck,
+            strength: self.strength,
+            defense: self.defense,
             is_hidden: self.is_hidden,
             dexterity: self.dexterity,
             status: self.status.to_string(),
