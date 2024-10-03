@@ -483,7 +483,7 @@ impl Tribute {
             brain.set_preferred_action(suggested_action.unwrap(), probability.unwrap());
         }
 
-        let nearby_tributes = game.clone().living_tributes().iter()
+        let nearby_tributes = get_all_living_tributes(&game).iter()
             .filter(|t| t.area().is_some())
             .map(|t| Tribute::from(t.clone()))
             .filter(|t| t.clone().area.unwrap() == area)
