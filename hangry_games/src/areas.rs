@@ -65,10 +65,10 @@ impl Area {
     pub fn neighbors(&self) -> Vec<Area> {
         match self {
             Area::Cornucopia => vec![Area::Northeast, Area::Northwest, Area::Southeast, Area::Southwest],
-            Area::Northeast => vec![Area::Cornucopia, Area::Northwest],
-            Area::Northwest => vec![Area::Cornucopia, Area::Northeast],
-            Area::Southeast => vec![Area::Cornucopia, Area::Southwest],
-            Area::Southwest => vec![Area::Cornucopia, Area::Southeast],
+            Area::Northeast => vec![Area::Cornucopia, Area::Northwest, Area::Southeast],
+            Area::Northwest => vec![Area::Cornucopia, Area::Northeast, Area::Southwest],
+            Area::Southeast => vec![Area::Cornucopia, Area::Southwest, Area::Northeast],
+            Area::Southwest => vec![Area::Cornucopia, Area::Southeast, Area::Northwest]
         }
     }
 
@@ -236,9 +236,9 @@ mod tests {
     #[test]
     fn area_neighbors() {
         assert_eq!(Area::Cornucopia.neighbors(), vec![Area::Northeast, Area::Northwest, Area::Southeast, Area::Southwest]);
-        assert_eq!(Area::Northeast.neighbors(), vec![Area::Cornucopia, Area::Northwest]);
-        assert_eq!(Area::Northwest.neighbors(), vec![Area::Cornucopia, Area::Northeast]);
-        assert_eq!(Area::Southeast.neighbors(), vec![Area::Cornucopia, Area::Southwest]);
-        assert_eq!(Area::Southwest.neighbors(), vec![Area::Cornucopia, Area::Southeast]);
+        assert_eq!(Area::Northeast.neighbors(), vec![Area::Cornucopia, Area::Northwest, Area::Southeast]);
+        assert_eq!(Area::Northwest.neighbors(), vec![Area::Cornucopia, Area::Northeast, Area::Southwest]);
+        assert_eq!(Area::Southeast.neighbors(), vec![Area::Cornucopia, Area::Southwest, Area::Northeast]);
+        assert_eq!(Area::Southwest.neighbors(), vec![Area::Cornucopia, Area::Southeast, Area::Northwest]);
     }
 }
