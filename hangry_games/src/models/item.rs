@@ -1,8 +1,9 @@
 use crate::establish_connection;
+use crate::models::{Area, Game};
 use crate::schema::item;
 use diesel::prelude::*;
 
-#[derive((Queryable, Selectable, Debug, Clone, Associations))]
+#[derive(Queryable, Selectable, Debug, Clone, Associations)]
 #[diesel(table_name = item)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[diesel(belongs_to(Area, foreign_key = area_id))]
@@ -21,7 +22,10 @@ pub struct Item {
 impl Item {
     pub fn get_all() -> Vec<Item> {
         let connection = &mut establish_connection();
-        item::table.load::<Item>(connection).expect("Error loading items")
+        item::table
+            .select(item::all_columns)
+            .load::<Item>(connection)
+            .expect("Error loading items")
     }
 
     pub fn get_by_id(id: i32) -> Item {
@@ -51,7 +55,7 @@ impl Item {
 }
 
 #[derive(Insertable, Debug)]
-#[table_name = item]
+#[diesel(table_name = item)]
 pub struct NewItem {
     pub name: String,
     pub item_type: String,
@@ -63,6 +67,7 @@ pub struct NewItem {
 }
 
 pub fn create_item(new_item: NewItem) -> Item {
+    use crate::schema::item;
     let connection = &mut establish_connection();
     diesel::insert_into(item::table)
         .values(&new_item)
