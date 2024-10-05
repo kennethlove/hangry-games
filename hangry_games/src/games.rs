@@ -1,12 +1,14 @@
 use crate::areas::Area;
 use crate::models::game::{get_game, Game as GameModel};
-use crate::models::{create_game, get_all_living_tributes, get_recently_dead_tributes, handle_tribute_event, update_tribute};
+use crate::models::{create_game, get_all_living_tributes, get_recently_dead_tributes, update_tribute};
 use crate::tributes::actions::TributeAction;
 use crate::tributes::actors::Tribute;
 use rand::prelude::SliceRandom;
 use rand::Rng;
 use std::fmt::Display;
 use std::str::FromStr;
+use crate::events::TributeEvent;
+use crate::tributes::statuses::TributeStatus;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Game {
@@ -132,19 +134,21 @@ impl Game {
         }
 
         living_tributes.shuffle(&mut rng);
-        for mut tribute in living_tributes {
+        for tribute in living_tributes {
+            let mut tribute = Tribute::from(tribute.clone());
+
             // Use luck to decide if the tribute is caught by an event
             if !rng.gen_bool(tribute.luck.unwrap_or(0) as f64 / 100.0) {
-                tribute = handle_tribute_event(tribute);
+                let event = TributeEvent::random();
+                tribute.handle_event(event);
             }
 
             // If the event killed the tribute, move on
             if !tribute.is_alive() {
-                update_tribute(tribute.id, tribute);
+                dbg!("tribute event killed tribute");
+                tribute.status = TributeStatus::RecentlyDead;
                 continue
             };
-
-            let mut tribute = Tribute::from(tribute.clone());
 
             match (self.day, day) {
                 (Some(1), true) => {
@@ -157,13 +161,11 @@ impl Game {
                         day
                     );
                 }
-                (_, true) => {
-                    tribute.do_day_night(None, None, day);
-                }
-                (_, false) => {
+                (_, _) => {
                     tribute.do_day_night(None, None, day);
                 }
             };
+            update_tribute(tribute.id.unwrap(), tribute.into());
         }
 
     }
