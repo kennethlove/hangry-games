@@ -582,7 +582,7 @@ fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
     // Add luck in here?
 
     let mut tribute2_roll = thread_rng().gen_range(1..=20); // Base roll
-    tribute2_roll += target.dexterity.unwrap(); // Add dexterity
+    tribute2_roll += target.defense.unwrap(); // Add defense
 
     if tribute1_roll > tribute2_roll {
         return AttackResult::AttackerWins;

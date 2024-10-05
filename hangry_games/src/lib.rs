@@ -7,5 +7,6 @@ pub mod games;
 pub mod models;
 pub mod schema;
 pub mod tributes;
+pub  mod items;
 
 pub use db::establish_connection;
