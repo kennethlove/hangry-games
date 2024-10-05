@@ -1,6 +1,5 @@
 use super::get_area_by_id;
 use crate::establish_connection;
-use crate::events::TributeEvent;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::schema::tribute;
 use crate::tributes::actors::Tribute as TributeActor;
@@ -126,23 +125,6 @@ impl Tribute {
             .execute(connection)
             .expect("Error killing tribute");
     }
-
-    pub fn is_alive(&self) -> bool {
-        match self.status.to_lowercase().as_str() {
-            "dead" | "recentlydead" => false,
-            _ => true
-        }
-    }
-}
-
-pub fn handle_tribute_event(tribute: Tribute) -> Tribute {
-    let mut tribute = TributeActor::from(tribute);
-    let event = TributeEvent::random();
-    tribute.handle_event(event.clone());
-
-    let tribute = Tribute::from(tribute);
-    update_tribute(tribute.id, tribute.clone());
-    tribute
 }
 
 impl From<crate::tributes::actors::Tribute> for Tribute {
@@ -237,6 +219,14 @@ pub struct UpdateTribute {
     pub defeats: Option<i32>,
     pub draws: Option<i32>,
     pub games: Option<i32>,
+    pub bravery: Option<i32>,
+    pub loyalty: Option<i32>,
+    pub speed: Option<i32>,
+    pub intelligence: Option<i32>,
+    pub persuasion: Option<i32>,
+    pub luck: Option<i32>,
+    pub strength: Option<i32>,
+    pub defense: Option<i32>,
     pub killed_by: Option<String>,
     pub is_hidden: Option<bool>,
     pub dexterity: Option<i32>,
@@ -311,6 +301,14 @@ pub fn update_tribute(tribute_id: i32, tribute: Tribute) {
         defeats: tribute.defeats,
         draws: tribute.draws,
         games: tribute.games,
+        bravery: tribute.bravery,
+        loyalty: tribute.loyalty,
+        speed: tribute.speed,
+        intelligence: tribute.intelligence,
+        persuasion: tribute.persuasion,
+        luck: tribute.luck,
+        strength: tribute.strength,
+        defense: tribute.defense,
         is_hidden: tribute.is_hidden,
         dexterity: tribute.dexterity,
         status: tribute.status,
