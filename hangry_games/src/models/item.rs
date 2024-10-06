@@ -87,7 +87,7 @@ pub fn create_item(new_item: NewItem) -> Item {
     diesel::insert_into(item::table)
         .values(&new_item)
         .get_result(connection)
-        .expect("Error saving new item")
+        .unwrap()
 }
 
 impl From<Item> for NewItem {

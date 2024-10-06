@@ -85,21 +85,22 @@ impl Area {
 
     pub fn id(&self) -> i32 {
         match self {
-            Area::Cornucopia => 0,
-            Area::Northeast => 1,
-            Area::Northwest => 2,
-            Area::Southeast => 3,
-            Area::Southwest => 4,
+            Area::Cornucopia => 1,
+            Area::Northeast => 2,
+            Area::Northwest => 3,
+            Area::Southeast => 4,
+            Area::Southwest => 5,
         }
     }
 
-    pub fn get_by_id(area_id: i32) -> Area {
+    pub fn get_by_id(area_id: i32) -> Option<Area> {
         match area_id {
-            1 => Area::Northeast,
-            2 => Area::Northwest,
-            3 => Area::Southeast,
-            4 => Area::Southwest,
-            _ => Area::Cornucopia,
+            1 => Some(Area::Cornucopia),
+            2 => Some(Area::Northeast),
+            3 => Some(Area::Northwest),
+            4 => Some(Area::Southeast),
+            5 => Some(Area::Southwest),
+            _ => None
         }
     }
 
