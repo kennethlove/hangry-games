@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use diesel::deserialize::FromSql;
+use crate::items::Item;
 use crate::models::Action as ActionModel;
 use crate::tributes::actors::Tribute;
 
@@ -14,6 +15,7 @@ pub enum TributeAction {
     UseItem,
     Attack,
     Hide,
+    TakeItem,
 }
 
 impl TributeAction {
@@ -25,6 +27,7 @@ impl TributeAction {
             TributeAction::UseItem => "Use Item",
             TributeAction::Attack => "Attack",
             TributeAction::Hide => "Hide",
+            TributeAction::TakeItem => "Take Item",
         }
     }
 }
@@ -47,6 +50,7 @@ impl FromStr for TributeAction {
             "use item" => Ok(TributeAction::UseItem),
             "attack" => Ok(TributeAction::Attack),
             "hide" => Ok(TributeAction::Hide),
+            "take item" => Ok(TributeAction::TakeItem),
             _ => Err(()),
         }
     }

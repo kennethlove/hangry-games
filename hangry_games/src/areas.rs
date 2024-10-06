@@ -7,6 +7,7 @@ use crate::tributes::statuses::TributeStatus;
 use rand::Rng;
 use std::fmt::Display;
 use std::str::FromStr;
+use crate::items::Item;
 
 #[derive(Clone, Default, Debug, Eq, PartialEq)]
 pub enum Area {
@@ -119,6 +120,18 @@ impl Area {
         area.tributes(game_id).iter()
             .map(|t| Tribute::from(t.clone()))
             .collect()
+    }
+
+    pub fn items(&self, game_id: i32) -> Vec<Item> {
+        let area = models::Area::from(self.clone());
+        area.items(game_id).iter()
+            .map(|i| Item::from(i.clone()))
+            .collect()
+    }
+
+    pub fn available_items(&self, game_id: i32) -> Vec<Item> {
+        let items = self.items(game_id);
+        items.iter().filter(|i| i.tribute_id.is_none()).cloned().collect()
     }
 
     pub fn do_area_event(game_id: i32) {

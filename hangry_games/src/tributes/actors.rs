@@ -7,6 +7,7 @@ use crate::models;
 use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
 use std::str::FromStr;
+use crate::items::Item;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
@@ -38,7 +39,6 @@ pub struct Tribute {
     pub dexterity: Option<i32>,
     pub status: TributeStatus
 }
-
 
 impl Tribute {
     /// Creates a new Tribute with full health, sanity, and movement.
@@ -533,7 +533,10 @@ impl Tribute {
             TributeAction::None => {
                 self.short_rests();
                 self.take_action(action, None);
-            }
+            },
+            TributeAction::TakeItem => {
+                self.take_nearby_item(area);
+            },
             _ => {
                 println!("⛔ {} does nothing", self.name);
                 self.take_action(action, None);
@@ -550,6 +553,24 @@ impl Tribute {
         let tribute = TributeModel::from(self.clone());
         let action = Action::from(get_action(action.as_str()));
         take_action(&tribute, &action, target);
+    }
+
+    fn take_nearby_item(&self, area: Area) {
+        let mut rng = thread_rng();
+        let mut items = area.available_items(self.game_id.unwrap());
+        let item = items.choose_mut(&mut rng).unwrap();
+        self.take_item(item.clone());
+    }
+
+    fn take_item(&self, item: Item) {
+        let tribute = TributeModel::from(self.clone());
+        tribute.takes_item(item.id.unwrap());
+        println!("🔨 {} takes a(n) {}", tribute.name, item.name);
+    }
+
+    fn items(&self) -> Vec<Item> {
+        let items = models::item::Item::get_by_tribute(self.game_id.unwrap(), self.id.unwrap());
+        items.iter().cloned().map(Item::from).collect()
     }
 }
 
@@ -579,10 +600,18 @@ fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
     let mut tribute1_roll = thread_rng().gen_range(1..=20); // Base roll
     tribute1_roll += tribute.strength.unwrap(); // Add strength
 
+    if let Some(weapon) = tribute.items().iter().filter(|i| i.is_weapon()).next() {
+        tribute1_roll += weapon.effect; // Add weapon damage
+    }
+
     // Add luck in here?
 
     let mut tribute2_roll = thread_rng().gen_range(1..=20); // Base roll
     tribute2_roll += target.defense.unwrap(); // Add defense
+
+    if let Some(shield) = target.items().iter().filter(|i| i.is_defensive()).next() {
+        tribute2_roll += shield.effect; // Add weapon defense
+    }
 
     if tribute1_roll > tribute2_roll {
         return AttackResult::AttackerWins;

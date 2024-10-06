@@ -1,4 +1,4 @@
-use super::get_area_by_id;
+use super::{get_area_by_id, Item};
 use crate::establish_connection;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::schema::tribute;
@@ -124,6 +124,18 @@ impl Tribute {
             ))
             .execute(connection)
             .expect("Error killing tribute");
+    }
+
+    pub fn takes_item(&self, item_id: i32) {
+        use crate::schema::item;
+        let connection = &mut establish_connection();
+
+        diesel::update(item::table.find(item_id))
+            .set((
+                item::tribute_id.eq(self.id),
+            ))
+            .execute(connection)
+            .expect("Error giving item to tribute");
     }
 }
 

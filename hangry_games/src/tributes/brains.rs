@@ -1,5 +1,7 @@
 use rand::{thread_rng, Rng};
+use rand::prelude::SliceRandom;
 use crate::areas::Area;
+use crate::items::Item;
 use crate::tributes::actions::TributeAction;
 use crate::tributes::actors::Tribute;
 
@@ -11,7 +13,7 @@ pub struct TributeBrain {
 }
 
 impl TributeBrain {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             previous_actions: Vec::new(),
             preferred_action: None,
@@ -59,6 +61,7 @@ impl TributeBrain {
 
     /// The AI for a tribute. Automatic decisions based on current state.
     fn decide_on_action(&mut self, tribute: &Tribute, nearby_tributes: usize) -> TributeAction {
+        let mut rng = thread_rng();
         // If the tribute isn't in the arena, they do nothing
         if tribute.area.is_none() {
             return TributeAction::None;
@@ -68,6 +71,18 @@ impl TributeBrain {
         }
 
         let _area = tribute.area.as_ref().unwrap();
+        // Get the items for an area
+        let area_items = _area.available_items(tribute.game_id.unwrap());
+        // Items exist in the area?
+        if !area_items.is_empty() {
+            // Are there items with sufficient quantities?
+            if area_items.iter().filter(|i| i.quantity > 0).cloned().collect::<Vec<Item>>().len() > 0 {
+                // Take a random item
+                let item = area_items.choose(&mut rng).expect("Problem choosing item");
+
+                return TributeAction::TakeItem;
+            }
+        }
 
         // If there is a preferred action, we should take it, assuming a positive roll
         if let Some(preferred_action) = self.preferred_action.clone() {

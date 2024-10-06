@@ -12,8 +12,9 @@ pub struct Item {
     pub id: i32,
     pub name: String,
     pub item_type: String,
-    pub area_id: Option<i32>,
     pub game_id: Option<i32>,
+    pub area_id: Option<i32>,
+    pub tribute_id: Option<i32>,
     pub quantity: i32,
     pub attribute: String,
     pub effect: i32,
@@ -52,6 +53,15 @@ impl Item {
         let connection = &mut establish_connection();
         item::table.filter(item::game_id.eq(game_id)).load::<Item>(connection).expect("Error loading items")
     }
+
+    pub fn get_by_tribute(game_id: i32, tribute_id: i32) -> Vec<Item> {
+        let connection = &mut establish_connection();
+        item::table
+            .filter(item::game_id.eq(game_id))
+            .filter(item::tribute_id.eq(tribute_id))
+            .load::<Item>(connection)
+            .expect("Error loading items")
+    }
 }
 
 impl From<crate::items::Item> for Item {
@@ -60,8 +70,9 @@ impl From<crate::items::Item> for Item {
             id: item.id.unwrap(),
             name: item.name,
             item_type: item.item_type.to_string(),
-            area_id: item.area_id,
             game_id: item.game_id,
+            area_id: item.area_id,
+            tribute_id: item.tribute_id,
             quantity: item.quantity,
             attribute: item.attribute.to_string(),
             effect: item.effect,
@@ -74,11 +85,42 @@ impl From<crate::items::Item> for Item {
 pub struct NewItem {
     pub name: String,
     pub item_type: String,
-    pub area_id: Option<i32>,
     pub game_id: Option<i32>,
+    pub area_id: Option<i32>,
+    pub tribute_id: Option<i32>,
     pub quantity: i32,
     pub attribute: String,
     pub effect: i32,
+}
+
+#[derive(Insertable, Debug, AsChangeset)]
+#[diesel(table_name = item)]
+pub struct UpdateItem {
+    pub id: i32,
+    pub name: String,
+    pub item_type: String,
+    pub game_id: Option<i32>,
+    pub area_id: Option<i32>,
+    pub tribute_id: Option<i32>,
+    pub quantity: i32,
+    pub attribute: String,
+    pub effect: i32,
+}
+
+impl From<crate::items::Item> for UpdateItem {
+    fn from(item: crate::items::Item) -> Self {
+        UpdateItem {
+            id: item.id.unwrap(),
+            name: item.name,
+            item_type: item.item_type.to_string(),
+            game_id: item.game_id,
+            area_id: item.area_id,
+            tribute_id: item.tribute_id,
+            quantity: item.quantity,
+            attribute: item.attribute.to_string(),
+            effect: item.effect,
+        }
+    }
 }
 
 pub fn create_item(new_item: NewItem) -> Item {
@@ -90,13 +132,23 @@ pub fn create_item(new_item: NewItem) -> Item {
         .unwrap()
 }
 
+pub fn update_item(updated_item: UpdateItem) {
+    use crate::schema::item;
+    let connection = &mut establish_connection();
+    diesel::update(item::table.find(updated_item.id))
+        .set(&updated_item)
+        .execute(connection)
+        .expect("Error updating item");
+}
+
 impl From<Item> for NewItem {
     fn from(item: Item) -> Self {
         NewItem {
             name: item.name,
             item_type: item.item_type,
-            area_id: item.area_id,
             game_id: item.game_id,
+            area_id: item.area_id,
+            tribute_id: item.tribute_id,
             quantity: item.quantity,
             attribute: item.attribute,
             effect: item.effect,
@@ -109,8 +161,9 @@ impl From<crate::items::Item> for NewItem {
         NewItem {
             name: item.name,
             item_type: item.item_type.to_string(),
-            area_id: item.area_id,
             game_id: item.game_id,
+            area_id: item.area_id,
+            tribute_id: item.tribute_id,
             quantity: item.quantity,
             attribute: item.attribute.to_string(),
             effect: item.effect,
