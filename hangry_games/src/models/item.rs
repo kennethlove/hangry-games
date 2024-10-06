@@ -88,6 +88,21 @@ impl From<crate::items::Item> for Item {
     }
 }
 
+impl From<crate::items::Item> for Item {
+    fn from(item: crate::items::Item) -> Self {
+        Item {
+            id: item.id.unwrap(),
+            name: item.name,
+            item_type: item.item_type.to_string(),
+            area_id: item.area_id,
+            game_id: item.game_id,
+            quantity: item.quantity,
+            attribute: item.attribute.to_string(),
+            effect: item.effect,
+        }
+    }
+}
+
 #[derive(Insertable, Debug)]
 #[diesel(table_name = item)]
 pub struct NewItem {
@@ -188,6 +203,34 @@ impl From<crate::items::Item> for NewItem {
             game_id: item.game_id,
             area_id: item.area_id,
             tribute_id: item.tribute_id,
+            quantity: item.quantity,
+            attribute: item.attribute.to_string(),
+            effect: item.effect,
+        }
+    }
+}
+
+impl From<Item> for NewItem {
+    fn from(item: Item) -> Self {
+        NewItem {
+            name: item.name,
+            item_type: item.item_type,
+            area_id: item.area_id,
+            game_id: item.game_id,
+            quantity: item.quantity,
+            attribute: item.attribute,
+            effect: item.effect,
+        }
+    }
+}
+
+impl From<crate::items::Item> for NewItem {
+    fn from(item: crate::items::Item) -> Self {
+        NewItem {
+            name: item.name,
+            item_type: item.item_type.to_string(),
+            area_id: item.area_id,
+            game_id: item.game_id,
             quantity: item.quantity,
             attribute: item.attribute.to_string(),
             effect: item.effect,
