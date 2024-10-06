@@ -122,6 +122,20 @@ impl Item {
         self.attribute != Attribute::Strength &&
         self.attribute != Attribute::Defense
     }
+
+    pub fn is_weapon(&self) -> bool {
+        self.item_type == ItemType::Weapon && self.attribute == Attribute::Strength
+    }
+
+    pub fn is_defensive(&self) -> bool {
+        self.item_type == ItemType::Weapon && self.attribute == Attribute::Defense
+    }
+
+    pub fn is_consumable(&self) -> bool {
+        self.item_type == ItemType::Consumable &&
+        self.attribute != Attribute::Strength &&
+        self.attribute != Attribute::Defense
+    }
 }
 
 impl From<ItemModel> for Item {

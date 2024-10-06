@@ -145,6 +145,18 @@ impl Area {
             .collect()
     }
 
+    pub fn items(&self, game_id: i32) -> Vec<Item> {
+        let area = models::Area::from(self.clone());
+        area.items(game_id).iter()
+            .map(|i| Item::from(i.clone()))
+            .collect()
+    }
+
+    pub fn available_items(&self, game_id: i32) -> Vec<Item> {
+        let items = self.items(game_id);
+        items.iter().filter(|i| i.tribute_id.is_none()).cloned().collect()
+    }
+
     pub fn do_area_event(game_id: i32) {
         let event = crate::events::AreaEvent::random();
         let mut game = get_game_by_id(game_id).expect("Game doesn't exist");
