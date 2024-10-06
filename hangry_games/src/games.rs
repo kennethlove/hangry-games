@@ -31,23 +31,16 @@ impl Game {
         // let knife = Item::new_random("knife".to_string());
         let game = get_game(self.name.as_str()).expect("Error loading game");
         let the_cornucopia = Area::from_str("cornucopia").expect("Error loading area");
-        let knife = Item {
-            id: None,
+        let knife = NewItem {
             name: "knife".to_string(),
-            item_type: Weapon,
-            quantity: 1,
-            attribute: Attribute::Strength,
-            effect: 1,
+            item_type: Weapon.to_string(),
+            quantity: 24,
+            attribute: Attribute::Strength.to_string(),
+            effect: 5,
             area_id: Some(the_cornucopia.id()),
             game_id: Some(game.id)
         };
-
-        for _ in 0..24 {
-            let mut new_knife = NewItem::from(knife.clone());
-            new_knife.area_id = Some(the_cornucopia.id());
-            new_knife.game_id = Some(game.id);
-            create_item(new_knife);
-        }
+        create_item(knife);
     }
 
     pub fn living_tributes(&self) -> Vec<Tribute> {
