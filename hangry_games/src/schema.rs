@@ -56,6 +56,23 @@ diesel::table! {
 }
 
 diesel::table! {
+    items (id) {
+        id -> Int4,
+        name -> Varchar,
+        itemtype -> Varchar,
+        weight -> Int4,
+        strength_mod -> Int4,
+        defense_mod -> Int4,
+        health_mod -> Int4,
+        speed_mod -> Int4,
+        attack_mod -> Int4,
+        area_id -> Nullable<Int4>,
+        game_id -> Nullable<Int4>,
+        durability -> Nullable<Int4>,
+    }
+}
+
+diesel::table! {
     log_entry (id) {
         id -> Int4,
         created_at -> Timestamp,
@@ -130,6 +147,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     area_event,
     game,
     item,
+    items,
     log_entry,
     tribute,
     tribute_action,

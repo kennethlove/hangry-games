@@ -30,6 +30,17 @@ impl Game {
     pub fn start(&self) {
         let game = get_game(self.name.as_str()).expect("Error loading game");
         let the_cornucopia = Area::from_str("cornucopia").expect("Error loading area");
+        let knife = Item {
+            id: None,
+            name: "knife".to_string(),
+            item_type: Weapon,
+            quantity: 1,
+            attribute: Attribute::Strength,
+            effect: 1,
+            area_id: Some(the_cornucopia.id()),
+            game_id: Some(game.id)
+        };
+
         for _ in 0..20 {
             let knife = NewItem {
                 name: "knife".to_string(),
