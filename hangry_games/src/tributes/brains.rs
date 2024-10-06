@@ -61,7 +61,6 @@ impl TributeBrain {
 
     /// The AI for a tribute. Automatic decisions based on current state.
     fn decide_on_action(&mut self, tribute: &Tribute, nearby_tributes: usize) -> TributeAction {
-        let mut rng = thread_rng();
         // If the tribute isn't in the arena, they do nothing
         if tribute.area.is_none() {
             return TributeAction::None;
@@ -77,9 +76,7 @@ impl TributeBrain {
         if !area_items.is_empty() {
             // Are there items with sufficient quantities?
             if area_items.iter().filter(|i| i.quantity > 0).cloned().collect::<Vec<Item>>().len() > 0 {
-                // Take a random item
-                let item = area_items.choose(&mut rng).expect("Problem choosing item");
-
+                // Take an item
                 return TributeAction::TakeItem;
             }
         }
