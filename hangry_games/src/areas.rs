@@ -83,6 +83,26 @@ impl Area {
         }
     }
 
+    pub fn id(&self) -> i32 {
+        match self {
+            Area::Cornucopia => 0,
+            Area::Northeast => 1,
+            Area::Northwest => 2,
+            Area::Southeast => 3,
+            Area::Southwest => 4,
+        }
+    }
+
+    pub fn get_by_id(area_id: i32) -> Area {
+        match area_id {
+            1 => Area::Northeast,
+            2 => Area::Northwest,
+            3 => Area::Southeast,
+            4 => Area::Southwest,
+            _ => Area::Cornucopia,
+        }
+    }
+
     pub fn random_open_area(closed_areas: Vec<Area>) -> Area {
         let area = loop {
             let random_area = Area::random();

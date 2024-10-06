@@ -1,4 +1,5 @@
 use crate::areas::Area;
+use crate::games::Game as GameActor;
 use crate::models::{get_area_by_id, Tribute};
 use crate::schema::game;
 use crate::tributes::statuses::TributeStatus;
@@ -47,6 +48,7 @@ impl Game {
         for mut tribute in tributes {
             tribute.set_area(&cornucopia);
         }
+        GameActor::from(self.clone()).start();
     }
 
     pub fn end(&self) {

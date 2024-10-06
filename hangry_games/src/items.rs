@@ -31,18 +31,29 @@ impl Item {
         Some(Item::from(ItemModel::get_by_name(name.to_string())))
     }
 
-    pub fn new(name: &str, item_type: i32, quantity: i32, attribute: &str, effect: i32) -> Item {
+    pub fn create(name: String, item_type: String, quantity: i32, attribute: String, effect: i32) -> Item {
         let new_item = NewItem {
-            name: name.to_string(),
-            item_type: ItemType::from_int(item_type).to_string(),
+            name,
+            item_type,
             area_id: None,
             game_id: None,
             quantity,
-            attribute: Attribute::from_str(attribute).unwrap().to_string(),
+            attribute,
             effect,
         };
         let item = create_item(new_item);
         Item::from(item)
+    }
+
+    pub fn new_random(name: String) -> Item {
+        let mut rng = rand::thread_rng();
+
+        let item_type = ItemType::random();
+        let quantity = rng.gen_range(1..=5);
+        let attribute = Attribute::random();
+        let effect = rng.gen_range(1..=10);
+
+        Item::create(name, item_type.to_string(), quantity, attribute.to_string(), effect)
     }
 }
 
@@ -82,27 +93,6 @@ pub enum ItemType {
     Weapon,
 }
 
-impl Display for ItemType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ItemType::Consumable => write!(f, "Consumable"),
-            ItemType::Weapon => write!(f, "Weapon"),
-        }
-    }
-}
-
-impl FromStr for ItemType {
-    type Err = &'static str;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "consumable" => Ok(ItemType::Consumable),
-            "weapon" => Ok(ItemType::Weapon),
-            _ => Err("Invalid item type"),
-        }
-    }
-}
-
 impl ItemType {
     pub fn random() -> ItemType {
         let mut rng = rand::thread_rng();
@@ -128,6 +118,27 @@ impl ItemType {
     }
 }
 
+impl Display for ItemType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ItemType::Consumable => write!(f, "Consumable"),
+            ItemType::Weapon => write!(f, "Weapon"),
+        }
+    }
+}
+
+impl FromStr for ItemType {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "consumable" => Ok(ItemType::Consumable),
+            "weapon" => Ok(ItemType::Weapon),
+            _ => Err("Invalid item type"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Attribute {
     Health, // Heals health
@@ -137,6 +148,22 @@ pub enum Attribute {
     Speed, // Increases speed
     Strength, // Increases damage done, i.e. weapon
     Defense, // Reduces damage taken
+}
+
+impl Attribute {
+    pub fn random() -> Attribute {
+        let mut rng = rand::thread_rng();
+        match rng.gen_range(0..7) {
+            0 => Attribute::Health,
+            1 => Attribute::Sanity,
+            2 => Attribute::Movement,
+            3 => Attribute::Bravery,
+            4 => Attribute::Speed,
+            5 => Attribute::Strength,
+            6 => Attribute::Defense,
+            _ => panic!("Invalid attribute"),
+        }
+    }
 }
 
 impl Display for Attribute {

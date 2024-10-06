@@ -1,14 +1,15 @@
 use crate::areas::Area;
+use crate::events::TributeEvent;
+use crate::items::Item;
 use crate::models::game::{get_game, Game as GameModel};
-use crate::models::{create_game, get_all_living_tributes, get_recently_dead_tributes, update_tribute};
+use crate::models::{create_item, get_all_living_tributes, get_recently_dead_tributes, update_tribute, NewItem};
 use crate::tributes::actions::TributeAction;
 use crate::tributes::actors::Tribute;
+use crate::tributes::statuses::TributeStatus;
 use rand::prelude::SliceRandom;
 use rand::Rng;
 use std::fmt::Display;
 use std::str::FromStr;
-use crate::events::TributeEvent;
-use crate::tributes::statuses::TributeStatus;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Game {
@@ -19,29 +20,23 @@ pub struct Game {
     pub status: GameStatus,
 }
 
-impl Display for Game {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name)
-    }
-}
-
-impl FromStr for Game {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let game = get_game(s).expect("Error loading game");
-        Ok(Game::from(game))
-    }
-}
-
 impl Game {
     pub fn as_str(&self) -> &str {
         self.name.as_str()
     }
 
-    pub fn new() -> Game {
-        let game = create_game();
-        Game::from(game)
+    // Runs at the start of the game
+    pub fn start(&self) {
+        let knife = Item::new_random("knife".to_string());
+        let game = get_game(self.name.as_str()).expect("Error loading game");
+        let the_cornucopia = Area::from_str("cornucopia").expect("Error loading area");
+
+        for _ in 0..24 {
+            let mut new_knife = NewItem::from(knife.clone());
+            new_knife.area_id = Some(the_cornucopia.id());
+            new_knife.game_id = Some(game.id);
+            create_item(new_knife);
+        }
     }
 
     pub fn living_tributes(&self) -> Vec<Tribute> {
@@ -179,6 +174,21 @@ impl Game {
             tribute.dies();
             println!("🪦 {}", tribute.name);
         }
+    }
+}
+
+impl Display for Game {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name)
+    }
+}
+
+impl FromStr for Game {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let game = get_game(s).expect("Error loading game");
+        Ok(Game::from(game))
     }
 }
 
