@@ -686,6 +686,18 @@ impl Tribute {
     pub fn consumable_items(&self) -> Vec<Item> {
         self.items().iter().cloned().filter(|i| i.is_consumable()).collect()
     }
+
+    pub fn weapons(&self) -> Vec<Item> {
+        self.items().iter().cloned().filter(|i| i.is_weapon()).collect()
+    }
+
+    pub fn defensive_items(&self) -> Vec<Item> {
+        self.items().iter().cloned().filter(|i| i.is_defensive()).collect()
+    }
+
+    pub fn consumable_items(&self) -> Vec<Item> {
+        self.items().iter().cloned().filter(|i| i.is_consumable()).collect()
+    }
 }
 
 #[derive(Debug)]

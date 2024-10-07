@@ -91,6 +91,11 @@ impl TributeBrain {
             }
         }
 
+        // Does the tribute have items?
+        if !tribute.consumable_items().is_empty() {
+            // Use an item
+            return TributeAction::UseItem;
+        }
 
         // If there are items available, take one
         // Get the items for an area
