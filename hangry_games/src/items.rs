@@ -32,13 +32,22 @@ impl Item {
         Some(Item::from(ItemModel::get_by_name(name.to_string())))
     }
 
-    pub fn create(name: String, item_type: String, quantity: i32, attribute: String, effect: i32) -> Item {
+    pub fn create(
+        name: String,
+        item_type: String,
+        quantity: i32,
+        attribute: String,
+        effect: i32,
+        game_id: Option<i32>,
+        area_id: Option<i32>,
+        tribute_id: Option<i32>
+    ) -> Item {
         let new_item = NewItem {
             name,
             item_type,
-            game_id: None,
-            area_id: None,
-            tribute_id: None,
+            game_id,
+            area_id,
+            tribute_id,
             quantity,
             attribute,
             effect,
@@ -56,15 +65,48 @@ impl Item {
         ItemModel::delete(self.id.unwrap());
     }
 
-    pub fn new_random(name: String) -> Item {
+    pub fn new_random(name: String, game_id: Option<i32>, area_id: Option<i32>, tribute_id: Option<i32>) -> Item {
         let mut rng = rand::thread_rng();
 
         let item_type = ItemType::random();
-        let quantity = rng.gen_range(1..=5);
+        let quantity = rng.gen_range(1..=3);
         let attribute = Attribute::random();
         let effect = rng.gen_range(1..=10);
 
-        Item::create(name, item_type.to_string(), quantity, attribute.to_string(), effect)
+        Item::create(name, item_type.to_string(), quantity, attribute.to_string(), effect, game_id, area_id, tribute_id)
+    }
+
+    pub fn new_weapon(name: String, game_id: Option<i32>, area_id: Option<i32>, tribute_id: Option<i32>) -> Item {
+        let mut rng = rand::thread_rng();
+
+        let item_type = ItemType::Weapon;
+        let quantity = rng.gen_range(1..=2);
+        let attribute = Attribute::Strength;
+        let effect = rng.gen_range(1..=5);
+
+        Item::create(name, item_type.to_string(), quantity, attribute.to_string(), effect, game_id, area_id, tribute_id)
+    }
+
+    pub fn new_consumable(name: String, game_id: Option<i32>, area_id: Option<i32>, tribute_id: Option<i32>) -> Item {
+        let mut rng = rand::thread_rng();
+
+        let item_type = ItemType::Consumable;
+        let quantity = 1;
+        let attribute = Attribute::random();
+        let effect = rng.gen_range(1..=10);
+
+        Item::create(name, item_type.to_string(), quantity, attribute.to_string(), effect, game_id, area_id, tribute_id)
+    }
+
+    pub fn new_shield(name: String, game_id: Option<i32>, area_id: Option<i32>, tribute_id: Option<i32>) -> Item {
+        let mut rng = rand::thread_rng();
+
+        let item_type = ItemType::Weapon;
+        let quantity = rng.gen_range(1..=3);
+        let attribute = Attribute::Defense;
+        let effect = rng.gen_range(1..=7);
+
+        Item::create(name, item_type.to_string(), quantity, attribute.to_string(), effect, game_id, area_id, tribute_id)
     }
 
     pub fn is_weapon(&self) -> bool {

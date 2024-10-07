@@ -305,6 +305,16 @@ pub fn get_tribute(name: &str) -> Tribute {
     tribute
 }
 
+pub fn get_tribute_by_id(tribute_id: i32) -> Tribute {
+    use crate::schema::tribute;
+    let conn = &mut establish_connection();
+    let tribute: Tribute = tribute::table
+        .find(tribute_id)
+        .first::<Tribute>(conn)
+        .expect("Error loading tribute");
+    tribute
+}
+
 pub fn update_tribute(tribute_id: i32, tribute: Tribute) {
     let conn = &mut establish_connection();
     let update_tribute = UpdateTribute {

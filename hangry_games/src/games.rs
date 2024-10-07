@@ -1,6 +1,6 @@
 use crate::areas::Area;
 use crate::events::TributeEvent;
-use crate::items::Attribute;
+use crate::items::{Attribute, Item};
 use crate::models::game::{get_game, Game as GameModel};
 use crate::models::{create_item, get_all_living_tributes, get_recently_dead_tributes, update_tribute, NewItem};
 use crate::tributes::actions::TributeAction;
@@ -135,6 +135,35 @@ impl Game {
             }
         }
 
+        if self.day == Some(3) && day {
+            // Add goodies to the Cornucopia
+            let cornucopia = Area::from_str("cornucopia").expect("Error loading area");
+            let items = cornucopia.available_items(game.id);
+            if items.len() <= 12 {
+                let count = (12 - items.len()) / 3;
+                for _ in 0..count {
+                    Item::new_consumable(
+                        "Consumable".to_string(),
+                        self.id,
+                        Some(cornucopia.id()),
+                        None
+                    );
+                    Item::new_weapon(
+                        "Weapon".to_string(),
+                        self.id,
+                        Some(cornucopia.id()),
+                        None
+                    );
+                    Item::new_shield(
+                        "Shield".to_string(),
+                        self.id,
+                        Some(cornucopia.id()),
+                        None
+                    );
+                }
+            }
+        }
+
         // Get all the remaining tributes to run their appropriate actions
         let mut living_tributes = get_all_living_tributes(&game);
 
@@ -168,6 +197,9 @@ impl Game {
                     tribute.do_day_night(Some(TributeAction::Move(None)), Some(0.5), day);
                 }
                 (Some(3), true) => {
+                    // Feast day
+
+                    // Encourage tributes to move to the Cornucopia
                     tribute.do_day_night(
                         Some(TributeAction::Move(Some(Area::Cornucopia.to_string()))),
                         Some(0.75),

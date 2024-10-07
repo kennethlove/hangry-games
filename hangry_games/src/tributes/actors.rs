@@ -242,7 +242,7 @@ impl Tribute {
         let mut rng = thread_rng();
         let area = self.clone().area.unwrap();
         let failure_msg = format!("😴 {} is too tired to move from {}, rests instead", self.name, area);
-        let success_msg = "🚶{tribute} moves from {area} to {new_area}";
+        let success_msg = "🚶 {tribute} moves from {area} to {new_area}";
 
         let suggested_area = {
             let suggested_area = suggested_area.clone();
@@ -551,18 +551,14 @@ impl Tribute {
                 }
             }
             TributeAction::UseItem(item) => {
-                dbg!(&item);
+                #[allow(unused_mut)]
                 let mut items = self.consumable_items();
                 if let Some(item) = item {
-                    let mut selected_item = items.iter().find(|i| i.name == item.clone());
+                    let selected_item = items.iter().find(|i| i.name == item.clone());
                     if selected_item.is_some() {
                         self.use_consumable(selected_item.unwrap().clone());
                     }
                 }
-            }
-            _ => {
-                println!("⛔ {} does nothing", self.name);
-                self.take_action(action, None);
             }
         }
 
@@ -593,13 +589,19 @@ impl Tribute {
 
     fn use_consumable(&mut self, chosen_item: Item) {
         let items = self.consumable_items();
+        #[allow(unused_assignments)]
         let mut item = items.iter().last().unwrap().clone();
-        if let Some(selected_item) = items.iter().find(|i| i.name == chosen_item.name) {
+        if let Some(selected_item) = items.iter()
+            .filter(|i| i.name == chosen_item.name)
+            .filter(|i| i.quantity > 0)
+            .last()
+        {
             item = selected_item.clone();
         } else {
             println!("❌ {} cannot use a(n) {}", self.name, chosen_item.name);
             return;
         }
+        item.quantity -= 1;
 
         // Apply item effect
         match item.attribute {
@@ -626,13 +628,20 @@ impl Tribute {
 
         println!("💊 {} uses a(n) {}, gains {} {}", self.name, item.name, item.effect, item.attribute);
 
-        TributeModel::from(self.clone()).uses_consumable(item.id.unwrap());
+
+        if item.quantity <= 0 {
+            // No uses left
+            TributeModel::from(self.clone()).uses_consumable(item.id.unwrap());
+        } else {
+            // Update item quantity
+            update_item(models::UpdateItem::from(item.clone()).into());
+        }
         update_tribute(self.id.unwrap(), self.clone().into());
     }
 
     pub fn items(&self) -> Vec<Item> {
         let items = models::item::Item::get_by_tribute(self.game_id.unwrap(), self.id.unwrap());
-        items.iter().cloned().map(Item::from).collect()
+        items.iter().filter(|i| i.quantity > 0).cloned().map(Item::from).collect()
     }
 
     pub fn weapons(&self) -> Vec<Item> {
@@ -674,11 +683,12 @@ fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
     let mut tribute1_roll = thread_rng().gen_range(1..=20); // Base roll
     tribute1_roll += tribute.strength.unwrap(); // Add strength
 
-    if let Some(weapon) = tribute.items().iter_mut().filter(|i| i.is_weapon()).next() {
+    if let Some(weapon) = tribute.weapons().iter_mut().last() {
         tribute1_roll += weapon.effect; // Add weapon damage
         weapon.quantity -= 1;
-        if weapon.quantity == 0 {
+        if weapon.quantity <= 0 {
             println!("🗡️ {} breaks their {}", tribute.name, weapon.name);
+            weapon.delete();
         }
         update_item(models::UpdateItem::from(weapon.clone()).into());
     }
@@ -691,8 +701,9 @@ fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
     if let Some(shield) = target.items().iter_mut().filter(|i| i.is_defensive()).next() {
         tribute2_roll += shield.effect; // Add weapon defense
         shield.quantity -= 1;
-        if shield.quantity == 0 {
+        if shield.quantity <= 0 {
             println!("🛡️ {} breaks their {}", tribute.name, shield.name);
+            shield.delete();
         }
         update_item(models::UpdateItem::from(shield.clone()).into());
     }
