@@ -1,4 +1,4 @@
-use super::{get_area_by_id, Item};
+use super::get_area_by_id;
 use crate::establish_connection;
 use crate::models::{get_area, get_game_by_id, tribute_action, Action, Area, Game};
 use crate::schema::tribute;
