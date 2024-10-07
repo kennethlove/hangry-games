@@ -537,15 +537,6 @@ impl Tribute {
             TributeAction::TakeItem => {
                 self.take_nearby_item(area);
             },
-            TributeAction::UseItem(item) => {
-                let mut items = self.consumable_items();
-                if let Some(item) = item {
-                    let mut selected_item = items.iter().find(|i| i.name == item.clone().name);
-                    if selected_item.is_some() {
-                        self.use_consumable(selected_item.unwrap().clone());
-                    }
-                }
-            }
             TributeAction::UseItem(None) => {
                 // Get consumable items
                 let mut items = self.consumable_items();
@@ -557,6 +548,16 @@ impl Tribute {
                     let item = items.choose_mut(&mut thread_rng()).unwrap();
                     self.use_consumable(item.clone());
                     self.take_action(action, Some(item.name.clone()));
+                }
+            }
+            TributeAction::UseItem(item) => {
+                dbg!(&item);
+                let mut items = self.consumable_items();
+                if let Some(item) = item {
+                    let mut selected_item = items.iter().find(|i| i.name == item.clone());
+                    if selected_item.is_some() {
+                        self.use_consumable(selected_item.unwrap().clone());
+                    }
                 }
             }
             _ => {
