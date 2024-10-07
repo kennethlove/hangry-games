@@ -7,7 +7,7 @@ use crate::models;
 use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
 use std::str::FromStr;
-use crate::items::Item;
+use crate::items::{Attribute, Item};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
@@ -537,6 +537,48 @@ impl Tribute {
             TributeAction::TakeItem => {
                 self.take_nearby_item(area);
             },
+            TributeAction::UseItem => {
+                // Get consumable items
+                let mut items = self.consumable_items();
+
+                // Get random item
+                let mut item = items.choose_mut(&mut thread_rng()).unwrap();
+
+                // Use item
+                // Decrease item quantity
+                item.quantity = item.quantity - 1;
+
+                match item.attribute {
+                    Attribute::Health => {
+                        self.heals(item.effect);
+                    },
+                    Attribute::Sanity => {
+                        self.heals_mental_damage(item.effect);
+                    },
+                    Attribute::Movement => {
+                        self.movement = std::cmp::min(100, self.movement + item.effect);
+                    },
+                    Attribute::Bravery => {
+                        self.bravery = Some(std::cmp::min(100, self.bravery.unwrap() + item.effect));
+                    },
+                    Attribute::Speed => {
+                        self.speed = Some(std::cmp::min(100, self.speed.unwrap() + item.effect));
+                    },
+                    Attribute::Strength => {
+                        self.strength = Some(std::cmp::min(50, self.strength.unwrap() + item.effect));
+                    },
+                    _ => ()
+                }
+
+                println!("💊 {} uses a(n) {}, gains {} {}", self.name, item.name, item.effect, item.attribute);
+
+                if item.quantity <= 0 {
+                    // Remove item from tribute
+                    item.delete();
+                }
+
+                self.take_action(action, Some(item.name.clone()));
+            }
             _ => {
                 println!("⛔ {} does nothing", self.name);
                 self.take_action(action, None);
@@ -568,9 +610,21 @@ impl Tribute {
         println!("🔨 {} takes a(n) {}", tribute.name, item.name);
     }
 
-    fn items(&self) -> Vec<Item> {
+    pub fn items(&self) -> Vec<Item> {
         let items = models::item::Item::get_by_tribute(self.game_id.unwrap(), self.id.unwrap());
         items.iter().cloned().map(Item::from).collect()
+    }
+
+    pub fn weapons(&self) -> Vec<Item> {
+        self.items().iter().cloned().filter(|i| i.is_weapon()).collect()
+    }
+
+    pub fn defensive_items(&self) -> Vec<Item> {
+        self.items().iter().cloned().filter(|i| i.is_defensive()).collect()
+    }
+
+    pub fn consumable_items(&self) -> Vec<Item> {
+        self.items().iter().cloned().filter(|i| i.is_consumable()).collect()
     }
 }
 

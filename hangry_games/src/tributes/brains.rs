@@ -91,6 +91,11 @@ impl TributeBrain {
             }
         }
 
+        // Does the tribute have items?
+        if !tribute.consumable_items().is_empty() {
+            // Use an item
+            return TributeAction::UseItem;
+        }
 
         match &nearby_tributes {
             0 => {

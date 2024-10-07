@@ -52,6 +52,10 @@ impl Item {
         update_item(instance);
     }
 
+    pub fn delete(&self) {
+        ItemModel::delete(self.id.unwrap());
+    }
+
     pub fn new_random(name: String) -> Item {
         let mut rng = rand::thread_rng();
 

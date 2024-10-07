@@ -62,6 +62,14 @@ impl Item {
             .load::<Item>(connection)
             .expect("Error loading items")
     }
+
+    pub fn delete(id: i32) {
+        use crate::schema::item;
+        let connection = &mut establish_connection();
+        diesel::delete(item::table.find(id))
+            .execute(connection)
+            .expect("Error deleting item");
+    }
 }
 
 impl From<crate::items::Item> for Item {
