@@ -1,5 +1,4 @@
 use rand::{thread_rng, Rng};
-use rand::prelude::SliceRandom;
 use crate::areas::Area;
 use crate::items::Item;
 use crate::tributes::actions::TributeAction;
@@ -94,7 +93,7 @@ impl TributeBrain {
         // Does the tribute have items?
         if !tribute.consumable_items().is_empty() {
             // Use an item
-            return TributeAction::UseItem;
+            return TributeAction::UseItem(None);
         }
 
         match &nearby_tributes {

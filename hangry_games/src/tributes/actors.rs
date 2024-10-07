@@ -537,47 +537,27 @@ impl Tribute {
             TributeAction::TakeItem => {
                 self.take_nearby_item(area);
             },
-            TributeAction::UseItem => {
+            TributeAction::UseItem(item) => {
+                let mut items = self.consumable_items();
+                if let Some(item) = item {
+                    let mut selected_item = items.iter().find(|i| i.name == item.clone().name);
+                    if selected_item.is_some() {
+                        self.use_consumable(selected_item.unwrap().clone());
+                    }
+                }
+            }
+            TributeAction::UseItem(None) => {
                 // Get consumable items
                 let mut items = self.consumable_items();
-
-                // Get random item
-                let mut item = items.choose_mut(&mut thread_rng()).unwrap();
-
-                // Use item
-                // Decrease item quantity
-                item.quantity = item.quantity - 1;
-
-                match item.attribute {
-                    Attribute::Health => {
-                        self.heals(item.effect);
-                    },
-                    Attribute::Sanity => {
-                        self.heals_mental_damage(item.effect);
-                    },
-                    Attribute::Movement => {
-                        self.movement = std::cmp::min(100, self.movement + item.effect);
-                    },
-                    Attribute::Bravery => {
-                        self.bravery = Some(std::cmp::min(100, self.bravery.unwrap() + item.effect));
-                    },
-                    Attribute::Speed => {
-                        self.speed = Some(std::cmp::min(100, self.speed.unwrap() + item.effect));
-                    },
-                    Attribute::Strength => {
-                        self.strength = Some(std::cmp::min(50, self.strength.unwrap() + item.effect));
-                    },
-                    _ => ()
+                if items.is_empty() {
+                    self.short_rests();
+                    self.take_action(action, None);
+                } else {
+                    // Use random item
+                    let item = items.choose_mut(&mut thread_rng()).unwrap();
+                    self.use_consumable(item.clone());
+                    self.take_action(action, Some(item.name.clone()));
                 }
-
-                println!("💊 {} uses a(n) {}, gains {} {}", self.name, item.name, item.effect, item.attribute);
-
-                if item.quantity <= 0 {
-                    // Remove item from tribute
-                    item.delete();
-                }
-
-                self.take_action(action, Some(item.name.clone()));
             }
             _ => {
                 println!("⛔ {} does nothing", self.name);
@@ -608,6 +588,45 @@ impl Tribute {
         let tribute = TributeModel::from(self.clone());
         tribute.takes_item(item.id.unwrap());
         println!("🔨 {} takes a(n) {}", tribute.name, item.name);
+    }
+
+    fn use_consumable(&mut self, chosen_item: Item) {
+        let items = self.consumable_items();
+        let mut item = items.iter().last().unwrap().clone();
+        if let Some(selected_item) = items.iter().find(|i| i.name == chosen_item.name) {
+            item = selected_item.clone();
+        } else {
+            println!("❌ {} cannot use a(n) {}", self.name, chosen_item.name);
+            return;
+        }
+
+        // Apply item effect
+        match item.attribute {
+            Attribute::Health => {
+                self.heals(item.effect);
+            },
+            Attribute::Sanity => {
+                self.heals_mental_damage(item.effect);
+            },
+            Attribute::Movement => {
+                self.movement = std::cmp::min(100, self.movement + item.effect);
+            },
+            Attribute::Bravery => {
+                self.bravery = Some(std::cmp::min(100, self.bravery.unwrap() + item.effect));
+            },
+            Attribute::Speed => {
+                self.speed = Some(std::cmp::min(100, self.speed.unwrap() + item.effect));
+            },
+            Attribute::Strength => {
+                self.strength = Some(std::cmp::min(50, self.strength.unwrap() + item.effect));
+            },
+            _ => ()
+        }
+
+        println!("💊 {} uses a(n) {}, gains {} {}", self.name, item.name, item.effect, item.attribute);
+
+        TributeModel::from(self.clone()).uses_consumable(item.id.unwrap());
+        update_tribute(self.id.unwrap(), self.clone().into());
     }
 
     pub fn items(&self) -> Vec<Item> {
