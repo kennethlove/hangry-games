@@ -70,6 +70,16 @@ impl TributeBrain {
         }
 
         let _area = tribute.area.as_ref().unwrap();
+
+        // If there is a preferred action, we should take it, assuming a positive roll
+        if let Some(preferred_action) = self.preferred_action.clone() {
+            if thread_rng().gen_bool(self.preferred_action_percentage) {
+                self.previous_actions.push(preferred_action.clone());
+                return preferred_action
+            }
+        }
+
+        // If there are items available, take one
         // Get the items for an area
         let area_items = _area.available_items(tribute.game_id.unwrap());
         // Items exist in the area?
@@ -81,13 +91,6 @@ impl TributeBrain {
             }
         }
 
-        // If there is a preferred action, we should take it, assuming a positive roll
-        if let Some(preferred_action) = self.preferred_action.clone() {
-            if thread_rng().gen_bool(self.preferred_action_percentage) {
-                self.previous_actions.push(preferred_action.clone());
-                return preferred_action
-            }
-        }
 
         match &nearby_tributes {
             0 => {
