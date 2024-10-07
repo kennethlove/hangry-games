@@ -154,7 +154,11 @@ impl Area {
 
     pub fn available_items(&self, game_id: i32) -> Vec<Item> {
         let items = self.items(game_id);
-        items.iter().filter(|i| i.tribute_id.is_none()).cloned().collect()
+        items.iter()
+            .filter(|i| i.tribute_id.is_none())
+            .filter(|i| i.quantity > 0)
+            .cloned()
+            .collect()
     }
 
     pub fn do_area_event(game_id: i32) {

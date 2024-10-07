@@ -1,6 +1,6 @@
 use crate::areas::Area;
 use crate::events::TributeEvent;
-use crate::items::Attribute;
+use crate::items::{Attribute, Item};
 use crate::models::game::{get_game, Game as GameModel};
 use crate::models::{create_item, get_all_living_tributes, get_recently_dead_tributes, update_tribute, NewItem};
 use crate::tributes::actions::TributeAction;
