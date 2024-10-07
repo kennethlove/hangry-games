@@ -115,6 +115,22 @@ pub struct UpdateItem {
     pub effect: i32,
 }
 
+impl From<Item> for UpdateItem {
+    fn from(item: Item) -> Self {
+        UpdateItem {
+            id: item.id,
+            name: item.name,
+            item_type: item.item_type,
+            game_id: item.game_id,
+            area_id: item.area_id,
+            tribute_id: item.tribute_id,
+            quantity: item.quantity,
+            attribute: item.attribute,
+            effect: item.effect,
+        }
+    }
+}
+
 impl From<crate::items::Item> for UpdateItem {
     fn from(item: crate::items::Item) -> Self {
         UpdateItem {

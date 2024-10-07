@@ -143,12 +143,9 @@ impl Tribute {
         use crate::schema::item;
         let connection = &mut establish_connection();
 
-        diesel::update(item::table.find(item_id))
-            .set((
-                item::tribute_id.eq(None::<i32>),
-            ))
+        diesel::delete(item::table.find(item_id))
             .execute(connection)
-            .expect("Error removing item from tribute");
+            .expect("Error using consumable");
     }
 }
 

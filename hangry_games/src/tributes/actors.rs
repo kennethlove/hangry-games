@@ -673,8 +673,13 @@ fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
     let mut tribute1_roll = thread_rng().gen_range(1..=20); // Base roll
     tribute1_roll += tribute.strength.unwrap(); // Add strength
 
-    if let Some(weapon) = tribute.items().iter().filter(|i| i.is_weapon()).next() {
+    if let Some(weapon) = tribute.items().iter_mut().filter(|i| i.is_weapon()).next() {
         tribute1_roll += weapon.effect; // Add weapon damage
+        weapon.quantity -= 1;
+        if weapon.quantity == 0 {
+            println!("🗡️ {} breaks their {}", tribute.name, weapon.name);
+        }
+        update_item(models::UpdateItem::from(weapon.clone()).into());
     }
 
     // Add luck in here?
@@ -751,7 +756,7 @@ impl Default for Tribute {
     }
 }
 
-use crate::models::{get_all_living_tributes, get_area, get_area_by_id, get_game_by_id, update_tribute, Action, Tribute as TributeModel};
+use crate::models::{get_all_living_tributes, get_area, get_area_by_id, get_game_by_id, update_item, update_tribute, Action, Tribute as TributeModel};
 impl From<TributeModel> for Tribute {
     fn from(tribute: models::tribute::Tribute) -> Self {
         use crate::areas::Area;
