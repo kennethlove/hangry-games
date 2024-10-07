@@ -687,8 +687,13 @@ fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
     let mut tribute2_roll = thread_rng().gen_range(1..=20); // Base roll
     tribute2_roll += target.defense.unwrap(); // Add defense
 
-    if let Some(shield) = target.items().iter().filter(|i| i.is_defensive()).next() {
+    if let Some(shield) = target.items().iter_mut().filter(|i| i.is_defensive()).next() {
         tribute2_roll += shield.effect; // Add weapon defense
+        shield.quantity -= 1;
+        if shield.quantity == 0 {
+            println!("🛡️ {} breaks their {}", tribute.name, shield.name);
+        }
+        update_item(models::UpdateItem::from(shield.clone()).into());
     }
 
     if tribute1_roll > tribute2_roll {
