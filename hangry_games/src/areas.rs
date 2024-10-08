@@ -105,12 +105,19 @@ impl Area {
         }
     }
 
+    /// Returns a random open area that is not in the list of closed areas.
+    /// If it can't find an open area after 5 tries, it defaults to the Cornucopia.
     pub fn random_open_area(closed_areas: Vec<Area>) -> Area {
+        let mut count = 0;
         let area = loop {
             let random_area = Area::random();
             if !closed_areas.contains(&random_area.clone()) {
                 break random_area;
             }
+            if count == 10 {
+                break Area::Cornucopia;
+            }
+            count += 1;
         };
         area
     }

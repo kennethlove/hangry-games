@@ -306,9 +306,17 @@ impl Tribute {
                         return TravelResult::Success(area.clone());
                     }
                 }
+                let mut count = 0;
                 let new_area = loop {
                     let new_area = neighbors.choose(&mut rng).unwrap();
                     if new_area == &area || closed_areas.contains(new_area) {
+                        count += 1;
+
+                        if count == 10 {
+                            println!("🪑 {} stays in {}", self.name, area);
+                            return TravelResult::Success(area.clone());
+                        }
+
                         continue;
                     }
                     break new_area.clone();
@@ -459,7 +467,30 @@ impl Tribute {
         self.process_status();
 
         // Nighttime terror
-        if !day && self.is_alive() { self.suffers(); }
+        if !day && self.is_alive() {
+            self.suffers();
+
+            // Gift from patrons?
+            let chance = match self.district {
+                1 | 2 => 1.0 / 10.0,
+                3 | 4 => 1.0 / 15.0,
+                5 | 6 => 1.0 / 20.0,
+                7 | 8 => 1.0 / 25.0,
+                9 | 10 => 1.0 / 30.0,
+                _ => 1.0 / 50.0,
+            };
+
+            if thread_rng().gen_bool(chance) {
+                let item = Item::new_random("Gift".to_string(), self.game_id, None, self.id);
+                println!("🎁 {} receives a(n) {} ({}x {} +{})",
+                    self.name,
+                    item.name,
+                    item.quantity,
+                    item.attribute,
+                    item.effect,
+                );
+            }
+        }
 
         // Tribute died to the period's events.
         if self.status == TributeStatus::RecentlyDead || self.health <= 0 {
@@ -731,12 +762,12 @@ pub fn pick_target(tribute: TributeModel) -> Option<Tribute> {
         0 => { // there are no other targets
             match tribute.sanity {
                 0..=9 => { // attempt suicide
-                    println!("{} attempts suicide.", tribute.name);
+                    println!("🪒 {} attempts suicide.", tribute.name);
                     Some(tribute.into())
                 },
                 10..=19 => match thread_rng().gen_bool(0.2) {
                     true => { // attempt suicide
-                        println!("{} attempts suicide.", tribute.name);
+                        println!("🪒 {} attempts suicide.", tribute.name);
                         Some(tribute.into())
                     },
                     false => None, // Attack no one
