@@ -173,59 +173,84 @@ impl Tribute {
     }
 
     pub fn attacks(&mut self, target: &mut Tribute) -> AttackOutcome {
-        let game = get_game_by_id(self.game_id.unwrap()).unwrap();
-
         if self == target { println!("🤦 {} tries to attack themself!", self.name); }
 
         match attack_contest(self.clone(), target.clone()) {
             AttackResult::AttackerWins => {
                 println!("🔪 {} attacks {}, and wins!", self.name, target.name);
                 target.takes_physical_damage(self.strength.unwrap());
-
+                target.defeats = Some(target.defeats.unwrap_or(0) + 1);
                 self.wins = Some(self.wins.unwrap_or(0) + 1);
-                apply_violence_stress(self);
 
-                if target.health <= 0 {
-                    self.kills = Some(self.kills.unwrap_or(0) + 1);
-                    target.status = TributeStatus::RecentlyDead;
-                    target.killed_by = Some(self.name.clone());
-                    target.day_killed = Some(game.day.unwrap());
-                    target.defeats = Some(target.defeats.unwrap_or(0) + 1);
-                    println!("☠️ {} successfully kills {}", self.name, target.name);
-                    return AttackOutcome::Kill(self.clone(), target.clone());
-                }
-                target.status = TributeStatus::Wounded;
                 println!("🤕 {} wounds {}", self.name, target.name);
-                AttackOutcome::Wound(self.clone(), target.clone())
+                if target.health > 0 {
+                    return AttackOutcome::Wound(self.clone(), target.clone())
+                }
+            }
+            AttackResult::AttackerWinsDecisively => {
+                println!("🔪 {} attacks {}, and wins decisively!", self.name, target.name);
+                target.takes_physical_damage(self.strength.unwrap() * 2);
+                target.defeats = Some(target.defeats.unwrap_or(0) + 1);
+                self.wins = Some(self.wins.unwrap_or(0) + 1);
+
+                println!("🤕 {} wounds {}", self.name, target.name);
+                if target.health > 0 {
+                    return AttackOutcome::Wound(self.clone(), target.clone())
+                }
             }
             AttackResult::DefenderWins => {
                 println!("🤣 {} attacks {}, but loses!", self.name, target.name);
                 self.takes_physical_damage(target.strength.unwrap());
-
+                self.defeats = Some(self.defeats.unwrap() + 1);
                 target.wins = Some(target.wins.unwrap() + 1);
-                apply_violence_stress(target);
 
-                if self.health <= 0 {
-                    target.kills = Some(target.kills.unwrap() + 1);
-                    self.status = TributeStatus::RecentlyDead;
-                    self.killed_by = Some(target.name.clone());
-                    self.day_killed = Some(game.day.unwrap());
-                    self.defeats = Some(self.defeats.unwrap() + 1);
-                    println!("☠️ {} accidentally kills {}", target.name, self.name);
-                    return AttackOutcome::Kill(target.clone(), self.clone());
-                }
-                self.status = TributeStatus::Wounded;
                 println!("🤕 {} wounds {}", target.name, self.name);
-                AttackOutcome::Wound(target.clone(), self.clone())
+                if self.health > 0 {
+                    return AttackOutcome::Wound(target.clone(), self.clone())
+                }
+            }
+            AttackResult::DefenderWinsDecisively => {
+                println!("🤣 {} attacks {}, but loses decisively!", self.name, target.name);
+                self.takes_physical_damage(target.strength.unwrap() * 2);
+                self.defeats = Some(self.defeats.unwrap() + 1);
+                target.wins = Some(target.wins.unwrap() + 1);
+
+                println!("🤕 {} wounds {}", target.name, self.name);
+                if self.health > 0 {
+                    return AttackOutcome::Wound(target.clone(), self.clone())
+                }
             }
             AttackResult::Miss => {
                 println!("👻 {} attacks {}, but misses!", self.name, target.name);
                 self.draws = Some(self.draws.unwrap() + 1);
                 target.draws = Some(target.draws.unwrap() + 1);
 
-                AttackOutcome::Miss(self.clone(), target.clone())
+                return AttackOutcome::Miss(self.clone(), target.clone())
             }
+        };
+
+        if self.health <= 0 {
+            self.killed_by = Some(target.name.clone());
+            self.status = TributeStatus::RecentlyDead;
+            self.dies();
+            println!("☠️ {} is killed by {}", self.name, target.name);
+            AttackOutcome::Kill(target.clone(), self.clone())
+        } else if target.health <= 0 {
+            target.killed_by = Some(self.name.clone());
+            target.status = TributeStatus::RecentlyDead;
+            target.dies();
+            println!("☠️ {} successfully kills {}", self.name, target.name);
+            AttackOutcome::Kill(self.clone(), target.clone())
+        } else {
+            println!("👻 {} attacks {}, but misses! SHOULD NOT HAPPEN", self.name, target.name);
+            self.draws = Some(self.draws.unwrap() + 1);
+            target.draws = Some(target.draws.unwrap() + 1);
+
+            return AttackOutcome::Miss(self.clone(), target.clone())
         }
+
+        // apply_violence_stress(self);
+
     }
 
     pub fn is_visible(&self) -> bool {
@@ -548,8 +573,21 @@ impl Tribute {
                 if let Some(mut target) = target {
                     if target.is_visible() {
                         match self.attacks(&mut target) {
-                            AttackOutcome::Kill(_attacker, mut target) => {
-                                target.dies();
+                            AttackOutcome::Kill(mut attacker, mut target) => {
+                                if attacker.health <= 0 {
+                                    attacker.dies();
+                                }
+                                if target.health <= 0 {
+                                    target.dies();
+                                }
+                                if attacker.id == target.id {
+                                    attacker.health = target.health.clone();
+                                    attacker.day_killed = target.day_killed.clone();
+                                    attacker.killed_by = target.killed_by.clone();
+                                    attacker.status = target.status.clone();
+                                    return target;
+                                }
+                                update_tribute(attacker.id.unwrap(), attacker.clone().into());
                                 update_tribute(target.id.unwrap(), target.clone().into());
                             },
                             _ => ()
@@ -592,7 +630,6 @@ impl Tribute {
                 }
             }
         }
-
         self.clone()
     }
 
@@ -710,15 +747,15 @@ fn apply_violence_stress(tribute: &mut Tribute) {
     }
 }
 
-fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
+fn attack_contest(attacker: Tribute, target: Tribute) -> AttackResult {
     let mut tribute1_roll = thread_rng().gen_range(1..=20); // Base roll
-    tribute1_roll += tribute.strength.unwrap(); // Add strength
+    tribute1_roll += attacker.strength.unwrap(); // Add strength
 
-    if let Some(weapon) = tribute.weapons().iter_mut().last() {
+    if let Some(weapon) = attacker.weapons().iter_mut().last() {
         tribute1_roll += weapon.effect; // Add weapon damage
         weapon.quantity -= 1;
         if weapon.quantity <= 0 {
-            println!("🗡️ {} breaks their {}", tribute.name, weapon.name);
+            println!("🗡️ {} breaks their {}", attacker.name, weapon.name);
             weapon.delete();
         }
         update_item(models::UpdateItem::from(weapon.clone()).into());
@@ -733,21 +770,30 @@ fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
         tribute2_roll += shield.effect; // Add weapon defense
         shield.quantity -= 1;
         if shield.quantity <= 0 {
-            println!("🛡️ {} breaks their {}", tribute.name, shield.name);
+            println!("🛡️ {} breaks their {}", target.name, shield.name);
             shield.delete();
         }
         update_item(models::UpdateItem::from(shield.clone()).into());
     }
 
-    if tribute1_roll > tribute2_roll {
-        return AttackResult::AttackerWins;
-    } else if tribute2_roll > tribute1_roll {
-        if tribute2_roll >= tribute1_roll + 5 { // Defender wins significantly
-            return AttackResult::DefenderWins;
+    let response = {
+        if tribute1_roll > tribute2_roll {
+            if tribute1_roll >= tribute2_roll + 5 { // Attacker wins significantly
+                AttackResult::AttackerWinsDecisively
+            } else {
+                AttackResult::AttackerWins
+            }
+        } else if tribute2_roll > tribute1_roll {
+            if tribute2_roll >= tribute1_roll + 5 { // Defender wins significantly
+                AttackResult::DefenderWinsDecisively
+            } else {
+                AttackResult::DefenderWins
+            }
+        } else {
+            AttackResult::Miss
         }
-    }
-
-    AttackResult::Miss
+    };
+    response
 }
 
 pub fn pick_target(tribute: TributeModel) -> Option<Tribute> {

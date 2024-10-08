@@ -187,27 +187,26 @@ impl Game {
 
             // If the event killed the tribute, move on
             if !tribute.is_alive() {
-                dbg!("tribute event killed tribute");
                 tribute.status = TributeStatus::RecentlyDead;
                 continue;
             };
 
             match (self.day, day) {
                 (Some(1), true) => {
-                    tribute.do_day_night(Some(TributeAction::Move(None)), Some(0.5), day);
+                    tribute = tribute.do_day_night(Some(TributeAction::Move(None)), Some(0.5), day);
                 }
                 (Some(3), true) => {
                     // Feast day
 
                     // Encourage tributes to move to the Cornucopia
-                    tribute.do_day_night(
+                    tribute = tribute.do_day_night(
                         Some(TributeAction::Move(Some(Area::Cornucopia.to_string()))),
                         Some(0.75),
                         day,
                     );
                 }
                 (_, _) => {
-                    tribute.do_day_night(None, None, day);
+                    tribute = tribute.do_day_night(None, None, day);
                 }
             };
             update_tribute(tribute.id.unwrap(), tribute.into());
