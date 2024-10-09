@@ -11,9 +11,10 @@ pub enum TributeAction {
     None,
     Move(Option<String>),
     Rest,
-    UseItem,
+    UseItem(Option<String>),
     Attack,
     Hide,
+    TakeItem,
 }
 
 impl TributeAction {
@@ -22,9 +23,10 @@ impl TributeAction {
             TributeAction::None => "None",
             TributeAction::Move(_) => "Move",
             TributeAction::Rest => "Rest",
-            TributeAction::UseItem => "Use Item",
+            TributeAction::UseItem(_) => "Use Item",
             TributeAction::Attack => "Attack",
             TributeAction::Hide => "Hide",
+            TributeAction::TakeItem => "Take Item",
         }
     }
 }
@@ -44,9 +46,10 @@ impl FromStr for TributeAction {
             "none" => Ok(TributeAction::None),
             "move" => Ok(TributeAction::Move(None)),
             "rest" => Ok(TributeAction::Rest),
-            "use item" => Ok(TributeAction::UseItem),
+            "use item" => Ok(TributeAction::UseItem(None)),
             "attack" => Ok(TributeAction::Attack),
             "hide" => Ok(TributeAction::Hide),
+            "take item" => Ok(TributeAction::TakeItem),
             _ => Err(()),
         }
     }

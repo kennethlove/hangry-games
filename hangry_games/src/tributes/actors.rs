@@ -7,6 +7,7 @@ use crate::models;
 use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
 use std::str::FromStr;
+use crate::items::{Attribute, Item};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
@@ -38,7 +39,6 @@ pub struct Tribute {
     pub dexterity: Option<i32>,
     pub status: TributeStatus
 }
-
 
 impl Tribute {
     /// Creates a new Tribute with full health, sanity, and movement.
@@ -242,7 +242,7 @@ impl Tribute {
         let mut rng = thread_rng();
         let area = self.clone().area.unwrap();
         let failure_msg = format!("😴 {} is too tired to move from {}, rests instead", self.name, area);
-        let success_msg = "🚶{tribute} moves from {area} to {new_area}";
+        let success_msg = "🚶 {tribute} moves from {area} to {new_area}";
 
         let suggested_area = {
             let suggested_area = suggested_area.clone();
@@ -306,9 +306,17 @@ impl Tribute {
                         return TravelResult::Success(area.clone());
                     }
                 }
+                let mut count = 0;
                 let new_area = loop {
                     let new_area = neighbors.choose(&mut rng).unwrap();
                     if new_area == &area || closed_areas.contains(new_area) {
+                        count += 1;
+
+                        if count == 10 {
+                            println!("🪑 {} stays in {}", self.name, area);
+                            return TravelResult::Success(area.clone());
+                        }
+
                         continue;
                     }
                     break new_area.clone();
@@ -459,7 +467,30 @@ impl Tribute {
         self.process_status();
 
         // Nighttime terror
-        if !day && self.is_alive() { self.suffers(); }
+        if !day && self.is_alive() {
+            self.suffers();
+
+            // Gift from patrons?
+            let chance = match self.district {
+                1 | 2 => 1.0 / 10.0,
+                3 | 4 => 1.0 / 15.0,
+                5 | 6 => 1.0 / 20.0,
+                7 | 8 => 1.0 / 25.0,
+                9 | 10 => 1.0 / 30.0,
+                _ => 1.0 / 50.0,
+            };
+
+            if thread_rng().gen_bool(chance) {
+                let item = Item::new_random("Gift".to_string(), self.game_id, None, self.id);
+                println!("🎁 {} receives a(n) {} ({}x {} +{})",
+                    self.name,
+                    item.name,
+                    item.quantity,
+                    item.attribute,
+                    item.effect,
+                );
+            }
+        }
 
         // Tribute died to the period's events.
         if self.status == TributeStatus::RecentlyDead || self.health <= 0 {
@@ -533,10 +564,32 @@ impl Tribute {
             TributeAction::None => {
                 self.short_rests();
                 self.take_action(action, None);
+            },
+            TributeAction::TakeItem => {
+                self.take_nearby_item(area);
+            },
+            TributeAction::UseItem(None) => {
+                // Get consumable items
+                let mut items = self.consumable_items();
+                if items.is_empty() {
+                    self.short_rests();
+                    self.take_action(action, None);
+                } else {
+                    // Use random item
+                    let item = items.choose_mut(&mut thread_rng()).unwrap();
+                    self.use_consumable(item.clone());
+                    self.take_action(action, Some(item.name.clone()));
+                }
             }
-            _ => {
-                println!("⛔ {} does nothing", self.name);
-                self.take_action(action, None);
+            TributeAction::UseItem(item) => {
+                #[allow(unused_mut)]
+                let mut items = self.consumable_items();
+                if let Some(item) = item {
+                    let selected_item = items.iter().find(|i| i.name == item.clone());
+                    if selected_item.is_some() {
+                        self.use_consumable(selected_item.unwrap().clone());
+                    }
+                }
             }
         }
 
@@ -550,6 +603,88 @@ impl Tribute {
         let tribute = TributeModel::from(self.clone());
         let action = Action::from(get_action(action.as_str()));
         take_action(&tribute, &action, target);
+    }
+
+    fn take_nearby_item(&self, area: Area) {
+        let mut rng = thread_rng();
+        let mut items = area.available_items(self.game_id.unwrap());
+        let item = items.choose_mut(&mut rng).unwrap();
+        self.take_item(item.clone());
+    }
+
+    fn take_item(&self, item: Item) {
+        let tribute = TributeModel::from(self.clone());
+        tribute.takes_item(item.id.unwrap());
+        println!("🔨 {} takes a(n) {}", tribute.name, item.name);
+    }
+
+    fn use_consumable(&mut self, chosen_item: Item) {
+        let items = self.consumable_items();
+        #[allow(unused_assignments)]
+        let mut item = items.iter().last().unwrap().clone();
+        if let Some(selected_item) = items.iter()
+            .filter(|i| i.name == chosen_item.name)
+            .filter(|i| i.quantity > 0)
+            .last()
+        {
+            item = selected_item.clone();
+        } else {
+            println!("❌ {} cannot use a(n) {}", self.name, chosen_item.name);
+            return;
+        }
+        item.quantity -= 1;
+
+        // Apply item effect
+        match item.attribute {
+            Attribute::Health => {
+                self.heals(item.effect);
+            },
+            Attribute::Sanity => {
+                self.heals_mental_damage(item.effect);
+            },
+            Attribute::Movement => {
+                self.movement = std::cmp::min(100, self.movement + item.effect);
+            },
+            Attribute::Bravery => {
+                self.bravery = Some(std::cmp::min(100, self.bravery.unwrap() + item.effect));
+            },
+            Attribute::Speed => {
+                self.speed = Some(std::cmp::min(100, self.speed.unwrap() + item.effect));
+            },
+            Attribute::Strength => {
+                self.strength = Some(std::cmp::min(50, self.strength.unwrap() + item.effect));
+            },
+            _ => ()
+        }
+
+        println!("💊 {} uses a(n) {}, gains {} {}", self.name, item.name, item.effect, item.attribute);
+
+
+        if item.quantity <= 0 {
+            // No uses left
+            TributeModel::from(self.clone()).uses_consumable(item.id.unwrap());
+        } else {
+            // Update item quantity
+            update_item(models::UpdateItem::from(item.clone()).into());
+        }
+        update_tribute(self.id.unwrap(), self.clone().into());
+    }
+
+    pub fn items(&self) -> Vec<Item> {
+        let items = models::item::Item::get_by_tribute(self.game_id.unwrap(), self.id.unwrap());
+        items.iter().filter(|i| i.quantity > 0).cloned().map(Item::from).collect()
+    }
+
+    pub fn weapons(&self) -> Vec<Item> {
+        self.items().iter().cloned().filter(|i| i.is_weapon()).collect()
+    }
+
+    pub fn defensive_items(&self) -> Vec<Item> {
+        self.items().iter().cloned().filter(|i| i.is_defensive()).collect()
+    }
+
+    pub fn consumable_items(&self) -> Vec<Item> {
+        self.items().iter().cloned().filter(|i| i.is_consumable()).collect()
     }
 }
 
@@ -579,10 +714,30 @@ fn attack_contest(tribute: Tribute, target: Tribute) -> AttackResult {
     let mut tribute1_roll = thread_rng().gen_range(1..=20); // Base roll
     tribute1_roll += tribute.strength.unwrap(); // Add strength
 
+    if let Some(weapon) = tribute.weapons().iter_mut().last() {
+        tribute1_roll += weapon.effect; // Add weapon damage
+        weapon.quantity -= 1;
+        if weapon.quantity <= 0 {
+            println!("🗡️ {} breaks their {}", tribute.name, weapon.name);
+            weapon.delete();
+        }
+        update_item(models::UpdateItem::from(weapon.clone()).into());
+    }
+
     // Add luck in here?
 
     let mut tribute2_roll = thread_rng().gen_range(1..=20); // Base roll
     tribute2_roll += target.defense.unwrap(); // Add defense
+
+    if let Some(shield) = target.items().iter_mut().filter(|i| i.is_defensive()).next() {
+        tribute2_roll += shield.effect; // Add weapon defense
+        shield.quantity -= 1;
+        if shield.quantity <= 0 {
+            println!("🛡️ {} breaks their {}", tribute.name, shield.name);
+            shield.delete();
+        }
+        update_item(models::UpdateItem::from(shield.clone()).into());
+    }
 
     if tribute1_roll > tribute2_roll {
         return AttackResult::AttackerWins;
@@ -607,12 +762,12 @@ pub fn pick_target(tribute: TributeModel) -> Option<Tribute> {
         0 => { // there are no other targets
             match tribute.sanity {
                 0..=9 => { // attempt suicide
-                    println!("{} attempts suicide.", tribute.name);
+                    println!("🪒 {} attempts suicide.", tribute.name);
                     Some(tribute.into())
                 },
                 10..=19 => match thread_rng().gen_bool(0.2) {
                     true => { // attempt suicide
-                        println!("{} attempts suicide.", tribute.name);
+                        println!("🪒 {} attempts suicide.", tribute.name);
                         Some(tribute.into())
                     },
                     false => None, // Attack no one
@@ -649,7 +804,7 @@ impl Default for Tribute {
     }
 }
 
-use crate::models::{get_all_living_tributes, get_area, get_area_by_id, get_game_by_id, update_tribute, Action, Tribute as TributeModel};
+use crate::models::{get_all_living_tributes, get_area, get_area_by_id, get_game_by_id, update_item, update_tribute, Action, Tribute as TributeModel};
 impl From<TributeModel> for Tribute {
     fn from(tribute: models::tribute::Tribute) -> Self {
         use crate::areas::Area;

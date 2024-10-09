@@ -45,8 +45,9 @@ diesel::table! {
         name -> Varchar,
         #[max_length = 255]
         item_type -> Varchar,
-        area_id -> Nullable<Int4>,
         game_id -> Nullable<Int4>,
+        area_id -> Nullable<Int4>,
+        tribute_id -> Nullable<Int4>,
         quantity -> Int4,
         #[max_length = 255]
         attribute -> Varchar,
@@ -114,6 +115,7 @@ diesel::joinable!(area_event -> area (area_id));
 diesel::joinable!(area_event -> game (game_id));
 diesel::joinable!(item -> area (area_id));
 diesel::joinable!(item -> game (game_id));
+diesel::joinable!(item -> tribute (tribute_id));
 diesel::joinable!(log_entry -> area (area_id));
 diesel::joinable!(log_entry -> game (game_id));
 diesel::joinable!(log_entry -> tribute_action (tribute_action_id));

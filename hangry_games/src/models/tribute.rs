@@ -125,6 +125,28 @@ impl Tribute {
             .execute(connection)
             .expect("Error killing tribute");
     }
+
+    pub fn takes_item(&self, item_id: i32) {
+        use crate::schema::item;
+        let connection = &mut establish_connection();
+
+        diesel::update(item::table.find(item_id))
+            .set((
+                item::tribute_id.eq(self.id),
+                item::area_id.eq(None::<i32>),
+            ))
+            .execute(connection)
+            .expect("Error giving item to tribute");
+    }
+
+    pub fn uses_consumable(&self, item_id: i32) {
+        use crate::schema::item;
+        let connection = &mut establish_connection();
+
+        diesel::delete(item::table.find(item_id))
+            .execute(connection)
+            .expect("Error using consumable");
+    }
 }
 
 impl From<crate::tributes::actors::Tribute> for Tribute {
@@ -278,6 +300,16 @@ pub fn get_tribute(name: &str) -> Tribute {
     let conn = &mut establish_connection();
     let tribute: Tribute = tribute::table
         .filter(tribute::name.ilike(name))
+        .first::<Tribute>(conn)
+        .expect("Error loading tribute");
+    tribute
+}
+
+pub fn get_tribute_by_id(tribute_id: i32) -> Tribute {
+    use crate::schema::tribute;
+    let conn = &mut establish_connection();
+    let tribute: Tribute = tribute::table
+        .find(tribute_id)
         .first::<Tribute>(conn)
         .expect("Error loading tribute");
     tribute

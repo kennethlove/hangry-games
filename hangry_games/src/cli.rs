@@ -1,5 +1,5 @@
 use crate::models::game::{fill_tributes, get_all_living_tributes, get_dead_tributes, get_game_tributes};
-use crate::models::{create_area, create_game, create_tribute, get_action, get_all_tributes, get_area, get_areas, get_game, get_games, get_recently_dead_tributes, get_tribute, place_tribute_in_area};
+use crate::models::{create_area, create_game, create_tribute, get_action, get_all_tributes, get_area, get_area_by_id, get_areas, get_game, get_games, get_recently_dead_tributes, get_tribute, get_tribute_by_id, place_tribute_in_area, Item};
 use clap::{Parser, Subcommand};
 use crate::games::Game;
 use std::fs;
@@ -168,6 +168,7 @@ pub fn parse() {
             let living_tributes = get_all_living_tributes(&game);
             let dead_tributes = get_dead_tributes(&game).into_iter().filter(|t| t.day_killed.is_some()).collect::<Vec<_>>();
             let recently_dead_tributes = get_recently_dead_tributes(&game).into_iter().collect::<Vec<_>>();
+            let items = Item::get_by_game(game.id);
             println!("Day {}", game.day.unwrap_or(0));
             println!("{} tributes left", living_tributes.len());
             for area in get_areas() {
@@ -196,6 +197,17 @@ pub fn parse() {
                     area,
                     tribute.status
                 );
+            }
+            println!("Items");
+            for item in items {
+                let location = if item.area_id.is_some() {
+                    get_area_by_id(Some(item.area_id.unwrap())).unwrap().name
+                } else if item.tribute_id.is_some() {
+                    get_tribute_by_id(item.tribute_id.unwrap()).name
+                } else {
+                    "Unknown".to_string()
+                };
+                println!("({}) {}: {}", location, item.name, item.quantity);
             }
         }
         Commands::QuickStart => {

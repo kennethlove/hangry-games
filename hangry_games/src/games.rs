@@ -1,14 +1,16 @@
 use crate::areas::Area;
+use crate::events::TributeEvent;
+use crate::items::{Attribute, Item};
 use crate::models::game::{get_game, Game as GameModel};
-use crate::models::{create_game, get_all_living_tributes, get_recently_dead_tributes, update_tribute};
+use crate::models::{create_item, get_all_living_tributes, get_recently_dead_tributes, update_tribute, NewItem};
 use crate::tributes::actions::TributeAction;
 use crate::tributes::actors::Tribute;
+use crate::tributes::statuses::TributeStatus;
 use rand::prelude::SliceRandom;
 use rand::Rng;
 use std::fmt::Display;
 use std::str::FromStr;
-use crate::events::TributeEvent;
-use crate::tributes::statuses::TributeStatus;
+use crate::items::ItemType::{Consumable, Weapon};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Game {
@@ -19,29 +21,41 @@ pub struct Game {
     pub status: GameStatus,
 }
 
-impl Display for Game {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name)
-    }
-}
-
-impl FromStr for Game {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let game = get_game(s).expect("Error loading game");
-        Ok(Game::from(game))
-    }
-}
-
 impl Game {
     pub fn as_str(&self) -> &str {
         self.name.as_str()
     }
 
-    pub fn new() -> Game {
-        let game = create_game();
-        Game::from(game)
+    // Runs at the start of the game
+    pub fn start(&self) {
+        let game = get_game(self.name.as_str()).expect("Error loading game");
+        let the_cornucopia = Area::from_str("cornucopia").expect("Error loading area");
+        for _ in 0..20 {
+            let knife = NewItem {
+                name: "knife".to_string(),
+                item_type: Weapon.to_string(),
+                game_id: Some(game.id),
+                area_id: Some(the_cornucopia.id()),
+                tribute_id: None,
+                quantity: 1,
+                attribute: Attribute::Strength.to_string(),
+                effect: 5,
+            };
+            create_item(knife);
+        }
+        for _ in 0..4 {
+            let health_pack = NewItem {
+                name: "health pack".to_string(),
+                item_type: Consumable.to_string(),
+                game_id: Some(game.id),
+                area_id: Some(the_cornucopia.id()),
+                tribute_id: None,
+                quantity: 1,
+                attribute: Attribute::Health.to_string(),
+                effect: 10,
+            };
+            create_item(health_pack);
+        }
     }
 
     pub fn living_tributes(&self) -> Vec<Tribute> {
@@ -86,9 +100,9 @@ impl Game {
         }
 
         println!("=== {} tribute{} remain{} ===",
-             living_tributes.len(),
-             if living_tributes.len() == 1 { "" } else { "s" },
-             if living_tributes.len() == 1 { "s" } else { "" }
+                 living_tributes.len(),
+                 if living_tributes.len() == 1 { "" } else { "s" },
+                 if living_tributes.len() == 1 { "s" } else { "" }
         );
 
         // Run the day
@@ -103,7 +117,6 @@ impl Game {
 
         // Clean up any deaths
         self.clean_up_recent_deaths();
-
     }
 
     pub fn do_day_night_cycle(&mut self, day: bool) {
@@ -119,6 +132,35 @@ impl Game {
         if self.day > Some(3) || !day {
             if rng.gen_bool(if day { day_event_frequency } else { night_event_frequency }) {
                 Area::do_area_event(self.id.unwrap());
+            }
+        }
+
+        if self.day == Some(3) && day {
+            // Add goodies to the Cornucopia
+            let cornucopia = Area::from_str("cornucopia").expect("Error loading area");
+            let items = cornucopia.available_items(game.id);
+            if items.len() <= 12 {
+                let count = (12 - items.len()) / 3;
+                for _ in 0..count {
+                    Item::new_consumable(
+                        "Consumable".to_string(),
+                        self.id,
+                        Some(cornucopia.id()),
+                        None
+                    );
+                    Item::new_weapon(
+                        "Weapon".to_string(),
+                        self.id,
+                        Some(cornucopia.id()),
+                        None
+                    );
+                    Item::new_shield(
+                        "Shield".to_string(),
+                        self.id,
+                        Some(cornucopia.id()),
+                        None
+                    );
+                }
             }
         }
 
@@ -147,7 +189,7 @@ impl Game {
             if !tribute.is_alive() {
                 dbg!("tribute event killed tribute");
                 tribute.status = TributeStatus::RecentlyDead;
-                continue
+                continue;
             };
 
             match (self.day, day) {
@@ -155,10 +197,13 @@ impl Game {
                     tribute.do_day_night(Some(TributeAction::Move(None)), Some(0.5), day);
                 }
                 (Some(3), true) => {
+                    // Feast day
+
+                    // Encourage tributes to move to the Cornucopia
                     tribute.do_day_night(
                         Some(TributeAction::Move(Some(Area::Cornucopia.to_string()))),
                         Some(0.75),
-                        day
+                        day,
                     );
                 }
                 (_, _) => {
@@ -167,7 +212,6 @@ impl Game {
             };
             update_tribute(tribute.id.unwrap(), tribute.into());
         }
-
     }
     pub fn clean_up_recent_deaths(&self) {
         let game = get_game(self.name.as_str()).expect("Error loading game");
@@ -179,6 +223,21 @@ impl Game {
             tribute.dies();
             println!("🪦 {}", tribute.name);
         }
+    }
+}
+
+impl Display for Game {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name)
+    }
+}
+
+impl FromStr for Game {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let game = get_game(s).expect("Error loading game");
+        Ok(Game::from(game))
     }
 }
 

@@ -7,6 +7,7 @@ use crate::tributes::statuses::TributeStatus;
 use rand::Rng;
 use std::fmt::Display;
 use std::str::FromStr;
+use crate::items::Item;
 
 #[derive(Clone, Default, Debug, Eq, PartialEq)]
 pub enum Area {
@@ -83,12 +84,40 @@ impl Area {
         }
     }
 
+    pub fn id(&self) -> i32 {
+        match self {
+            Area::Cornucopia => 1,
+            Area::Northeast => 2,
+            Area::Northwest => 3,
+            Area::Southeast => 4,
+            Area::Southwest => 5,
+        }
+    }
+
+    pub fn get_by_id(area_id: i32) -> Option<Area> {
+        match area_id {
+            1 => Some(Area::Cornucopia),
+            2 => Some(Area::Northeast),
+            3 => Some(Area::Northwest),
+            4 => Some(Area::Southeast),
+            5 => Some(Area::Southwest),
+            _ => None
+        }
+    }
+
+    /// Returns a random open area that is not in the list of closed areas.
+    /// If it can't find an open area after 5 tries, it defaults to the Cornucopia.
     pub fn random_open_area(closed_areas: Vec<Area>) -> Area {
+        let mut count = 0;
         let area = loop {
             let random_area = Area::random();
             if !closed_areas.contains(&random_area.clone()) {
                 break random_area;
             }
+            if count == 10 {
+                break Area::Cornucopia;
+            }
+            count += 1;
         };
         area
     }
@@ -97,6 +126,22 @@ impl Area {
         let area = models::Area::from(self.clone());
         area.tributes(game_id).iter()
             .map(|t| Tribute::from(t.clone()))
+            .collect()
+    }
+
+    pub fn items(&self, game_id: i32) -> Vec<Item> {
+        let area = models::Area::from(self.clone());
+        area.items(game_id).iter()
+            .map(|i| Item::from(i.clone()))
+            .collect()
+    }
+
+    pub fn available_items(&self, game_id: i32) -> Vec<Item> {
+        let items = self.items(game_id);
+        items.iter()
+            .filter(|i| i.tribute_id.is_none())
+            .filter(|i| i.quantity > 0)
+            .cloned()
             .collect()
     }
 

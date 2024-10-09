@@ -1,5 +1,6 @@
 use rand::{thread_rng, Rng};
 use crate::areas::Area;
+use crate::items::Item;
 use crate::tributes::actions::TributeAction;
 use crate::tributes::actors::Tribute;
 
@@ -11,7 +12,7 @@ pub struct TributeBrain {
 }
 
 impl TributeBrain {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             previous_actions: Vec::new(),
             preferred_action: None,
@@ -75,6 +76,24 @@ impl TributeBrain {
                 self.previous_actions.push(preferred_action.clone());
                 return preferred_action
             }
+        }
+
+        // If there are items available, take one
+        // Get the items for an area
+        let area_items = _area.available_items(tribute.game_id.unwrap());
+        // Items exist in the area?
+        if !area_items.is_empty() {
+            // Are there items with sufficient quantities?
+            if area_items.iter().filter(|i| i.quantity > 0).cloned().collect::<Vec<Item>>().len() > 0 {
+                // Take an item
+                return TributeAction::TakeItem;
+            }
+        }
+
+        // Does the tribute have items?
+        if !tribute.consumable_items().is_empty() {
+            // Use an item
+            return TributeAction::UseItem(None);
         }
 
         match &nearby_tributes {

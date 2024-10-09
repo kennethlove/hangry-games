@@ -11,6 +11,7 @@ pub use action::*;
 pub use area::*;
 pub use event::*;
 pub use game::*;
+pub use item::*;
 pub use log::*;
 pub use tribute::*;
 pub use tribute_action::*;

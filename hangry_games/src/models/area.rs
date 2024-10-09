@@ -33,6 +33,14 @@ impl Area {
             .cloned()
             .collect()
     }
+
+    pub fn items(&self, game: i32) -> Vec<crate::models::Item> {
+        let items = crate::models::item::Item::get_by_game(game);
+        items.iter()
+            .filter(|i| i.area_id == Some(self.id))
+            .cloned()
+            .collect()
+    }
 }
 
 impl From<crate::areas::Area> for Area {
