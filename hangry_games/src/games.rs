@@ -40,7 +40,7 @@ impl Game {
             game_id: Some(game.id)
         };
 
-        for _ in 0..20 {
+        for _ in 0..10 {
             let knife = NewItem {
                 name: "knife".to_string(),
                 item_type: Weapon.to_string(),
@@ -53,7 +53,7 @@ impl Game {
             };
             create_item(knife);
         }
-        for _ in 0..4 {
+        for _ in 0..2 {
             let health_pack = NewItem {
                 name: "health pack".to_string(),
                 item_type: Consumable.to_string(),
@@ -177,10 +177,11 @@ impl Game {
         // Get all the remaining tributes to run their appropriate actions
         let mut living_tributes = get_all_living_tributes(&game);
 
-        // If there are too few tributes, close an area or two
+        // If there are too few, but not just one, tribute left, close an area or two
         if living_tributes.len() > 1 && living_tributes.len() < 7 {
             Area::do_area_event(self.id.unwrap());
-            if rng.gen_bool(living_tributes.len() as f64 / 12.0) {
+
+            if rng.gen_bool(living_tributes.len() as f64 / 24.0) {
                 Area::do_area_event(self.id.unwrap());
             }
         }
@@ -203,7 +204,11 @@ impl Game {
 
             match (self.day, day) {
                 (Some(1), true) => {
-                    tribute = tribute.do_day_night(Some(TributeAction::Move(None)), Some(0.5), day);
+                    tribute = tribute.do_day_night(
+                        Some(TributeAction::Move(None)),
+                        Some(0.5),
+                        day
+                    );
                 }
                 (Some(3), true) => {
                     // Feast day

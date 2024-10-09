@@ -743,6 +743,7 @@ pub enum TravelResult {
     Failure,
 }
 
+#[allow(dead_code)]
 fn apply_violence_stress(tribute: &mut Tribute) {
     let kills = tribute.kills.unwrap_or(0);
     let wins = tribute.wins.unwrap_or(0);
@@ -755,7 +756,10 @@ fn apply_violence_stress(tribute: &mut Tribute) {
 
     if terror.round() > 0.0 {
         tribute.takes_mental_damage(terror.round() as i32);
-        println!("😱 {} is horrified by the violence, loses {} sanity.", tribute.name, terror.round() as i32);
+        println!("😱 {} is horrified by the violence, loses {} sanity.",
+                 tribute.name,
+                 terror.round() as i32
+        );
     }
 }
 
