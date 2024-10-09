@@ -88,22 +88,6 @@ impl From<crate::items::Item> for Item {
     }
 }
 
-impl From<crate::items::Item> for Item {
-    fn from(item: crate::items::Item) -> Self {
-        Item {
-            id: item.id.unwrap(),
-            name: item.name,
-            item_type: item.item_type.to_string(),
-            game_id: item.game_id,
-            area_id: item.area_id,
-            tribute_id: item.tribute_id,
-            quantity: item.quantity,
-            attribute: item.attribute.to_string(),
-            effect: item.effect,
-        }
-    }
-}
-
 #[derive(Insertable, Debug)]
 #[diesel(table_name = item)]
 pub struct NewItem {
@@ -179,36 +163,6 @@ pub fn update_item(updated_item: UpdateItem) {
         .set(&updated_item)
         .execute(connection)
         .expect("Error updating item");
-}
-
-impl From<Item> for NewItem {
-    fn from(item: Item) -> Self {
-        NewItem {
-            name: item.name,
-            item_type: item.item_type,
-            game_id: item.game_id,
-            area_id: item.area_id,
-            tribute_id: item.tribute_id,
-            quantity: item.quantity,
-            attribute: item.attribute,
-            effect: item.effect,
-        }
-    }
-}
-
-impl From<crate::items::Item> for NewItem {
-    fn from(item: crate::items::Item) -> Self {
-        NewItem {
-            name: item.name,
-            item_type: item.item_type.to_string(),
-            game_id: item.game_id,
-            area_id: item.area_id,
-            tribute_id: item.tribute_id,
-            quantity: item.quantity,
-            attribute: item.attribute.to_string(),
-            effect: item.effect,
-        }
-    }
 }
 
 impl From<Item> for NewItem {

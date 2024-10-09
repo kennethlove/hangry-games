@@ -96,24 +96,6 @@ impl TributeBrain {
             return TributeAction::UseItem(None);
         }
 
-        // If there are items available, take one
-        // Get the items for an area
-        let area_items = _area.available_items(tribute.game_id.unwrap());
-        // Items exist in the area?
-        if !area_items.is_empty() {
-            // Are there items with sufficient quantities?
-            if area_items.iter().filter(|i| i.quantity > 0).cloned().collect::<Vec<Item>>().len() > 0 {
-                // Take an item
-                return TributeAction::TakeItem;
-            }
-        }
-
-        // Does the tribute have items?
-        if !tribute.consumable_items().is_empty() {
-            // Use an item
-            return TributeAction::UseItem(None);
-        }
-
         match &nearby_tributes {
             0 => {
                 match tribute.health {
