@@ -66,7 +66,9 @@ impl From<&ActionModel> for TributeAction {
 #[derive(Debug)]
 pub enum AttackResult {
     AttackerWins,
+    AttackerWinsDecisively,
     DefenderWins,
+    DefenderWinsDecisively,
     Miss,
 }
 
