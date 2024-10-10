@@ -37,7 +37,8 @@ enum Commands {
     QuickStart,
     RunFullGame { game_id: String },
     ShowGameLog { game_id: String },
-    LogTributes { game_id: String }
+    LogTributes { game_id: String },
+    Gui,
 }
 
 pub fn parse() {
@@ -253,6 +254,9 @@ pub fn parse() {
                     println!("Error: {}", e.to_string());
                 }
             }
+        }
+        Commands::Gui => {
+            todo!();
         }
     }
 }
