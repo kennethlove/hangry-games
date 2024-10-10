@@ -1,4 +1,3 @@
-use std::sync::{Arc, Mutex};
 use dioxus::prelude::*;
 use dioxus_logger::tracing::Level;
 use hangry_games::gui::components::*;
