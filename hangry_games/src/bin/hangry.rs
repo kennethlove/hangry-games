@@ -40,12 +40,6 @@ fn app() -> Element {
     use_context_provider(|| Signal::new(HGState { games: list_of_games() }));
 
     rsx! {
-        head {
-            link {
-                rel: "stylesheet",
-                href: "https://cdn.jsdelivr.net/npm/tailwindcss@2.0.2/dist/tailwind.min.css"
-            }
-        }
         div {
             class: "container mx-auto",
             header::Header {}
