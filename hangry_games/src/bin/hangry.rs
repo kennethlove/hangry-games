@@ -10,8 +10,8 @@ fn main() {
     launch(app);
 }
 
-fn new_animal() -> String {
-    Animal::random().to_string()
+fn list_of_games() -> Vec<Game> {
+    get_games().iter().map(|g| Game::from(g.clone())).collect()
 }
 
 #[component]
@@ -27,11 +27,8 @@ fn Animal() -> Element {
 
     rsx! {
         div {
-            h2 { {animal} }
-            button {
-                onclick: move |_| { animal.set(new_animal()) },
-                "Random"
-            }
+            class: "grid grid-cols-2",
+            CreateGame {}
         }
     }
 }
