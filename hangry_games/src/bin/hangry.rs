@@ -1,15 +1,17 @@
+use dioxus::html::head;
 use dioxus::prelude::*;
-use hangry_games::animals::Animal;
 use manganis::*;
-use hangry_games::games::{Game, GameStatus};
-use hangry_games::models::{get_game, get_game_by_id, get_games};
+use hangry_games::games::{Game};
+use hangry_games::models::{get_game_by_id, get_games};
+
+pub const LOGO_IMG: ImageAsset = mg!(image("./assets/hangry-games.png"));
+pub const CSS: &str = mg!(file("./assets/tailwind.css"));
 
 // All of our routes will be a variant of this Route enum
 #[derive(Routable, PartialEq, Clone)]
 enum Route {
     #[route("/")]
     Home {},
-
     #[route("/game")]
     GameDetail {},
 }
@@ -21,10 +23,6 @@ fn main() {
     launch(app);
 }
 
-fn new_animal() -> String {
-    Animal::random().to_string()
-}
-
 fn list_of_games() -> Vec<Game> {
     get_games().iter().map(|g| Game::from(g.clone())).collect()
 }
@@ -32,8 +30,11 @@ fn list_of_games() -> Vec<Game> {
 #[component]
 fn Header() -> Element {
     rsx! {
+        img {
+            class: "sm:w-4 sm:h-12",
+            src: "{LOGO_IMG}", alt: "Hangry Games Logo", width: 52, height: 52 }
         h1 {
-            img { src: "{LOGO_IMG}", alt: "Hangry Games Logo", width: 52, height: 52 }
+            class: "sm:w-12 text-3xl font-bold",
             "Hangry Games"
         }
     }
@@ -43,27 +44,19 @@ fn Header() -> Element {
 fn Home() -> Element {
     rsx! {
         p { "Welcome to the Hangry Games!" }
-        Games {}
-    }
-}
-
-#[component]
-fn AnimalName() -> Element {
-    let mut animal = use_signal(||new_animal());
-
-    rsx! {
         div {
-            h2 { {animal} }
-            button {
-                onclick: move |_| { animal.set(new_animal()) },
-                "Random"
-            }
+            class: "grid grid-cols-2",
+            GameList {}
+        }
+        div {
+            class: "grid grid-cols-2",
+            CreateGame {}
         }
     }
 }
 
 #[component]
-fn Games() -> Element {
+fn GameList() -> Element {
     let games = use_signal(||list_of_games());
 
     rsx! {
@@ -71,7 +64,7 @@ fn Games() -> Element {
             h2 { "Games" }
             ul {
                 for game in games.read().iter() {
-                    GameItem { game: game.clone() }
+                    GameListItem { game: game.clone() }
                 }
             }
         }
@@ -79,7 +72,7 @@ fn Games() -> Element {
 }
 
 #[component]
-fn GameItem(game: Game) -> Element {
+fn GameListItem(game: Game) -> Element {
     let mut selected_game = use_context::<Signal<SelectedGame>>();
     rsx! {
         li {
@@ -93,8 +86,8 @@ fn GameItem(game: Game) -> Element {
 }
 
 #[component]
-fn GameDetails() -> Element {
-    let mut selected_game = use_context::<Signal<SelectedGame>>();
+fn GameDetail() -> Element {
+    let selected_game = use_context::<Signal<SelectedGame>>();
     let game = Game::from(get_game_by_id(selected_game.read().0.unwrap()).unwrap());
     rsx! {
         div {
@@ -114,14 +107,32 @@ fn GameDetails() -> Element {
     }
 }
 
+#[component]
+fn CreateGame() -> Element {
+    rsx! {
+        div {
+            h2 { "Create Game" }
+            form {
+                input { r#type: "text", placeholder: "Game Name" }
+                button { "Create Game" }
+            }
+        }
+    }
+}
+
 fn app() -> Element {
     use_context_provider(|| Signal::new(SelectedGame(None)));
     rsx! {
+        head {
+            link {
+                rel: "stylesheet",
+                href: "https://cdn.jsdelivr.net/npm/tailwindcss@2.0.2/dist/tailwind.min.css"
+            }
+        }
         div {
             Header {}
             Router::<Route> {}
         }
     }
 }
-pub const LOGO_IMG: ImageAsset = mg!(image("assets/hangry-games.png"));
 
