@@ -50,6 +50,7 @@ fn app() -> Element {
             class: "container mx-auto",
             header::Header {}
             Router::<Routes> {}
+            img { src: mg!(image("assets/hangry-games.png").preload()) }
         }
     }
 }
