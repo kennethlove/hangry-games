@@ -1,5 +1,5 @@
-use std::collections::VecDeque;
 use dioxus::prelude::*;
+use manganis::*;
 use hangry_games::animals::Animal;
 
 fn main() {
@@ -37,6 +37,14 @@ fn app() -> Element {
         div {
             Header {}
             Animal {}
+            img { src: mg!(image("assets/hangry-games.png").preload()) }
         }
     }
 }
+pub const LOGO_IMG: ImageAsset = mg!(image("assets/hangry-games.png")
+        // Manganis uses the builder pattern inside the macro. You can set the image size in pixels at compile time to send the smallest possible image to the client
+        .size(52, 52)
+        // You can also convert the image to a web friendly format at compile time. This can make your images significantly smaller
+        .format(ImageType::Avif)
+        // You can even tell manganis to preload the image so it's ready to be displayed as soon as it's needed
+        .preload());

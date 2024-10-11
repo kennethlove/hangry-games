@@ -256,7 +256,7 @@ pub fn parse() {
             }
         }
         Commands::Gui => {
-            todo!();
+            println!("here");
         }
     }
 }
