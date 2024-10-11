@@ -26,6 +26,16 @@ impl Game {
         self.name.as_str()
     }
 
+    pub fn default() -> Game {
+        Game {
+            id: None,
+            name: "".to_string(),
+            day: Some(0),
+            closed_areas: None,
+            status: GameStatus::NotStarted,
+        }
+    }
+
     // Runs at the start of the game
     pub fn start(&self) {
         let game = get_game(self.name.as_str()).expect("Error loading game");

@@ -160,7 +160,7 @@ pub fn get_games() -> Vec<Game> {
 
 fn generate_random_name() -> String {
     let wp_gen = witty_phrase_generator::WPGen::new();
-    let name = wp_gen.generic(3, 1, Some(5), Some(25), None).expect("Couldn't generate name");
+    let name = wp_gen.generic(3, 1, Some(5), Some(25), None, None).expect("Couldn't generate name");
     let name = name[0].join("-");
     name.to_string()
 }
