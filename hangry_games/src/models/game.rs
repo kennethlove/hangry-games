@@ -1,7 +1,7 @@
 use crate::areas::Area;
 use crate::games::Game as GameActor;
 use crate::models::{get_area_by_id, Tribute};
-use crate::schema::game;
+use crate::schema::{game, tribute};
 use crate::tributes::statuses::TributeStatus;
 use crate::{establish_connection, models};
 use diesel::prelude::*;
@@ -160,7 +160,13 @@ pub fn get_games() -> Vec<Game> {
 }
 
 pub fn delete_game(game_id: i32) {
+    use crate::schema::tribute;
+
     let connection = &mut establish_connection();
+    diesel::delete(tribute::table)
+        .filter(tribute::game_id.eq(game_id))
+        .execute(connection)
+        .expect("Error deleting tributes");
     diesel::delete(game::table)
         .filter(game::id.eq(game_id))
         .execute(connection)
