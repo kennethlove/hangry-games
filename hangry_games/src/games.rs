@@ -2,7 +2,7 @@ use crate::areas::Area;
 use crate::events::TributeEvent;
 use crate::items::{Attribute, Item};
 use crate::models::game::{get_game, Game as GameModel};
-use crate::models::{create_item, get_all_living_tributes, get_recently_dead_tributes, update_tribute, NewItem};
+use crate::models::{create_game, create_item, get_all_living_tributes, get_recently_dead_tributes, update_tribute, NewItem};
 use crate::tributes::actions::TributeAction;
 use crate::tributes::actors::Tribute;
 use crate::tributes::statuses::TributeStatus;
@@ -22,6 +22,10 @@ pub struct Game {
 }
 
 impl Game {
+    pub fn new(game_name: &str) -> Game {
+        Game::from(create_game(Some(game_name)))
+    }
+
     pub fn as_str(&self) -> &str {
         self.name.as_str()
     }

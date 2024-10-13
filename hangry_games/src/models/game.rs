@@ -120,9 +120,10 @@ pub struct NewGame<'a> {
     pub day: i32,
 }
 
-pub fn create_game() -> Game {
+pub fn create_game(name: Option<&str>) -> Game {
     let connection = &mut establish_connection();
-    let name = generate_random_name();
+    let random_name = generate_random_name();
+    let name = name.unwrap_or(&random_name);
     let new_game = NewGame { name: &name, day: 0 };
 
     diesel::insert_into(game::table)

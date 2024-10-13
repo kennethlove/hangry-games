@@ -1,5 +1,5 @@
-use dioxus::html::head;
 use dioxus::prelude::*;
+use KeyCode::Enter;
 use manganis::*;
 use hangry_games::games::{Game};
 use hangry_games::models::{get_game_by_id, get_games};
@@ -30,11 +30,7 @@ fn list_of_games() -> Vec<Game> {
 #[component]
 fn Header() -> Element {
     rsx! {
-        img {
-            class: "sm:w-4 sm:h-12",
-            src: "{LOGO_IMG}", alt: "Hangry Games Logo", width: 52, height: 52 }
         h1 {
-            class: "sm:w-12 text-3xl font-bold",
             "Hangry Games"
         }
     }
@@ -42,28 +38,27 @@ fn Header() -> Element {
 
 #[component]
 fn Home() -> Element {
+    let games_signal: Signal<Vec<Game>> = use_signal(||list_of_games());
     rsx! {
         p { "Welcome to the Hangry Games!" }
         div {
-            class: "grid grid-cols-2",
-            GameList {}
+            {GameList()}
         }
         div {
-            class: "grid grid-cols-2",
-            CreateGame {}
+            {CreateGame()}
         }
     }
 }
 
 #[component]
 fn GameList() -> Element {
-    let games = use_signal(||list_of_games());
+    let mut state = use_context::<Signal<HGState>>();
 
     rsx! {
         div {
             h2 { "Games" }
             ul {
-                for game in games.read().iter() {
+                for game in state.read().games.iter() {
                     GameListItem { game: game.clone() }
                 }
             }
@@ -109,19 +104,49 @@ fn GameDetail() -> Element {
 
 #[component]
 fn CreateGame() -> Element {
+    let mut state = use_context::<Signal<HGState>>();
+    let mut game_name = use_signal(String::new);
+
     rsx! {
         div {
             h2 { "Create Game" }
             form {
-                input { r#type: "text", placeholder: "Game Name" }
+                onsubmit: move |event| {
+                    let data = event.data.values();
+                    let game_name = data.get("game_name").unwrap().first().unwrap();
+                    let game = Game::new(game_name);
+                    let mut selected_game = use_context::<Signal<SelectedGame>>();
+                    selected_game.set(SelectedGame(Some(game.id.unwrap())));
+                    state.write().games.push(game);
+                },
+                input {
+                    r#type: "text",
+                    placeholder: "Game Name",
+                    id: "game_name",
+                    name: "game_name",
+                    value: "{game_name}",
+                    oninput: move |event| game_name.set(event.value().clone()),
+                    onkeypress: move |event| {
+                        if event.key() == Key::Enter {
+                            game_name.set(String::from(""))
+                        }
+                    }
+                }
                 button { "Create Game" }
             }
         }
     }
 }
 
+#[derive(Debug)]
+struct HGState {
+    games: Vec<Game>,
+}
+
 fn app() -> Element {
     use_context_provider(|| Signal::new(SelectedGame(None)));
+    use_context_provider(|| Signal::new(HGState { games: list_of_games() }));
+
     rsx! {
         head {
             link {

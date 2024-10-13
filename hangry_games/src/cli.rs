@@ -134,7 +134,7 @@ pub fn parse() {
 
         // Games
         Commands::AddGame => {
-            let game = create_game();
+            let game = create_game(None);
             println!("Game created: {}", game.name);
         }
         Commands::ShowGames => {
@@ -212,7 +212,7 @@ pub fn parse() {
             }
         }
         Commands::QuickStart => {
-            let game = create_game();
+            let game = create_game(None);
             println!("Game created: {}", game.name);
             let count = fill_tributes(&game);
             println!("{} tributes created", count);
