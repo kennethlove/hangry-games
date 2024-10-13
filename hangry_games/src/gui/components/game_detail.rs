@@ -57,6 +57,16 @@ pub fn GameDetail() -> Element {
             }
         }
 
+        if game.tributes().len() == 24 {
+            div {
+                class: "flow-root",
+                h2 {
+                    class: "text-lg font-medium text-gray-900",
+                    "Game is Full"
+                }
+            }
+        }
+
         Link {
             to: Routes::Home {},
             class: "underline text-blue-500",

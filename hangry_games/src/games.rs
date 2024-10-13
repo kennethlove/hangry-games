@@ -76,6 +76,11 @@ impl Game {
         }
     }
 
+    pub fn tributes(&self) -> Vec<Tribute> {
+        let game = get_game(self.name.as_str()).expect("Error loading game");
+        game.tributes().iter().map(|t| Tribute::from(t.clone())).collect()
+    }
+
     pub fn living_tributes(&self) -> Vec<Tribute> {
         let game = get_game(self.name.as_str()).expect("Error loading game");
         get_all_living_tributes(&game).iter().map(|t| Tribute::from(t.clone())).collect()
