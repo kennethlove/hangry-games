@@ -33,7 +33,6 @@ fn GameDeleteButton(game: Game) -> Element {
 
 #[component]
 fn GameDetailsButton(game: Game) -> Element {
-    let _state = use_context::<Signal<HGState>>();
     let nav = navigator();
 
     rsx! {
@@ -49,7 +48,6 @@ fn GameDetailsButton(game: Game) -> Element {
 
 #[component]
 fn GamePlayButton(game: Game) -> Element {
-    let _state = use_context::<Signal<HGState>>();
     let nav = navigator();
     let mut classes = "inline-block rounded-md px-4 py-2 text-sm txt-gray-500 hover:text-green-700 focus:relative".to_string();
     if game.tributes().len() < 24 || game.status == GameStatus::Finished {
