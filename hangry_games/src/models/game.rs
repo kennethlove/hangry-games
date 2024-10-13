@@ -159,6 +159,14 @@ pub fn get_games() -> Vec<Game> {
         .expect("Error loading games")
 }
 
+pub fn delete_game(game_id: i32) {
+    let connection = &mut establish_connection();
+    diesel::delete(game::table)
+        .filter(game::id.eq(game_id))
+        .execute(connection)
+        .expect("Error deleting game");
+}
+
 fn generate_random_name() -> String {
     let wp_gen = witty_phrase_generator::WPGen::new();
     let name = wp_gen.generic(3, 1, Some(5), Some(25), None, None).expect("Couldn't generate name");
