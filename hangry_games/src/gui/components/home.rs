@@ -12,7 +12,7 @@ pub fn Home() -> Element {
     rsx! {
         p { "Welcome to the Hangry Games!" }
         div {
-            {GameList()}
+            GameList { games: games_signal.clone() }
         }
         div {
             {CreateGame()}

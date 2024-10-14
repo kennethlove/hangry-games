@@ -3,11 +3,13 @@ use crate::games::Game;
 use crate::models::get_game_by_id;
 use crate::gui::router::Routes;
 use crate::gui::states::SelectedGame;
+use crate::gui::components::create_tribute::CreateTribute;
 
 #[component]
 pub fn GameDetail() -> Element {
     let selected_game = use_context::<Signal<SelectedGame>>();
     let game = Game::from(get_game_by_id(selected_game.read().0.unwrap()).unwrap());
+    let tributes = use_signal(||game.living_tributes());
     rsx! {
         div {
             class: "flow-root",
@@ -45,10 +47,10 @@ pub fn GameDetail() -> Element {
                         class: "text-gray-700 sm:col-span-2",
                         ul {
                             class: "divide-y divide-gray-200",
-                            for tribute in game.living_tributes() {
+                            for tribute in tributes.read().iter() {
                                 li {
                                     class: "flex items-center py-3",
-                                    "{tribute.name}"
+                                    "{tribute.name} from District {tribute.district}"
                                 }
                             }
                         }
@@ -57,14 +59,8 @@ pub fn GameDetail() -> Element {
             }
         }
 
-        if game.tributes().len() == 24 {
-            div {
-                class: "flow-root",
-                h2 {
-                    class: "text-lg font-medium text-gray-900",
-                    "Game is Full"
-                }
-            }
+        if game.tributes().len() < 24 {
+            CreateTribute {signal: tributes.clone()}
         }
 
         Link {

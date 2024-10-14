@@ -1,7 +1,7 @@
 use crate::areas::Area;
 use crate::games::Game as GameActor;
 use crate::models::{get_area_by_id, Tribute};
-use crate::schema::{game, tribute};
+use crate::schema::game;
 use crate::tributes::statuses::TributeStatus;
 use crate::{establish_connection, models};
 use diesel::prelude::*;
@@ -183,8 +183,10 @@ fn generate_random_name() -> String {
 pub fn get_all_living_tributes(game: &Game) -> Vec<Tribute> {
     let conn = &mut establish_connection();
     use crate::schema::tribute;
+
     tribute::table
         .select(tribute::all_columns)
+        .order_by(tribute::district)
         .filter(tribute::game_id.eq(game.id))
         .filter(tribute::status.ne(TributeStatus::Dead.to_string()))
         .filter(tribute::status.ne(TributeStatus::RecentlyDead.to_string()))

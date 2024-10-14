@@ -32,7 +32,7 @@ fn GameDeleteButton(game: Game) -> Element {
 
 #[component]
 fn GameDetailsButton(game: Game) -> Element {
-    let mut state = use_context::<Signal<HGState>>();
+    let _state = use_context::<Signal<HGState>>();
     let nav = navigator();
 
     rsx! {
@@ -50,7 +50,7 @@ fn GameDetailsButton(game: Game) -> Element {
 
 #[component]
 fn GamePlayButton(game: Game) -> Element {
-    let mut state = use_context::<Signal<HGState>>();
+    let _state = use_context::<Signal<HGState>>();
     rsx! {
         button {
             class: "inline-block rounded-md px-4 py-2 text-sm text-gray-500 hover:text-green-700 focus:relative",
