@@ -2,15 +2,12 @@ use dioxus::prelude::*;
 use crate::games::Game;
 use crate::models::get_game_by_id;
 use crate::gui::router::Routes;
-use crate::gui::states::SelectedGame;
 use crate::gui::components::create_tribute::CreateTribute;
-use crate::gui::components::tribute_actions_group::TributeActionsGroup;
 use crate::gui::components::tribute_table::TributeTable;
 
 #[component]
-pub fn GameDetail() -> Element {
-    let selected_game = use_context::<Signal<SelectedGame>>();
-    let game = Game::from(get_game_by_id(selected_game.read().0.unwrap()).unwrap());
+pub fn GameDetail(id: i32) -> Element {
+    let game = Game::from(get_game_by_id(id).unwrap());
     let tributes = use_signal(||game.tributes());
 
     rsx! {
@@ -55,7 +52,7 @@ pub fn GameDetail() -> Element {
         }
 
         if game.tributes().len() < 24 {
-            CreateTribute {signal: tributes.clone()}
+            CreateTribute {signal: tributes.clone(), game_id: game.id.unwrap()}
         }
 
         Link {

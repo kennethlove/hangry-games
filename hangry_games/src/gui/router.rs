@@ -12,12 +12,12 @@ use crate::gui::components::{
 pub enum Routes {
     #[route("/")]
     Home {},
-    #[route("/game")]
-    GameDetail {},
+    #[route("/game/:id")]
+    GameDetail { id: i32 },
+    #[route("/game/:id/play")]
+    GamePlay { id: i32 },
+    #[route("/game/:id/log")]
+    GameLog { id: i32 },
     #[route("/tribute/:id")]
     TributeDetail { id: i32 },
-    #[route("/play")]
-    GamePlay {},
-    #[route("/log")]
-    GameLog {},
 }

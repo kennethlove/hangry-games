@@ -1,19 +1,16 @@
 use dioxus::prelude::*;
 use crate::games::Game;
-use crate::gui::states::SelectedGame;
 use crate::gui::components::game_actions_group::GameActionsGroup;
 use crate::gui::router::Routes;
 
 #[component]
 pub fn GameTableRow(game: Game) -> Element {
-    let mut selected_game = use_context::<Signal<SelectedGame>>();
     rsx! {
         tr {
             td {
                 class: "whitespace-nowrap px-4 py-2 text-gray-700",
                 Link {
-                    onclick: move |_| { selected_game.set(SelectedGame(Some(game.id.unwrap()))) },
-                    to: Routes::GameDetail {},
+                    to: Routes::GameDetail { id: game.id.unwrap() },
                     "{game.name}"
                 }
             }

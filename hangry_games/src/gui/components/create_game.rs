@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use crate::games::Game;
-use crate::gui::states::{HGState, SelectedGame};
+use crate::gui::states::HGState;
 use crate::gui::router::Routes;
 
 #[component]
@@ -18,10 +18,8 @@ pub fn CreateGame() -> Element {
                     let data = event.data.values();
                     let game_name = data.get("game_name").unwrap().first().unwrap();
                     let game = Game::new(game_name);
-                    let mut selected_game = use_context::<Signal<SelectedGame>>();
-                    selected_game.set(SelectedGame(Some(game.id.unwrap())));
-                    state.write().games.push(game);
-                    nav.push(Routes::GameDetail {});
+                    state.write().games.push(game.clone());
+                    nav.push(Routes::GameDetail { id: game.id.unwrap() });
                 },
                 label {
                     r#for: "game_name",

@@ -138,7 +138,7 @@ pub fn parse() {
             println!("Game created: {}", game.name);
         }
         Commands::ShowGames => {
-            for _game in get_games() {
+            for _game in get_games(None) {
                 println!("{}, Day {}, Tributes {}/24 {}",
                          _game.name,
                          _game.day.unwrap_or(0),
@@ -256,7 +256,9 @@ pub fn parse() {
             }
         }
         Commands::Gui => {
-            println!("here");
+            // run hangry bin
+            println!("Launching GUI...");
+            let _ = std::process::Command::new("hangry").spawn();
         }
     }
 }

@@ -1,6 +1,5 @@
 use dioxus::prelude::*;
-use crate::games::Game;
-use crate::gui::states::{HGState, SelectedGame};
+use crate::gui::states::HGState;
 use crate::gui::router::Routes;
 use crate::tributes::actors::Tribute;
 

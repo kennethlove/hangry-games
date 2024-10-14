@@ -1,10 +1,8 @@
 use dioxus::prelude::*;
-use dioxus_logger::tracing::{Level, info};
-use hangry_games::games::{Game};
-use hangry_games::models::{get_game_by_id, get_games};
+use dioxus_logger::tracing::Level;
 use hangry_games::gui::components::*;
 use hangry_games::gui::router::Routes;
-use hangry_games::gui::states::{HGState, SelectedGame};
+use hangry_games::gui::states::HGState;
 use hangry_games::gui::functions::list_of_games;
 
 fn main() {
@@ -13,7 +11,6 @@ fn main() {
 }
 
 fn app() -> Element {
-    use_context_provider(|| Signal::new(SelectedGame(None)));
     use_context_provider(|| Signal::new(HGState { games: list_of_games() }));
 
     rsx! {

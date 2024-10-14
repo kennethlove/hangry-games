@@ -1,15 +1,12 @@
 use dioxus::prelude::*;
 use crate::games::Game;
-use crate::gui::states::SelectedGame;
 use crate::models::get_game_by_id;
 use crate::tributes::actors::Tribute;
 
 #[component]
-pub fn CreateTribute(signal: Signal<Vec<Tribute>>) -> Element {
-    let selected_game = use_context::<Signal<SelectedGame>>();
-    let game = Game::from(get_game_by_id(selected_game.read().0.unwrap()).unwrap());
+pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
+    let game = Game::from(get_game_by_id(game_id).unwrap());
     let mut tribute_name = use_signal(String::new);
-    let tributes = use_signal(||game.tributes());
 
     rsx! {
         div {

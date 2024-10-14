@@ -5,7 +5,6 @@ use crate::gui::router::Routes;
 
 #[component]
 pub fn TributeDetail(id: i32) -> Element {
-    let nav = navigator();
     let tribute = Tribute::from(get_tribute_by_id(id));
 
     rsx! {
@@ -242,7 +241,7 @@ pub fn TributeDetail(id: i32) -> Element {
 
         Link {
             class: "text-blue-700 underline",
-            to: Routes::GameDetail {},
+            to: Routes::GameDetail { id: tribute.game_id.unwrap() },
             "Back"
         }
     }
