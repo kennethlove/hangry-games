@@ -7,7 +7,6 @@ use crate::tributes::actors::Tribute;
 pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
     let game = Game::from(get_game_by_id(game_id).unwrap());
     let mut tribute_name = use_signal(String::new);
-    let tributes = use_signal(||game.tributes());
 
     rsx! {
         div {
