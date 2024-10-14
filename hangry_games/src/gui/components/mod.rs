@@ -10,3 +10,5 @@ pub mod tribute_list_item;
 pub mod tribute_actions_group;
 pub mod tribute_table;
 pub mod tribute_detail;
+pub mod game_play;
+pub mod game_log;

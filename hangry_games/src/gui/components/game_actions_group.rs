@@ -11,6 +11,7 @@ pub fn GameActionsGroup(game: Game) -> Element {
             GameDeleteButton { game: game.clone() }
             GameDetailsButton { game: game.clone() }
             GamePlayButton { game: game.clone() }
+            GameLogButton { game: game.clone() }
         }
     }
 }
@@ -51,6 +52,7 @@ fn GameDetailsButton(game: Game) -> Element {
 #[component]
 fn GamePlayButton(game: Game) -> Element {
     let _state = use_context::<Signal<HGState>>();
+    let nav = navigator();
     let mut classes = "inline-block rounded-md px-4 py-2 text-sm txt-gray-500 hover:text-green-700 focus:relative".to_string();
     if game.tributes().len() < 24 || game.status == GameStatus::Finished {
         classes += " hidden";
@@ -58,7 +60,32 @@ fn GamePlayButton(game: Game) -> Element {
     rsx! {
         button {
             class: classes,
+            onclick: move |_| {
+                let mut selected_game = use_context::<Signal<SelectedGame>>();
+                selected_game.set(SelectedGame(Some(game.id.unwrap())));
+                nav.push(Routes::GamePlay {});
+            },
             "Play"
+        }
+    }
+}
+#[component]
+fn GameLogButton(game: Game) -> Element {
+    let _state = use_context::<Signal<HGState>>();
+    let nav = navigator();
+    let mut classes = "inline-block rounded-md px-4 py-2 text-sm txt-gray-500 hover:text-green-700 focus:relative".to_string();
+    if game.tributes().len() != 24 || game.status == GameStatus::InProgress || game.status == GameStatus::NotStarted {
+        classes += " hidden";
+    }
+    rsx! {
+        button {
+            class: classes,
+            onclick: move |_| {
+                let mut selected_game = use_context::<Signal<SelectedGame>>();
+                selected_game.set(SelectedGame(Some(game.id.unwrap())));
+                nav.push(Routes::GamePlay {});
+            },
+            "Log"
         }
     }
 }

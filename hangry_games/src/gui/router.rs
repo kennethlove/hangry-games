@@ -2,6 +2,8 @@ use dioxus::prelude::*;
 use crate::gui::components::{
     home::Home,
     game_detail::GameDetail,
+    game_log::GameLog,
+    game_play::GamePlay,
     tribute_detail::TributeDetail,
 };
 
@@ -12,6 +14,10 @@ pub enum Routes {
     Home {},
     #[route("/game")]
     GameDetail {},
-    #[route("/tribute")]
+    #[route("/tribute/:id")]
     TributeDetail { id: i32 },
+    #[route("/play")]
+    GamePlay {},
+    #[route("/log")]
+    GameLog {},
 }
