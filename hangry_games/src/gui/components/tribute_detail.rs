@@ -5,6 +5,7 @@ use crate::gui::router::Routes;
 
 #[component]
 pub fn TributeDetail(id: i32) -> Element {
+    let nav = navigator();
     let tribute = Tribute::from(get_tribute_by_id(id));
 
     rsx! {
