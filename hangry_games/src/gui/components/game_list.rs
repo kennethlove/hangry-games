@@ -1,10 +1,11 @@
 use dioxus::prelude::*;
+use crate::games::Game;
 use crate::gui::states::HGState;
 use crate::gui::components::game_list_item::GameListItem;
 
 #[component]
-pub fn GameList() -> Element {
-    let mut state = use_context::<Signal<HGState>>();
+pub fn GameList(games: Signal<Vec<Game>>) -> Element {
+    let _state = use_context::<Signal<HGState>>();
 
     rsx! {
         div {
@@ -34,7 +35,7 @@ pub fn GameList() -> Element {
                 }
                 tbody {
                     class: "divide-y divide-gray-200",
-                    for game in state.read().games.iter() {
+                    for game in games.read().iter() {
                         GameListItem { game: game.clone() }
                     }
                 }
