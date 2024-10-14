@@ -9,6 +9,7 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>) -> Element {
     let selected_game = use_context::<Signal<SelectedGame>>();
     let game = Game::from(get_game_by_id(selected_game.read().0.unwrap()).unwrap());
     let mut tribute_name = use_signal(String::new);
+    let tributes = use_signal(||game.tributes());
 
     rsx! {
         div {

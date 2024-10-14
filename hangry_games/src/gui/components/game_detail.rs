@@ -9,7 +9,10 @@ use crate::gui::components::create_tribute::CreateTribute;
 pub fn GameDetail() -> Element {
     let selected_game = use_context::<Signal<SelectedGame>>();
     let game = Game::from(get_game_by_id(selected_game.read().0.unwrap()).unwrap());
-    let tributes = use_signal(||game.living_tributes());
+    let tributes = use_signal(||game.tributes());
+    let living_tributes = use_signal(||game.living_tributes());
+    let dead_tributes = game.dead_tributes();
+
     rsx! {
         div {
             class: "flow-root",
@@ -47,7 +50,26 @@ pub fn GameDetail() -> Element {
                         class: "text-gray-700 sm:col-span-2",
                         ul {
                             class: "divide-y divide-gray-200",
-                            for tribute in tributes.read().iter() {
+                            for tribute in living_tributes.read().iter() {
+                                li {
+                                    class: "flex items-center py-3",
+                                    "{tribute.name} from District {tribute.district}"
+                                }
+                            }
+                        }
+                    }
+                }
+                div {
+                    class: "grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4",
+                    dt {
+                        class: "font-medium text-gray-900",
+                        "Dead Tributes"
+                    }
+                    dd {
+                        class: "text-gray-700 sm:col-span-2",
+                        ul {
+                            class: "divide-y divide-gray-200",
+                            for tribute in dead_tributes.iter() {
                                 li {
                                     class: "flex items-center py-3",
                                     "{tribute.name} from District {tribute.district}"
@@ -60,7 +82,7 @@ pub fn GameDetail() -> Element {
         }
 
         if game.tributes().len() < 24 {
-            CreateTribute {signal: tributes.clone()}
+            CreateTribute {signal: living_tributes.clone()}
         }
 
         Link {

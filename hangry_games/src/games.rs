@@ -2,7 +2,7 @@ use crate::areas::Area;
 use crate::events::TributeEvent;
 use crate::items::{Attribute, Item};
 use crate::models::game::{get_game, Game as GameModel};
-use crate::models::{create_game, create_item, create_tribute, delete_game, get_all_living_tributes, get_recently_dead_tributes, update_tribute, NewItem};
+use crate::models::{create_game, create_item, create_tribute, delete_game, get_all_living_tributes, get_dead_tributes, get_recently_dead_tributes, update_tribute, NewItem};
 use crate::tributes::actions::TributeAction;
 use crate::tributes::actors::Tribute;
 use crate::tributes::statuses::TributeStatus;
@@ -86,10 +86,16 @@ impl Game {
         get_all_living_tributes(&game).iter().map(|t| Tribute::from(t.clone())).collect()
     }
 
+    pub fn dead_tributes(&self) -> Vec<Tribute> {
+        let game = get_game(self.name.as_str()).expect("Error loading game");
+        get_dead_tributes(&game).iter().map(|t| Tribute::from(t.clone())).collect()
+    }
+
     pub fn add_tribute(&self, name: String) -> Result<Tribute, ()> {
         let game = get_game(self.name.as_str()).expect("Error loading game");
         let mut tribute = create_tribute(name.as_str());
         tribute.set_game(&game);
+        tribute.game_id = Some(game.id);
 
         Ok(Tribute::from(tribute))
     }
