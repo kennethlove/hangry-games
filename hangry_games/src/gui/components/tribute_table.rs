@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use crate::tributes::actors::Tribute;
 use crate::gui::components::tribute_actions_group::TributeActionsGroup;
+
 #[component]
 pub fn TributeTable(tributes: Signal<Vec<Tribute>>) -> Element {
     rsx! {

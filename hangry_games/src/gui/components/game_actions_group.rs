@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use crate::games::Game;
+use crate::games::{Game, GameStatus};
 use crate::gui::states::{HGState, SelectedGame};
 use crate::gui::router::Routes;
 
@@ -51,11 +51,13 @@ fn GameDetailsButton(game: Game) -> Element {
 #[component]
 fn GamePlayButton(game: Game) -> Element {
     let _state = use_context::<Signal<HGState>>();
+    let mut classes = "inline-block rounded-md px-4 py-2 text-sm txt-gray-500 hover:text-green-700 focus:relative".to_string();
+    if game.tributes().len() < 24 || game.status == GameStatus::Finished {
+        classes = classes + " hidden";
+    }
     rsx! {
         button {
-            class: "inline-block rounded-md px-4 py-2 text-sm text-gray-500 hover:text-green-700 focus:relative",
-            onclick: move |_| {
-            },
+            class: classes,
             "Play"
         }
     }

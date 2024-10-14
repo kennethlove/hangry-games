@@ -8,4 +8,5 @@ pub mod game_actions_group;
 pub mod create_tribute;
 pub mod tribute_list_item;
 pub mod tribute_actions_group;
-mod tribute_table;
+pub mod tribute_table;
+pub mod tribute_detail;

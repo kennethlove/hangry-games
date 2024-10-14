@@ -155,6 +155,7 @@ pub fn get_games() -> Vec<Game> {
     let connection = &mut establish_connection();
     game::table
         .select(game::all_columns)
+        .order_by(game::created_at.desc())
         .load::<Game>(connection)
         .expect("Error loading games")
 }

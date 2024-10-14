@@ -38,6 +38,7 @@ fn TributeDetailsButton(tribute: Tribute) -> Element {
         button {
             class: "inline-block rounded-md px-4 py-2 text-sm text-gray-500 hover:text-blue-700 focus:relative",
             onclick: move |_| {
+                nav.push(Routes::TributeDetail { id: tribute.id.unwrap() });
             },
             "Details"
         }

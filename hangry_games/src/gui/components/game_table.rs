@@ -4,8 +4,8 @@ use crate::gui::states::HGState;
 use crate::gui::components::game_table_row::GameTableRow;
 
 #[component]
-pub fn GameTable(games: Signal<Vec<Game>>) -> Element {
-    let _state = use_context::<Signal<HGState>>();
+pub fn GameTable() -> Element {
+    let state = use_context::<Signal<HGState>>();
 
     rsx! {
         div {
@@ -35,7 +35,7 @@ pub fn GameTable(games: Signal<Vec<Game>>) -> Element {
                 }
                 tbody {
                     class: "divide-y divide-gray-200",
-                    for game in games.read().iter() {
+                    for game in state.read().games.iter() {
                         GameTableRow { game: game.clone() }
                     }
                 }
