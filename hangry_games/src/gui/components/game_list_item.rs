@@ -21,7 +21,7 @@ pub fn GameListItem(game: Game) -> Element {
                 "{game.day.unwrap_or(0)}"
             }
             td {
-                "{game.living_tributes().len()}/24"
+                "{game.tributes().len()}/24"
             }
             td {
                 class: "flex-end",
