@@ -12,8 +12,6 @@ pub fn GameDetail() -> Element {
     let selected_game = use_context::<Signal<SelectedGame>>();
     let game = Game::from(get_game_by_id(selected_game.read().0.unwrap()).unwrap());
     let tributes = use_signal(||game.tributes());
-    let living_tributes = use_signal(||game.living_tributes());
-    let dead_tributes = game.dead_tributes();
 
     rsx! {
         div {

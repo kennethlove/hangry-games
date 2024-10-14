@@ -27,6 +27,7 @@ impl Game {
         let connection = &mut establish_connection();
         tribute::table
             .filter(tribute::game_id.eq(self.id))
+            .order_by(tribute::district)
             .load::<Tribute>(connection)
             .expect("Error loading tributes")
     }
