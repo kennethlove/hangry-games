@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use crate::games::Game;
 use crate::gui::components::{
-    game_list::GameList,
+    game_table::GameTable,
     create_game::CreateGame,
 };
 use crate::gui::functions::list_of_games;
@@ -12,7 +12,7 @@ pub fn Home() -> Element {
     rsx! {
         p { "Welcome to the Hangry Games!" }
         div {
-            GameList { games: games_signal.clone() }
+            GameTable { games: games_signal.clone() }
         }
         div {
             {CreateGame()}

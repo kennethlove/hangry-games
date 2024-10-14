@@ -147,6 +147,13 @@ impl Tribute {
             .execute(connection)
             .expect("Error using consumable");
     }
+
+    pub fn delete(id: i32) {
+        let connection = &mut establish_connection();
+        diesel::delete(tribute::table.find(id))
+            .execute(connection)
+            .expect("Error deleting tribute");
+    }
 }
 
 impl From<crate::tributes::actors::Tribute> for Tribute {

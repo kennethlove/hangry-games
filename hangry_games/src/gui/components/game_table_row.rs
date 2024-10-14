@@ -5,7 +5,7 @@ use crate::gui::components::game_actions_group::GameActionsGroup;
 use crate::gui::router::Routes;
 
 #[component]
-pub fn GameListItem(game: Game) -> Element {
+pub fn GameTableRow(game: Game) -> Element {
     let mut selected_game = use_context::<Signal<SelectedGame>>();
     rsx! {
         tr {

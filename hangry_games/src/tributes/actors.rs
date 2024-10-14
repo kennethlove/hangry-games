@@ -77,6 +77,10 @@ impl Tribute {
         }
     }
 
+    pub fn delete(id: i32) {
+        models::tribute::Tribute::delete(id);
+    }
+
     /// Reduces health, triggers death if health reaches 0.
     pub fn takes_physical_damage(&mut self, damage: i32) {
         self.health = std::cmp::max(0, self.health - damage);

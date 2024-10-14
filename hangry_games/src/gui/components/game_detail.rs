@@ -4,6 +4,8 @@ use crate::models::get_game_by_id;
 use crate::gui::router::Routes;
 use crate::gui::states::SelectedGame;
 use crate::gui::components::create_tribute::CreateTribute;
+use crate::gui::components::tribute_actions_group::TributeActionsGroup;
+use crate::gui::components::tribute_table::TributeTable;
 
 #[component]
 pub fn GameDetail() -> Element {
@@ -44,45 +46,18 @@ pub fn GameDetail() -> Element {
                     class: "grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4",
                     dt {
                         class: "font-medium text-gray-900",
-                        "Living Tributes"
+                        "Tributes"
                     }
                     dd {
                         class: "text-gray-700 sm:col-span-2",
-                        ul {
-                            class: "divide-y divide-gray-200",
-                            for tribute in living_tributes.read().iter() {
-                                li {
-                                    class: "flex items-center py-3",
-                                    "{tribute.name} from District {tribute.district}"
-                                }
-                            }
-                        }
-                    }
-                }
-                div {
-                    class: "grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4",
-                    dt {
-                        class: "font-medium text-gray-900",
-                        "Dead Tributes"
-                    }
-                    dd {
-                        class: "text-gray-700 sm:col-span-2",
-                        ul {
-                            class: "divide-y divide-gray-200",
-                            for tribute in dead_tributes.iter() {
-                                li {
-                                    class: "flex items-center py-3",
-                                    "{tribute.name} from District {tribute.district}"
-                                }
-                            }
-                        }
+                        TributeTable { tributes: tributes.clone() }
                     }
                 }
             }
         }
 
         if game.tributes().len() < 24 {
-            CreateTribute {signal: living_tributes.clone()}
+            CreateTribute {signal: tributes.clone()}
         }
 
         Link {
