@@ -1,7 +1,7 @@
 use crate::areas::Area;
 use crate::games::Game as GameActor;
 use crate::models::{get_area_by_id, Tribute};
-use crate::schema::{game, tribute};
+use crate::schema::game;
 use crate::tributes::statuses::TributeStatus;
 use crate::{establish_connection, models};
 use diesel::prelude::*;
