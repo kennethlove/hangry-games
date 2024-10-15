@@ -2,7 +2,7 @@ use crate::areas::Area;
 use crate::events::TributeEvent;
 use crate::items::{Attribute, Item};
 use crate::models::game::{get_game, Game as GameModel};
-use crate::models::{create_game, create_item, create_tribute, delete_game, get_all_living_tributes, get_dead_tributes, get_recently_dead_tributes, update_tribute, NewItem};
+use crate::models::{create_full_log, create_game, create_item, create_tribute, delete_game, get_all_living_tributes, get_dead_tributes, get_recently_dead_tributes, update_tribute, NewItem};
 use crate::tributes::actions::TributeAction;
 use crate::tributes::actors::Tribute;
 use crate::tributes::statuses::TributeStatus;
@@ -10,7 +10,9 @@ use rand::prelude::SliceRandom;
 use rand::Rng;
 use std::fmt::Display;
 use std::str::FromStr;
+use dioxus::prelude::*;
 use crate::items::ItemType::{Consumable, Weapon};
+use crate::output::*;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Game {
@@ -111,12 +113,16 @@ impl Game {
         // See if we have a winner or a dud game
         match living_tributes.len() {
             0 => {
-                println!("=== 🎭 No one wins! ===");
+                create_full_log(game.id, NO_ONE_WINS.to_string(), None, None, None, None, None);
+                println!("{}", NO_ONE_WINS);
                 game.end();
                 return;
             }
             1 => {
-                println!("=== 🏆 The winner is {} ===", living_tributes[0].name);
+                let winner = living_tributes[0].clone();
+                let message = TRIBUTE_WINS.replace("{}", &winner.name);
+                println!("{}", &message);
+                create_full_log(game.id, message, None, None, Some(winner.id), None, None);
                 game.end();
                 return;
             }
@@ -126,13 +132,13 @@ impl Game {
         // Make any announcements for the day
         match self.day {
             Some(1) => {
-                println!("=== 🎉 The Hunger Games begin! 🎉 ===");
+                println!("{}", FIRST_DAY_START);
             }
             Some(3) => {
-                println!("=== 😋 Day 3: Feast Day ===");
+                println!("{}", FEAST_DAY_START);
             }
             _ => {
-                println!("=== ☀️ Day {} begins ===", self.day.unwrap());
+                println!("{}", GAME_DAY_START.replace("{}", self.day.unwrap().to_string().as_str()));
             }
         }
 
