@@ -114,14 +114,15 @@ impl Game {
         match living_tributes.len() {
             0 => {
                 create_full_log(game.id, NO_ONE_WINS.to_string(), None, None, None, None, None);
-                println!("{}", NO_ONE_WINS);
+                print_message(NO_ONE_WINS, vec![]);
                 game.end();
                 return;
             }
             1 => {
                 let winner = living_tributes[0].clone();
-                let message = TRIBUTE_WINS.replace("{}", &winner.name);
-                println!("{}", &message);
+                let message = format_message(TRIBUTE_WINS, vec![winner.name]);
+                println!("{}", message);
+
                 create_full_log(game.id, message, None, None, Some(winner.id), None, None);
                 game.end();
                 return;
@@ -132,21 +133,17 @@ impl Game {
         // Make any announcements for the day
         match self.day {
             Some(1) => {
-                println!("{}", FIRST_DAY_START);
+                print_message(FIRST_DAY_START, vec![]);
             }
             Some(3) => {
-                println!("{}", FEAST_DAY_START);
+                print_message(FEAST_DAY_START, vec![]);
             }
             _ => {
-                println!("{}", GAME_DAY_START.replace("{}", self.day.unwrap().to_string().as_str()));
+                print_message(GAME_DAY_START, vec![self.day.unwrap().to_string()]);
             }
         }
 
-        println!("=== {} tribute{} remain{} ===",
-                 living_tributes.len(),
-                 if living_tributes.len() == 1 { "" } else { "s" },
-                 if living_tributes.len() == 1 { "s" } else { "" }
-        );
+        print_message(TRIBUTES_LEFT, vec![living_tributes.len().to_string()]);
 
         // Run the day
         self.do_day_night_cycle(true);
@@ -155,7 +152,7 @@ impl Game {
         self.clean_up_recent_deaths();
 
         // Run the night
-        println!("=== 🌙 Night {} begins ===", self.day.unwrap());
+        print_message(GAME_NIGHT_START, vec![self.day.unwrap().to_string()]);
         self.do_day_night_cycle(false);
 
         // Clean up any deaths
@@ -264,11 +261,11 @@ impl Game {
         let game = get_game(self.name.as_str()).expect("Error loading game");
         let dead_tributes = get_recently_dead_tributes(&game);
 
-        println!("=== 💀 {} tribute{} died ===", dead_tributes.len(), if dead_tributes.len() == 1 { "" } else { "s" });
+        print_message(DAILY_DEATH_ANNOUNCEMENT, vec![dead_tributes.len().to_string()]);
 
         for tribute in dead_tributes {
             tribute.dies();
-            println!("🪦 {}", tribute.name);
+            print_message(DEATH_ANNOUNCEMENT, vec![tribute.name]);
         }
     }
 }
