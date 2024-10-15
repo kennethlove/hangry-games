@@ -201,7 +201,6 @@ impl Tribute {
                 self.wins = Some(self.wins.unwrap_or(0) + 1);
 
                 if target.health > 0 {
-                    println!("{}", GameMessage::TributeAttackWound(self.clone(), target.clone()));
                     return AttackOutcome::Wound(self.clone(), target.clone())
                 }
             }
