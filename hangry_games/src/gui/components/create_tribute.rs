@@ -17,7 +17,6 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
                     let data = event.data.values();
                     let name = data.get("tribute_name").unwrap().first().unwrap();
                     let tribute = game.add_tribute(name.clone());
-                    println!("Added tribute: {:?}", tribute);
                     signal.write().push(tribute.expect("Error creating tribute"));
                     tribute_name.set(String::from(""));
                 },

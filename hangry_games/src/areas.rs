@@ -8,6 +8,7 @@ use rand::Rng;
 use std::fmt::Display;
 use std::str::FromStr;
 use crate::items::Item;
+use crate::output::*;
 
 #[derive(Clone, Default, Debug, Eq, PartialEq)]
 pub enum Area {
@@ -151,7 +152,7 @@ impl Area {
         let closed_areas = game.closed_areas();
         let area = Area::random_open_area(closed_areas);
 
-        println!("=== ⚠️ A(n) {} has occurred in {} ===", event, area);
+        print_message(AREA_EVENT, vec![event.to_string(), area.to_string()]);
 
         let model_area = models::Area::from(area.clone());
         models::AreaEvent::create(event.to_string(), model_area.id, game.id);
@@ -175,7 +176,7 @@ impl Area {
             let area_name = area.as_str().strip_prefix("The ").unwrap_or(area.as_str());
 
             for mut tribute in tributes {
-                println!("💥 {} is trapped in the {}.", tribute.name, area_name);
+                print_message(TRAPPED_IN_AREA, vec![tribute.name.clone(), area_name.to_string()]);
 
                 if rng.gen_bool(tribute.luck.unwrap_or(0) as f64 / 100.0) {
                     // If the tribute is lucky, they're just harmed by the event
@@ -208,14 +209,14 @@ impl Area {
                     tribute.dies();
                     tribute.health = 0;
                     tribute.killed_by = Some(last_event.name.clone());
-                    println!("🪦 {} died in the {}.", tribute.name, area_name);
+                    print_message(DIED_IN_AREA, vec![tribute.name.clone(), area_name.to_string()]);
                 }
                 update_tribute(tribute.id.unwrap(), ModelTribute::from(tribute.clone()));
             }
 
             // Re-open the area?
             if rng.gen_bool(0.5) {
-                println!("=== 🔔 The {} is habitable again ===", area_name);
+                print_message(AREA_OPEN, vec![area_name.to_string()]);
                 game.open_area(&model_area);
             }
         }
@@ -223,6 +224,8 @@ impl Area {
 }
 
 use crate::models::area::Area as AreaModel;
+use crate::output::print_message;
+
 impl From<AreaModel> for Area {
     fn from(area: AreaModel) -> Self {
         Self::from_str(area.name.as_str()).unwrap_or(Area::Cornucopia)
