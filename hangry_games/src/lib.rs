@@ -4,6 +4,7 @@ pub mod cli;
 pub mod db;
 pub mod events;
 pub mod games;
+pub mod gui;
 pub mod models;
 pub mod schema;
 pub mod tributes;

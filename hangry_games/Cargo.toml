@@ -11,7 +11,10 @@ clap = { version = "4.5.16", features = ["derive", "unicode"] }
 diesel = { version = "2.2.2", features = ["chrono", "postgres"] }
 fake = { version = "2.9.2", features = ["derive"] }
 chrono = "0.4.38"
-witty-phrase-generator = "0.2.0"
+witty-phrase-generator = "0.3.0"
 rand = "0.8.5"
 serde = { version = "1.0.210", features = ["derive"] }
 reqwest = "0.12.7"
+dioxus = { version = "0.5.6", features = ["desktop", "router"] }
+manganis = "0.2.2"
+dioxus-logger = "0.5.1"
