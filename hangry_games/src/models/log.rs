@@ -2,6 +2,7 @@ use crate::schema::log_entry;
 use crate::{establish_connection, models};
 use diesel::prelude::*;
 use models::get_game_by_id;
+use crate::models::get_action;
 
 #[derive(Queryable, Selectable, Debug, Associations)]
 #[diesel(table_name = log_entry)]
