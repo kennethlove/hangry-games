@@ -12,7 +12,7 @@ use std::fmt::Display;
 use std::str::FromStr;
 use dioxus::prelude::*;
 use crate::items::ItemType::{Consumable, Weapon};
-use crate::output::*;
+use crate::output::GameMessage;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Game {
@@ -113,17 +113,18 @@ impl Game {
         // See if we have a winner or a dud game
         match living_tributes.len() {
             0 => {
-                create_full_log(game.id, NO_ONE_WINS.to_string(), None, None, None, None, None);
-                print_message(NO_ONE_WINS, vec![]);
+                let message = GameMessage::NoOneWins;
+                create_full_log(game.id, message.to_string(), None, None, None, None, None);
+                println!("{}", message);
                 game.end();
                 return;
             }
             1 => {
                 let winner = living_tributes[0].clone();
-                let message = format_message(TRIBUTE_WINS, vec![winner.name]);
+                let message = GameMessage::TributeWins(Tribute::from(winner.clone()));
                 println!("{}", message);
 
-                create_full_log(game.id, message, None, None, Some(winner.id), None, None);
+                create_full_log(game.id, message.to_string(), None, None, Some(winner.id), None, None);
                 game.end();
                 return;
             }
@@ -133,17 +134,17 @@ impl Game {
         // Make any announcements for the day
         match self.day {
             Some(1) => {
-                print_message(FIRST_DAY_START, vec![]);
+                println!("{}", GameMessage::FirstDayStart);
             }
             Some(3) => {
-                print_message(FEAST_DAY_START, vec![]);
+                println!("{}", GameMessage::FeastDayStart);
             }
             _ => {
-                print_message(GAME_DAY_START, vec![self.day.unwrap().to_string()]);
+                println!("{}", GameMessage::GameDayStart(self.day.unwrap()));
             }
         }
 
-        print_message(TRIBUTES_LEFT, vec![living_tributes.len().to_string()]);
+        println!("{}", GameMessage::TributesLeft(living_tributes.len() as i32));
 
         // Run the day
         self.do_day_night_cycle(true);
@@ -152,7 +153,7 @@ impl Game {
         self.clean_up_recent_deaths();
 
         // Run the night
-        print_message(GAME_NIGHT_START, vec![self.day.unwrap().to_string()]);
+        println!("{}", GameMessage::GameNightStart(self.day.unwrap()));
         self.do_day_night_cycle(false);
 
         // Clean up any deaths
@@ -261,11 +262,11 @@ impl Game {
         let game = get_game(self.name.as_str()).expect("Error loading game");
         let dead_tributes = get_recently_dead_tributes(&game);
 
-        print_message(DAILY_DEATH_ANNOUNCEMENT, vec![dead_tributes.len().to_string()]);
+        println!("{}", GameMessage::DailyDeathAnnouncement(dead_tributes.len() as i32));
 
         for tribute in dead_tributes {
+            println!("{}", GameMessage::DeathAnnouncement(Tribute::from(tribute.clone())));
             tribute.dies();
-            print_message(DEATH_ANNOUNCEMENT, vec![tribute.name]);
         }
     }
 }
