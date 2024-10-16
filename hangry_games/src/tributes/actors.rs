@@ -8,7 +8,7 @@ use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
 use std::str::FromStr;
 use crate::items::{Attribute, Item};
-use crate::output::GameMessage;
+use crate::messages::GameMessage;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {

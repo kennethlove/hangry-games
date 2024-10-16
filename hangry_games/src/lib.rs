@@ -7,7 +7,7 @@ pub mod items;
 pub mod games;
 pub mod gui;
 pub mod models;
-pub mod output;
+pub mod messages;
 pub mod schema;
 pub mod tributes;
 

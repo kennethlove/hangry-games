@@ -12,7 +12,7 @@ use std::fmt::Display;
 use std::str::FromStr;
 use dioxus::prelude::*;
 use crate::items::ItemType::{Consumable, Weapon};
-use crate::output::GameMessage;
+use crate::messages::GameMessage;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Game {
