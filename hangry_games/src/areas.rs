@@ -9,7 +9,7 @@ use rand::Rng;
 use std::fmt::Display;
 use std::str::FromStr;
 use crate::items::Item;
-use crate::output::GameMessage;
+use crate::messages::GameMessage;
 
 #[derive(Clone, Default, Debug, Eq, PartialEq)]
 pub enum Area {
