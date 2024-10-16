@@ -1,5 +1,6 @@
 use crate::events::AreaEvent;
 use crate::models;
+use crate::models::area::Area as AreaModel;
 use crate::models::tribute::Tribute as ModelTribute;
 use crate::models::{get_game_by_id, update_tribute};
 use crate::tributes::actors::Tribute;
@@ -8,7 +9,7 @@ use rand::Rng;
 use std::fmt::Display;
 use std::str::FromStr;
 use crate::items::Item;
-use crate::output::*;
+use crate::output::GameMessage;
 
 #[derive(Clone, Default, Debug, Eq, PartialEq)]
 pub enum Area {
@@ -152,7 +153,7 @@ impl Area {
         let closed_areas = game.closed_areas();
         let area = Area::random_open_area(closed_areas);
 
-        print_message(AREA_EVENT, vec![event.to_string(), area.to_string()]);
+        println!("{}", GameMessage::AreaEvent(event.clone(), area.clone()));
 
         let model_area = models::Area::from(area.clone());
         models::AreaEvent::create(event.to_string(), model_area.id, game.id);
@@ -176,7 +177,7 @@ impl Area {
             let area_name = area.as_str().strip_prefix("The ").unwrap_or(area.as_str());
 
             for mut tribute in tributes {
-                print_message(TRAPPED_IN_AREA, vec![tribute.name.clone(), area_name.to_string()]);
+                println!("{}", GameMessage::TrappedInArea(tribute.clone(), area.clone()));
 
                 if rng.gen_bool(tribute.luck.unwrap_or(0) as f64 / 100.0) {
                     // If the tribute is lucky, they're just harmed by the event
@@ -209,22 +210,20 @@ impl Area {
                     tribute.dies();
                     tribute.health = 0;
                     tribute.killed_by = Some(last_event.name.clone());
-                    print_message(DIED_IN_AREA, vec![tribute.name.clone(), area_name.to_string()]);
+                    println!("{}", GameMessage::DiedInArea(tribute.clone(), area.clone()));
                 }
                 update_tribute(tribute.id.unwrap(), ModelTribute::from(tribute.clone()));
             }
 
             // Re-open the area?
             if rng.gen_bool(0.5) {
-                print_message(AREA_OPEN, vec![area_name.to_string()]);
+                println!("{}", GameMessage::AreaOpen(area.clone()));
                 game.open_area(&model_area);
             }
         }
     }
 }
 
-use crate::models::area::Area as AreaModel;
-use crate::output::print_message;
 
 impl From<AreaModel> for Area {
     fn from(area: AreaModel) -> Self {
