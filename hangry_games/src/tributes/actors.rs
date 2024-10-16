@@ -201,6 +201,7 @@ impl Tribute {
                 self.wins = Some(self.wins.unwrap_or(0) + 1);
 
                 if target.health > 0 {
+                    println!("{}", GameMessage::TributeAttackWound(self.clone(), target.clone()));
                     return AttackOutcome::Wound(self.clone(), target.clone())
                 }
             }
@@ -441,6 +442,7 @@ impl Tribute {
                 );
             },
             TributeStatus::Electrocuted => {
+                println!("{}", GameMessage::TributeElectrocuted(self.clone()));
                 self.takes_physical_damage(20);
                 println!("{}", GameMessage::TributeElectrocuted(self.clone()));
                 create_full_log(
@@ -454,6 +456,7 @@ impl Tribute {
                 );
             },
             TributeStatus::Frozen => {
+                println!("{}", GameMessage::TributeFrozen(self.clone()));
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
                 println!("{}", GameMessage::TributeFrozen(self.clone()));
                 create_full_log(
@@ -467,6 +470,7 @@ impl Tribute {
                 );
             },
             TributeStatus::Overheated => {
+                println!("{}", GameMessage::TributeOverheated(self.clone()));
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
                 println!("{}", GameMessage::TributeOverheated(self.clone()));
                 create_full_log(
@@ -480,6 +484,7 @@ impl Tribute {
                 );
             },
             TributeStatus::Dehydrated => {
+                println!("{}", GameMessage::TributeDehydrated(self.clone()));
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
                 println!("{}", GameMessage::TributeDehydrated(self.clone()));
                 create_full_log(
@@ -493,6 +498,7 @@ impl Tribute {
                 );
             },
             TributeStatus::Starving => {
+                println!("{}", GameMessage::TributeStarving(self.clone()));
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
                 println!("{}", GameMessage::TributeStarving(self.clone()));
                 create_full_log(
@@ -506,6 +512,7 @@ impl Tribute {
                 );
             },
             TributeStatus::Poisoned => {
+                println!("{}", GameMessage::TributePoisoned(self.clone()));
                 self.takes_mental_damage(5);
                 println!("{}", GameMessage::TributePoisoned(self.clone()));
                 create_full_log(
@@ -525,6 +532,7 @@ impl Tribute {
                 // TODO: Add in other bones? Ribs and skull make sense.
 
                 if leg_bone {
+                    println!("{}", GameMessage::TributeBrokenLeg(self.clone()));
                     self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 5));
                     println!("{}", GameMessage::TributeBrokenLeg(self.clone()));
                     create_full_log(
@@ -537,6 +545,7 @@ impl Tribute {
                         None
                     );
                 } else {
+                    println!("{}", GameMessage::TributeBrokenArm(self.clone()));
                     self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 5));
                     println!("{}", GameMessage::TributeBrokenArm(self.clone()));
                     create_full_log(
@@ -551,6 +560,7 @@ impl Tribute {
                 }
             },
             TributeStatus::Infected => {
+                println!("{}", GameMessage::TributeInfected(self.clone()));
                 self.takes_physical_damage(2);
                 self.takes_mental_damage(2);
                 println!("{}", GameMessage::TributeInfected(self.clone()));
@@ -565,6 +575,7 @@ impl Tribute {
                 );
             },
             TributeStatus::Drowned => {
+                println!("{}", GameMessage::TributeDrowned(self.clone()));
                 self.takes_physical_damage(2);
                 self.takes_mental_damage(2);
                 println!("{}", GameMessage::TributeDrowned(self.clone()));
@@ -581,6 +592,7 @@ impl Tribute {
             TributeStatus::Mauled(animal) => {
                 let number_of_animals = thread_rng().gen_range(2..=5);
                 let damage = animal.damage() * number_of_animals;
+                println!("{}", GameMessage::TributeMauled(self.clone(), number_of_animals, animal.clone(), damage));
                 self.takes_physical_damage(damage);
                 println!("{}", GameMessage::TributeMauled(self.clone(), number_of_animals, animal.clone(), damage));
                 create_full_log(
@@ -594,6 +606,7 @@ impl Tribute {
                 );
             },
             TributeStatus::Burned => {
+                println!("{}", GameMessage::TributeBurned(self.clone()));
                 self.takes_physical_damage(5);
                 println!("{}", GameMessage::TributeBurned(self.clone()));
                 create_full_log(
@@ -1004,6 +1017,7 @@ impl Tribute {
     fn take_item(&self, item: Item) {
         let tribute = TributeModel::from(self.clone());
         tribute.takes_item(item.id.unwrap());
+        println!("{}", GameMessage::TributeTakeItem(self.clone(), item.clone()));
     }
 
     fn use_consumable(&mut self, chosen_item: Item) -> bool {
@@ -1017,7 +1031,8 @@ impl Tribute {
         {
             item = selected_item.clone();
         } else {
-            return false;
+            println!("{}", GameMessage::TributeCannotUseItem(self.clone(), chosen_item.clone()));
+            return;
         }
         item.quantity -= 1;
 
@@ -1043,6 +1058,8 @@ impl Tribute {
             },
             _ => ()
         }
+
+        println!("{}", GameMessage::TributeUseItem(self.clone(), item.clone()));
 
         if item.quantity <= 0 {
             // No uses left
