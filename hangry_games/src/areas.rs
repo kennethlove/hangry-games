@@ -148,13 +148,13 @@ impl Area {
     }
 
     pub fn do_area_event(game_id: i32) {
-        let event = crate::events::AreaEvent::random();
+        let event = AreaEvent::random();
         let mut game = get_game_by_id(game_id).expect("Game doesn't exist");
         let closed_areas = game.closed_areas();
         let area = Area::random_open_area(closed_areas);
 
         println!("{}", GameMessage::AreaEvent(event.clone(), area.clone()));
-        models::log::create_full_log(
+        create_full_log(
             game_id,
             GameMessage::AreaEvent(event.clone(), area.clone()).to_string(),
             None,
@@ -183,7 +183,6 @@ impl Area {
                 .filter(|t| t.day_killed.is_none())
                 .map(|t| Tribute::from(t.clone()))
                 .collect::<Vec<_>>();
-            let area_name = area.as_str().strip_prefix("The ").unwrap_or(area.as_str());
 
             for mut tribute in tributes {
                 println!("{}", GameMessage::TrappedInArea(tribute.clone(), area.clone()));
