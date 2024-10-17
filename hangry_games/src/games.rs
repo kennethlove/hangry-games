@@ -2,7 +2,7 @@ use crate::areas::Area;
 use crate::events::TributeEvent;
 use crate::items::{Attribute, Item};
 use crate::models::game::{get_game, Game as GameModel};
-use crate::models::{create_item, get_all_living_tributes, get_recently_dead_tributes, update_tribute, NewItem};
+use crate::models::{create_full_log, create_game, create_item, create_tribute, delete_game, get_all_living_tributes, get_dead_tributes, get_recently_dead_tributes, update_tribute, NewItem};
 use crate::tributes::actions::TributeAction;
 use crate::tributes::actors::Tribute;
 use crate::tributes::statuses::TributeStatus;
@@ -10,7 +10,9 @@ use rand::prelude::SliceRandom;
 use rand::Rng;
 use std::fmt::Display;
 use std::str::FromStr;
+use dioxus::prelude::*;
 use crate::items::ItemType::{Consumable, Weapon};
+use crate::messages::GameMessage;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Game {
@@ -22,8 +24,26 @@ pub struct Game {
 }
 
 impl Game {
+    pub fn new(game_name: &str) -> Game {
+        Game::from(create_game(Some(game_name)))
+    }
+
+    pub fn delete(game_id: i32) {
+        let _ = delete_game(game_id);
+    }
+
     pub fn as_str(&self) -> &str {
         self.name.as_str()
+    }
+
+    pub fn default() -> Game {
+        Game {
+            id: None,
+            name: "".to_string(),
+            day: Some(0),
+            closed_areas: None,
+            status: GameStatus::NotStarted,
+        }
     }
 
     // Runs at the start of the game
@@ -58,9 +78,28 @@ impl Game {
         }
     }
 
+    pub fn tributes(&self) -> Vec<Tribute> {
+        let game = get_game(self.name.as_str()).expect("Error loading game");
+        game.tributes().iter().map(|t| Tribute::from(t.clone())).collect()
+    }
+
     pub fn living_tributes(&self) -> Vec<Tribute> {
         let game = get_game(self.name.as_str()).expect("Error loading game");
         get_all_living_tributes(&game).iter().map(|t| Tribute::from(t.clone())).collect()
+    }
+
+    pub fn dead_tributes(&self) -> Vec<Tribute> {
+        let game = get_game(self.name.as_str()).expect("Error loading game");
+        get_dead_tributes(&game).iter().map(|t| Tribute::from(t.clone())).collect()
+    }
+
+    pub fn add_tribute(&self, name: String) -> Result<Tribute, ()> {
+        let game = get_game(self.name.as_str()).expect("Error loading game");
+        let mut tribute = create_tribute(name.as_str());
+        tribute.set_game(&game);
+        tribute.game_id = Some(game.id);
+
+        Ok(Tribute::from(tribute))
     }
 
     pub fn run_day_night_cycle(&mut self) {
@@ -74,12 +113,18 @@ impl Game {
         // See if we have a winner or a dud game
         match living_tributes.len() {
             0 => {
-                println!("=== 🎭 No one wins! ===");
+                let message = GameMessage::NoOneWins;
+                create_full_log(game.id, message.to_string(), None, None, None, None, None);
+                println!("{}", message);
                 game.end();
                 return;
             }
             1 => {
-                println!("=== 🏆 The winner is {} ===", living_tributes[0].name);
+                let winner = living_tributes[0].clone();
+                let message = GameMessage::TributeWins(Tribute::from(winner.clone()));
+                println!("{}", message);
+
+                create_full_log(game.id, message.to_string(), None, None, Some(winner.id), None, None);
                 game.end();
                 return;
             }
@@ -89,21 +134,17 @@ impl Game {
         // Make any announcements for the day
         match self.day {
             Some(1) => {
-                println!("=== 🎉 The Hunger Games begin! 🎉 ===");
+                println!("{}", GameMessage::FirstDayStart);
             }
             Some(3) => {
-                println!("=== 😋 Day 3: Feast Day ===");
+                println!("{}", GameMessage::FeastDayStart);
             }
             _ => {
-                println!("=== ☀️ Day {} begins ===", self.day.unwrap());
+                println!("{}", GameMessage::GameDayStart(self.day.unwrap()));
             }
         }
 
-        println!("=== {} tribute{} remain{} ===",
-                 living_tributes.len(),
-                 if living_tributes.len() == 1 { "" } else { "s" },
-                 if living_tributes.len() == 1 { "s" } else { "" }
-        );
+        println!("{}", GameMessage::TributesLeft(living_tributes.len() as i32));
 
         // Run the day
         self.do_day_night_cycle(true);
@@ -112,7 +153,7 @@ impl Game {
         self.clean_up_recent_deaths();
 
         // Run the night
-        println!("=== 🌙 Night {} begins ===", self.day.unwrap());
+        println!("{}", GameMessage::GameNightStart(self.day.unwrap()));
         self.do_day_night_cycle(false);
 
         // Clean up any deaths
@@ -221,11 +262,11 @@ impl Game {
         let game = get_game(self.name.as_str()).expect("Error loading game");
         let dead_tributes = get_recently_dead_tributes(&game);
 
-        println!("=== 💀 {} tribute{} died ===", dead_tributes.len(), if dead_tributes.len() == 1 { "" } else { "s" });
+        println!("{}", GameMessage::DailyDeathAnnouncement(dead_tributes.len() as i32));
 
         for tribute in dead_tributes {
+            println!("{}", GameMessage::DeathAnnouncement(Tribute::from(tribute.clone())));
             tribute.dies();
-            println!("🪦 {}", tribute.name);
         }
     }
 }

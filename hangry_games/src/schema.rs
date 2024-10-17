@@ -64,6 +64,10 @@ diesel::table! {
         message -> Text,
         tribute_action_id -> Nullable<Int4>,
         area_id -> Nullable<Int4>,
+        tribute_id -> Nullable<Int4>,
+        #[max_length = 255]
+        action_target_type -> Nullable<Varchar>,
+        action_target_id -> Nullable<Int4>,
     }
 }
 
@@ -118,6 +122,7 @@ diesel::joinable!(item -> game (game_id));
 diesel::joinable!(item -> tribute (tribute_id));
 diesel::joinable!(log_entry -> area (area_id));
 diesel::joinable!(log_entry -> game (game_id));
+diesel::joinable!(log_entry -> tribute (tribute_id));
 diesel::joinable!(log_entry -> tribute_action (tribute_action_id));
 diesel::joinable!(tribute -> area (area_id));
 diesel::joinable!(tribute -> game (game_id));

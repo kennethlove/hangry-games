@@ -8,6 +8,7 @@ use crate::models::tribute::UpdateTribute;
 use rand::prelude::*;
 use std::str::FromStr;
 use crate::items::{Attribute, Item};
+use crate::messages::GameMessage;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
@@ -77,6 +78,10 @@ impl Tribute {
         }
     }
 
+    pub fn delete(id: i32) {
+        models::tribute::Tribute::delete(id);
+    }
+
     /// Reduces health, triggers death if health reaches 0.
     pub fn takes_physical_damage(&mut self, damage: i32) {
         self.health = std::cmp::max(0, self.health - damage);
@@ -105,12 +110,12 @@ impl Tribute {
 
     /// Restores movement.
     pub fn short_rests(&mut self) {
-        println!("💤 {} rests", self.name);
+        println!("{}", GameMessage::TributeRest(self.clone()));
         self.movement = 100;
     }
 
     pub fn long_rests(&mut self) {
-        println!("💤 {} rests and recovers a little health and sanity", self.name);
+        println!("{}", GameMessage::TributeLongRest(self.clone()));
         self.short_rests();
         self.heals(5);
         self.heals_mental_damage(5);
@@ -144,8 +149,8 @@ impl Tribute {
 
     /// Hides the tribute from view.
     pub fn hides(&mut self) {
+        println!("{}", GameMessage::TributeHide(self.clone()));
         self.is_hidden = Some(true);
-        println!("🫥 {} tries to hide", self.name);
     }
 
     /// Reveals the tribute to view.
@@ -167,61 +172,63 @@ impl Tribute {
         let terror = terror - connectedness;
 
         if terror.round() > 1.0 {
+            println!("{}", GameMessage::TributeSuffer(self.clone()));
             self.takes_mental_damage(terror.round() as i32);
-            println!("😭 {} suffers from loneliness and terror.", self.name);
         }
     }
 
     pub fn attacks(&mut self, target: &mut Tribute) -> AttackOutcome {
-        if self == target { println!("🤦 {} tries to attack themself!", self.name); }
+        if self == target {
+            println!("{}", GameMessage::TributeSelfHarm(self.clone()));
+        }
 
         match attack_contest(self.clone(), target.clone()) {
             AttackResult::AttackerWins => {
-                println!("🔪 {} attacks {}, and wins!", self.name, target.name);
+                println!("{}", GameMessage::TributeAttackWin(self.clone(), target.clone()));
                 target.takes_physical_damage(self.strength.unwrap());
                 target.defeats = Some(target.defeats.unwrap_or(0) + 1);
                 self.wins = Some(self.wins.unwrap_or(0) + 1);
 
-                println!("🤕 {} wounds {}", self.name, target.name);
                 if target.health > 0 {
+                    println!("{}", GameMessage::TributeAttackWound(self.clone(), target.clone()));
                     return AttackOutcome::Wound(self.clone(), target.clone())
                 }
             }
             AttackResult::AttackerWinsDecisively => {
-                println!("🔪 {} attacks {}, and wins decisively!", self.name, target.name);
+                println!("{}", GameMessage::TributeAttackWinExtra(self.clone(), target.clone()));
                 target.takes_physical_damage(self.strength.unwrap() * 2);
                 target.defeats = Some(target.defeats.unwrap_or(0) + 1);
                 self.wins = Some(self.wins.unwrap_or(0) + 1);
 
-                println!("🤕 {} wounds {}", self.name, target.name);
                 if target.health > 0 {
+                    println!("{}", GameMessage::TributeAttackWound(self.clone(), target.clone()));
                     return AttackOutcome::Wound(self.clone(), target.clone())
                 }
             }
             AttackResult::DefenderWins => {
-                println!("🤣 {} attacks {}, but loses!", self.name, target.name);
+                println!("{}", GameMessage::TributeAttackLose(self.clone(), target.clone()));
                 self.takes_physical_damage(target.strength.unwrap());
                 self.defeats = Some(self.defeats.unwrap() + 1);
                 target.wins = Some(target.wins.unwrap() + 1);
 
-                println!("🤕 {} wounds {}", target.name, self.name);
                 if self.health > 0 {
+                    println!("{}", GameMessage::TributeAttackWound(target.clone(), self.clone()));
                     return AttackOutcome::Wound(target.clone(), self.clone())
                 }
             }
             AttackResult::DefenderWinsDecisively => {
-                println!("🤣 {} attacks {}, but loses decisively!", self.name, target.name);
+                println!("{}", GameMessage::TributeAttackLoseExtra(target.clone(), self.clone()));
                 self.takes_physical_damage(target.strength.unwrap() * 2);
                 self.defeats = Some(self.defeats.unwrap() + 1);
                 target.wins = Some(target.wins.unwrap() + 1);
 
-                println!("🤕 {} wounds {}", target.name, self.name);
                 if self.health > 0 {
+                    println!("{}", GameMessage::TributeAttackWound(target.clone(), self.clone()));
                     return AttackOutcome::Wound(target.clone(), self.clone())
                 }
             }
             AttackResult::Miss => {
-                println!("👻 {} attacks {}, but misses!", self.name, target.name);
+                println!("{}", GameMessage::TributeAttackMiss(self.clone(), target.clone()));
                 self.draws = Some(self.draws.unwrap() + 1);
                 target.draws = Some(target.draws.unwrap() + 1);
 
@@ -230,27 +237,22 @@ impl Tribute {
         };
 
         if self.health <= 0 {
+            println!("{}", GameMessage::TributeAttackKill(self.clone(), target.clone()));
             self.killed_by = Some(target.name.clone());
             self.status = TributeStatus::RecentlyDead;
             self.dies();
-            println!("☠️ {} is killed by {}", self.name, target.name);
             AttackOutcome::Kill(target.clone(), self.clone())
         } else if target.health <= 0 {
+            println!("{}", GameMessage::TributeAttackSuccessKill(self.clone(), target.clone()));
             target.killed_by = Some(self.name.clone());
             target.status = TributeStatus::RecentlyDead;
             target.dies();
-            println!("☠️ {} successfully kills {}", self.name, target.name);
             AttackOutcome::Kill(self.clone(), target.clone())
         } else {
-            println!("👻 {} attacks {}, but misses! SHOULD NOT HAPPEN", self.name, target.name);
-            self.draws = Some(self.draws.unwrap() + 1);
-            target.draws = Some(target.draws.unwrap() + 1);
-
             return AttackOutcome::Miss(self.clone(), target.clone())
         }
 
         // apply_violence_stress(self);
-
     }
 
     pub fn is_visible(&self) -> bool {
@@ -266,8 +268,6 @@ impl Tribute {
     pub fn travels(&self, closed_areas: Vec<Area>, suggested_area: Option<String>) -> TravelResult {
         let mut rng = thread_rng();
         let area = self.clone().area.unwrap();
-        let failure_msg = format!("😴 {} is too tired to move from {}, rests instead", self.name, area);
-        let success_msg = "🚶 {tribute} moves from {area} to {new_area}";
 
         let suggested_area = {
             let suggested_area = suggested_area.clone();
@@ -284,17 +284,13 @@ impl Tribute {
         };
 
         if suggested_area.is_some() && suggested_area.clone().unwrap() == area {
-            println!("🤔 {} is already in the suggested area, stays put", self.name);
+            println!("{}", GameMessage::TributeTravelAlreadyThere(self.clone(), suggested_area.unwrap()));
             return TravelResult::Failure;
         }
 
         let handle_suggested_area = || -> TravelResult {
             if suggested_area.is_some() {
-                println!("{}", success_msg
-                    .replace("{tribute}", self.name.as_str())
-                    .replace("{area}", area.as_str())
-                    .replace("{new_area}", suggested_area.clone().unwrap().as_str())
-                );
+                println!("{}", GameMessage::TributeTravel(self.clone(), area.clone(), suggested_area.clone().unwrap()));
                 return TravelResult::Success(suggested_area.unwrap());
             }
             TravelResult::Failure
@@ -303,7 +299,7 @@ impl Tribute {
         match self.movement {
             // No movement left, can't move
             0 => {
-                println!("{}", failure_msg);
+                println!("{}", GameMessage::TributeTravelTooTired(self.clone(), area.clone()));
                 TravelResult::Failure
             },
             // Low movement, can only move to suggested area
@@ -311,7 +307,7 @@ impl Tribute {
                 match handle_suggested_area() {
                     TravelResult::Success(area) => TravelResult::Success(area),
                     TravelResult::Failure => {
-                        println!("{}", failure_msg);
+                        println!("{}", GameMessage::TributeTravelTooTired(self.clone(), area.clone()));
                         TravelResult::Failure
                     }
                 }
@@ -327,8 +323,8 @@ impl Tribute {
                     if area.tributes(self.game_id.unwrap()).iter()
                         .filter(|t| t.district == self.district)
                         .count() > 0 {
-                        println!("🫡 {} follows their district mate to {}", self.name, area);
-                        return TravelResult::Success(area.clone());
+                            println!("{}", GameMessage::TributeTravelFollow(self.clone(), area.clone()));
+                            return TravelResult::Success(area.clone());
                     }
                 }
                 let mut count = 0;
@@ -338,7 +334,7 @@ impl Tribute {
                         count += 1;
 
                         if count == 10 {
-                            println!("🪑 {} stays in {}", self.name, area);
+                            println!("{}", GameMessage::TributeTravelStay(self.clone(), area.clone()));
                             return TravelResult::Success(area.clone());
                         }
 
@@ -346,11 +342,7 @@ impl Tribute {
                     }
                     break new_area.clone();
                 };
-                println!("{}", success_msg
-                    .replace("{tribute}", self.name.as_str())
-                    .replace("{area}", area.as_str())
-                    .replace("{new_area}", new_area.as_str())
-                );
+                println!("{}", GameMessage::TributeTravel(self.clone(), area.clone(), new_area.clone()));
                 TravelResult::Success(new_area)
             }
         }
@@ -361,36 +353,36 @@ impl Tribute {
         match status {
             TributeStatus::Wounded => {
                 self.takes_physical_damage(1);
-                println!("🩸 {} bleeds from their wounds.", self.name);
+                println!("{}", GameMessage::TributeBleeds(self.clone()));
             },
             TributeStatus::Sick => {
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
-                println!("🤒 {} contracts dysentery, loses strength and speed", self.name);
+                println!("{}", GameMessage::TributeSick(self.clone()));
             },
             TributeStatus::Electrocuted => {
+                println!("{}", GameMessage::TributeElectrocuted(self.clone()));
                 self.takes_physical_damage(20);
-                println!("🌩️ {} is struck by lightning, loses health", self.name);
             },
             TributeStatus::Frozen => {
+                println!("{}", GameMessage::TributeFrozen(self.clone()));
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
-                println!("🥶 {} suffers from hypothermia, loses speed.", self.name);
             },
             TributeStatus::Overheated => {
+                println!("{}", GameMessage::TributeOverheated(self.clone()));
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
-                println!("🥵 {} suffers from heat stroke, loses speed.", self.name);
             },
             TributeStatus::Dehydrated => {
+                println!("{}", GameMessage::TributeDehydrated(self.clone()));
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
-                println!("🌵 {} is severely dehydrated, loses strength", self.name);
             },
             TributeStatus::Starving => {
+                println!("{}", GameMessage::TributeStarving(self.clone()));
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
-                println!("🍴 {} is ravenously hungry, loses strength", self.name);
             },
             TributeStatus::Poisoned => {
+                println!("{}", GameMessage::TributePoisoned(self.clone()));
                 self.takes_mental_damage(5);
-                println!("🧪 {} eats something poisonous, loses sanity", self.name);
             },
             TributeStatus::Broken => {
                 // coin flip for which bone breaks
@@ -399,45 +391,45 @@ impl Tribute {
                 // TODO: Add in other bones? Ribs and skull make sense.
 
                 if leg_bone {
+                    println!("{}", GameMessage::TributeBrokenLeg(self.clone()));
                     self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 5));
-                    println!("🦴 {} injures their leg, loses speed.", self.name);
                 } else {
+                    println!("{}", GameMessage::TributeBrokenArm(self.clone()));
                     self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 5));
-                    println!("🦴 {} injures their arm, loses strength.", self.name);
                 }
             },
             TributeStatus::Infected => {
+                println!("{}", GameMessage::TributeInfected(self.clone()));
                 self.takes_physical_damage(2);
                 self.takes_mental_damage(2);
-                println!("🤢 {} gets an infection, loses health and sanity", self.name);
             },
             TributeStatus::Drowned => {
+                println!("{}", GameMessage::TributeDrowned(self.clone()));
                 self.takes_physical_damage(2);
                 self.takes_mental_damage(2);
-                println!("🏊 {} partially drowns, loses health and sanity", self.name);
             },
             TributeStatus::Mauled(animal) => {
                 let number_of_animals = thread_rng().gen_range(2..=5);
                 let damage = animal.damage() * number_of_animals;
+                println!("{}", GameMessage::TributeMauled(self.clone(), number_of_animals, animal.clone(), damage));
                 self.takes_physical_damage(damage);
-                println!("🐾 {} is attacked by {} {}, takes {} damage!", self.name, number_of_animals, animal.plural(), damage);
             },
             TributeStatus::Burned => {
+                println!("{}", GameMessage::TributeBurned(self.clone()));
                 self.takes_physical_damage(5);
-                println!("🔥 {} gets burned, loses health", self.name);
             }
             _ => {}
         }
 
         if self.health <= 0 {
-            println!("💀 {} dies from {}", self.name, self.status);
+            println!("{}", GameMessage::TributeDiesFromStatus(self.clone(), self.status.clone()));
             self.killed_by = Some(self.status.to_string());
             self.status = TributeStatus::RecentlyDead;
         }
     }
 
-    pub fn handle_event(&mut self, player_event: TributeEvent) {
-        match player_event {
+    pub fn handle_event(&mut self, tribute_event: TributeEvent) {
+        match tribute_event {
             TributeEvent::AnimalAttack(ref animal) => {
                 self.status = TributeStatus::Mauled(animal.clone());
             },
@@ -476,7 +468,7 @@ impl Tribute {
             },
         }
         if self.health <= 0 {
-            println!("💀 {} dies by {}", self.name, player_event.clone());
+            println!("{}", GameMessage::TributeDiesFromTributeEvent(self.clone(), tribute_event.clone()));
             self.killed_by = Some(self.status.to_string());
             self.status = TributeStatus::RecentlyDead;
         }
@@ -484,7 +476,7 @@ impl Tribute {
 
     pub fn do_day_night(&mut self, suggested_action: Option<TributeAction>, probability: Option<f64>, day: bool) -> Tribute {
         if !self.is_alive() {
-            println!("‼️ {} is already dead!", self.name);
+            println!("{}", GameMessage::TributeAlreadyDead(self.clone()));
             return self.clone();
         }
 
@@ -507,19 +499,13 @@ impl Tribute {
 
             if thread_rng().gen_bool(chance) {
                 let item = Item::new_random("Gift".to_string(), self.game_id, None, self.id);
-                println!("🎁 {} receives a(n) {} ({}x {} +{})",
-                    self.name,
-                    item.name,
-                    item.quantity,
-                    item.attribute,
-                    item.effect,
-                );
+                println!("{}", GameMessage::SponsorGift(self.clone(), item.clone()))
             }
         }
 
         // Tribute died to the period's events.
         if self.status == TributeStatus::RecentlyDead || self.health <= 0 {
-            println!("❗️ {} is dead!", self.name);
+            println!("{}", GameMessage::TributeDead(self.clone()));
             return self.clone();
         }
 
@@ -594,7 +580,7 @@ impl Tribute {
                         }
                         self.take_action(action, Some(target.clone().name));
                     } else {
-                        println!("🤔 {} can't attack {}, they're hidden", self.name, target.name);
+                        println!("{}", GameMessage::TributeAttackHidden(self.clone(), target.clone()));
                         self.take_action(TributeAction::Hide, None);
                     }
                 }
@@ -652,7 +638,7 @@ impl Tribute {
     fn take_item(&self, item: Item) {
         let tribute = TributeModel::from(self.clone());
         tribute.takes_item(item.id.unwrap());
-        println!("🔨 {} takes a(n) {}", tribute.name, item.name);
+        println!("{}", GameMessage::TributeTakeItem(self.clone(), item.clone()));
     }
 
     fn use_consumable(&mut self, chosen_item: Item) {
@@ -666,7 +652,7 @@ impl Tribute {
         {
             item = selected_item.clone();
         } else {
-            println!("❌ {} cannot use a(n) {}", self.name, chosen_item.name);
+            println!("{}", GameMessage::TributeCannotUseItem(self.clone(), chosen_item.clone()));
             return;
         }
         item.quantity -= 1;
@@ -694,8 +680,7 @@ impl Tribute {
             _ => ()
         }
 
-        println!("💊 {} uses a(n) {}, gains {} {}", self.name, item.name, item.effect, item.attribute);
-
+        println!("{}", GameMessage::TributeUseItem(self.clone(), item.clone()));
 
         if item.quantity <= 0 {
             // No uses left
@@ -743,11 +728,8 @@ fn apply_violence_stress(tribute: &mut Tribute) {
     }
 
     if terror.round() > 0.0 {
+        println!("{}", GameMessage::TributeHorrified(tribute.clone(), terror.round() as i32));
         tribute.takes_mental_damage(terror.round() as i32);
-        println!("😱 {} is horrified by the violence, loses {} sanity.",
-                 tribute.name,
-                 terror.round() as i32
-        );
     }
 }
 
@@ -759,7 +741,7 @@ fn attack_contest(attacker: Tribute, target: Tribute) -> AttackResult {
         tribute1_roll += weapon.effect; // Add weapon damage
         weapon.quantity -= 1;
         if weapon.quantity <= 0 {
-            println!("🗡️ {} breaks their {}", attacker.name, weapon.name);
+            println!("{}", GameMessage::WeaponBreak(attacker.clone(), weapon.clone()));
             weapon.delete();
         }
         update_item(models::UpdateItem::from(weapon.clone()).into());
@@ -774,7 +756,7 @@ fn attack_contest(attacker: Tribute, target: Tribute) -> AttackResult {
         tribute2_roll += shield.effect; // Add weapon defense
         shield.quantity -= 1;
         if shield.quantity <= 0 {
-            println!("🛡️ {} breaks their {}", target.name, shield.name);
+            println!("{}", GameMessage::ShieldBreak(target.clone(), shield.clone()));
             shield.delete();
         }
         update_item(models::UpdateItem::from(shield.clone()).into());
@@ -812,12 +794,12 @@ pub fn pick_target(tribute: TributeModel) -> Option<Tribute> {
         0 => { // there are no other targets
             match tribute.sanity {
                 0..=9 => { // attempt suicide
-                    println!("🪒 {} attempts suicide.", tribute.name);
+                    println!("{}", GameMessage::TributeSuicide(Tribute::from(tribute.clone())));
                     Some(tribute.into())
                 },
                 10..=19 => match thread_rng().gen_bool(0.2) {
                     true => { // attempt suicide
-                        println!("🪒 {} attempts suicide.", tribute.name);
+                        println!("{}", GameMessage::TributeSuicide(Tribute::from(tribute.clone())));
                         Some(tribute.into())
                     },
                     false => None, // Attack no one
@@ -859,8 +841,10 @@ impl From<TributeModel> for Tribute {
     fn from(tribute: models::tribute::Tribute) -> Self {
         use crate::areas::Area;
         use crate::tributes::actions::TributeAction;
+        use crate::models::Area as AreaModel;
 
-        let area = Area::from(tribute.area().unwrap());
+        let area = tribute.area().unwrap_or(AreaModel::from(Area::default()));
+
         let actions: Vec<TributeAction> = tribute.actions()
             .iter()
             .map(TributeAction::from)
@@ -881,7 +865,7 @@ impl From<TributeModel> for Tribute {
             movement: tribute.movement,
             district: tribute.district,
             brain,
-            area: Some(area),
+            area: Some(Area::from(area.clone())),
             day_killed: tribute.day_killed,
             killed_by: tribute.killed_by.clone(),
             kills: tribute.kills,

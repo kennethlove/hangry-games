@@ -37,7 +37,8 @@ enum Commands {
     QuickStart,
     RunFullGame { game_id: String },
     ShowGameLog { game_id: String },
-    LogTributes { game_id: String }
+    LogTributes { game_id: String },
+    Gui,
 }
 
 pub fn parse() {
@@ -133,11 +134,11 @@ pub fn parse() {
 
         // Games
         Commands::AddGame => {
-            let game = create_game();
+            let game = create_game(None);
             println!("Game created: {}", game.name);
         }
         Commands::ShowGames => {
-            for _game in get_games() {
+            for _game in get_games(None) {
                 println!("{}, Day {}, Tributes {}/24 {}",
                          _game.name,
                          _game.day.unwrap_or(0),
@@ -211,7 +212,7 @@ pub fn parse() {
             }
         }
         Commands::QuickStart => {
-            let game = create_game();
+            let game = create_game(None);
             println!("Game created: {}", game.name);
             let count = fill_tributes(&game);
             println!("{} tributes created", count);
@@ -253,6 +254,11 @@ pub fn parse() {
                     println!("Error: {}", e.to_string());
                 }
             }
+        }
+        Commands::Gui => {
+            // run hangry bin
+            println!("Launching GUI...");
+            let _ = std::process::Command::new("hangry").spawn();
         }
     }
 }

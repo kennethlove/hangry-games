@@ -1,5 +1,5 @@
 use crate::establish_connection;
-use crate::models::{Action, LogEntry, Tribute};
+use crate::models::{create_full_log, Action, Tribute};
 use crate::schema::action;
 use crate::schema::tribute_action;
 use diesel::prelude::*;
@@ -57,11 +57,23 @@ impl TributeAction {
 
 pub fn take_action(tribute: &Tribute, action: &Action, target: Option<String>) -> TributeAction {
     let tribute_action = TributeAction::create(tribute.id, action.id, target.clone());
-    LogEntry::create_full_log(
+    let message = match tribute_action.action_id {
+        1 => format!("{} moved to {}", tribute.name, target.unwrap()),
+        2 => format!("{} rested", tribute.name),
+        3 => format!("{} searched for items", tribute.name),
+        4 => format!("{} attacked {}", tribute.name, target.unwrap()),
+        5 => format!("{} defended", tribute.name),
+        6 => format!("{} used an item", tribute.name),
+        _ => format!("{} did something", tribute.name),
+    };
+    create_full_log(
         tribute.game_id.unwrap(),
-        format!("{}: {} -> {}", tribute.name, action.name, target.unwrap_or("None".to_string())),
+        message,
         Some(tribute_action.id),
         Some(tribute.area_id.unwrap()),
+        Some(tribute.id),
+        None,
+        None,
     );
     tribute_action
 }
