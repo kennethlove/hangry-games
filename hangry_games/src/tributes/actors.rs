@@ -1017,7 +1017,6 @@ impl Tribute {
     fn take_item(&self, item: Item) {
         let tribute = TributeModel::from(self.clone());
         tribute.takes_item(item.id.unwrap());
-        println!("{}", GameMessage::TributeTakeItem(self.clone(), item.clone()));
     }
 
     fn use_consumable(&mut self, chosen_item: Item) -> bool {
@@ -1031,8 +1030,7 @@ impl Tribute {
         {
             item = selected_item.clone();
         } else {
-            println!("{}", GameMessage::TributeCannotUseItem(self.clone(), chosen_item.clone()));
-            return;
+            return false;
         }
         item.quantity -= 1;
 
@@ -1058,8 +1056,6 @@ impl Tribute {
             },
             _ => ()
         }
-
-        println!("{}", GameMessage::TributeUseItem(self.clone(), item.clone()));
 
         if item.quantity <= 0 {
             // No uses left
