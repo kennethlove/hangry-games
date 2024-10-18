@@ -1,5 +1,8 @@
 use crate::schema::log_entry;
 use crate::schema::tribute_action::dsl::tribute_action;
+use crate::schema::tribute::dsl::tribute;
+use crate::schema::area::dsl::area;
+use crate::schema::game::dsl::game;
 use crate::{establish_connection, models};
 use diesel::prelude::*;
 use models::get_game_by_id;
@@ -10,6 +13,7 @@ use models::get_game_by_id;
 #[diesel(belongs_to(models::TributeAction, foreign_key = tribute_action_id))]
 #[diesel(belongs_to(models::Area, foreign_key = area_id))]
 #[diesel(belongs_to(models::Game, foreign_key = game_id))]
+#[diesel(belongs_to(models::Tribute, foreign_key = tribute_id))]
 pub struct LogEntry {
     pub id: i32,
     pub created_at: chrono::NaiveDateTime,
@@ -20,6 +24,9 @@ pub struct LogEntry {
     // optional fields for further linking
     pub tribute_action_id: Option<i32>, // Action: Move, Rest, etc
     pub area_id: Option<i32>, // Area the action originates
+    pub tribute_id: Option<i32>, // Tribute performing the action
+    pub action_target_type: Option<String>, // Type of target of the action
+    pub action_target_id: Option<i32>, // Target of the action
 }
 
 #[derive(Insertable, Debug)]
@@ -30,18 +37,24 @@ pub struct NewLogEntry {
     pub message: String,
     pub tribute_action_id: Option<i32>,
     pub area_id: Option<i32>,
+    pub tribute_id: Option<i32>,
+    pub action_target_type: Option<String>,
+    pub action_target_id: Option<i32>,
 }
 
 impl LogEntry {
     pub fn create(game_id: i32, message: String) -> LogEntry {
         let connection = &mut establish_connection();
-        let game = get_game_by_id(game_id).expect("Game not found");
+        let selected_game = get_game_by_id(game_id).expect("Game not found");
         let new_log_entry = NewLogEntry {
-            game_id: game.id,
-            day: game.day.unwrap_or(0),
+            game_id: selected_game.id,
+            day: selected_game.day.unwrap_or(0),
             message,
             tribute_action_id: None,
             area_id: None,
+            tribute_id: None,
+            action_target_type: None,
+            action_target_id: None,
         };
 
         diesel::insert_into(log_entry::table)
@@ -50,24 +63,41 @@ impl LogEntry {
             .get_result(connection)
             .expect("Error saving new log entry")
     }
+}
 
-    pub fn create_full_log(game_id: i32, message: String, tribute_action_id: Option<i32>, area_id: Option<i32>) -> LogEntry {
-        let connection = &mut establish_connection();
-        let game = get_game_by_id(game_id).expect("Game not found");
-        let new_log_entry = NewLogEntry {
-            game_id: game.id,
-            day: game.day.unwrap_or(0),
-            message,
-            tribute_action_id,
-            area_id,
-        };
-
-        diesel::insert_into(log_entry::table)
-            .values(&new_log_entry)
-            .returning(LogEntry::as_returning())
-            .get_result(connection)
-            .expect("Error saving new log entry")
+pub fn create_full_log(
+    game_id: i32,
+    message: String,
+    tribute_action_id: Option<i32>,
+    area_id: Option<i32>,
+    tribute_id: Option<i32>,
+    action_target_type: Option<String>,
+    action_target_id: Option<i32>,
+) -> LogEntry {
+    if action_target_type.is_none() && action_target_id.is_some() {
+        panic!("Action target type must be provided if action target id is provided");
+    } else if action_target_type.is_some() && action_target_id.is_none() {
+        panic!("Action target id must be provided if action target type is provided");
     }
+
+    let connection = &mut establish_connection();
+    let selected_game = get_game_by_id(game_id).expect("Game not found");
+    let new_log_entry = NewLogEntry {
+        game_id: selected_game.id,
+        day: selected_game.day.unwrap_or(0),
+        message,
+        tribute_action_id,
+        area_id,
+        tribute_id,
+        action_target_type,
+        action_target_id,
+    };
+
+    diesel::insert_into(log_entry::table)
+        .values(&new_log_entry)
+        .returning(LogEntry::as_returning())
+        .get_result(connection)
+        .expect("Error saving new log entry")
 }
 
 pub fn get_log_entry_by_id(id: i32) -> Option<LogEntry> {
@@ -75,6 +105,9 @@ pub fn get_log_entry_by_id(id: i32) -> Option<LogEntry> {
     log_entry::table.find(id)
         .select(log_entry::all_columns)
         .inner_join(tribute_action)
+        .inner_join(area)
+        .inner_join(game)
+        .inner_join(tribute)
         .first(connection)
         .optional()
         .expect("Error loading log entry")
@@ -86,6 +119,36 @@ pub fn get_logs_for_game(id: i32) -> Vec<LogEntry> {
         .filter(log_entry::game_id.eq(id))
         .select(log_entry::all_columns)
         .inner_join(tribute_action)
+        .inner_join(area)
+        .inner_join(game)
+        .inner_join(tribute)
+        .load(connection)
+        .expect("Error loading log entries")
+}
+
+pub fn get_logs_for_game_day(id: i32, day: i32) -> Vec<LogEntry> {
+    let connection = &mut establish_connection();
+    log_entry::table
+        .filter(log_entry::game_id.eq(id))
+        .filter(log_entry::day.eq(day))
+        .select(log_entry::all_columns)
+        .inner_join(tribute_action)
+        .inner_join(area)
+        .inner_join(game)
+        .inner_join(tribute)
+        .load(connection)
+        .expect("Error loading log entries")
+}
+
+pub fn get_logs_for_tribute(id: i32) -> Vec<LogEntry> {
+    let connection = &mut establish_connection();
+    log_entry::table
+        .filter(log_entry::tribute_id.eq(id))
+        .select(log_entry::all_columns)
+        .inner_join(tribute_action)
+        .inner_join(area)
+        .inner_join(game)
+        .inner_join(tribute)
         .load(connection)
         .expect("Error loading log entries")
 }
