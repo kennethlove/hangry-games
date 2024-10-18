@@ -5,7 +5,6 @@ use crate::gui::router::Routes;
 use crate::gui::components::create_tribute::CreateTribute;
 use crate::gui::components::tribute_table::TributeTable;
 use crate::gui::components::tribute_actions_group::TributeActionsGroup;
-use crate::gui::components::tribute_table::TributeTable;
 
 #[component]
 pub fn GameDetail(id: i32) -> Element {
