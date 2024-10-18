@@ -669,12 +669,30 @@ impl Tribute {
                                 }
                                 update_tribute(attacker.id.unwrap(), attacker.clone().into());
                                 update_tribute(target.id.unwrap(), target.clone().into());
+                                create_full_log(
+                                    self.game_id.unwrap(),
+                                    GameMessage::TributeAttackKill(attacker.clone(), target.clone()).to_string(),
+                                    Some(get_action(action.as_str()).id),
+                                    Some(self.area.clone().unwrap().id()),
+                                    Some(attacker.id.unwrap()),
+                                    Some(action.as_str().to_string()),
+                                    Some(target.id.unwrap())
+                                );
                             },
                             _ => ()
                         }
                         self.take_action(action, Some(target.clone().name));
                     } else {
                         println!("{}", GameMessage::TributeAttackHidden(self.clone(), target.clone()));
+                        create_full_log(
+                            self.game_id.unwrap(),
+                            GameMessage::TributeAttackHidden(self.clone(), target.clone()).to_string(),
+                            Some(get_action(action.clone().as_str()).id),
+                            Some(self.area.clone().unwrap().id()),
+                            Some(self.id.unwrap()),
+                            Some(action.clone().as_str().to_string()),
+                            Some(target.id.unwrap())
+                        );
                         self.take_action(TributeAction::Attack, None);
                     }
                 }
@@ -711,8 +729,7 @@ impl Tribute {
                 }
             }
             TributeAction::UseItem(item) => {
-                #[allow(unused_mut)]
-                let mut items = self.consumable_items();
+                let items = self.consumable_items();
                 if let Some(item) = item {
                     let selected_item = items.iter().find(|i| i.name == item.clone());
                     if selected_item.is_some() {
