@@ -15,3 +15,6 @@ target/
 
 # Ignore logfile from log_tributes CLI
 ./hangry_games/log
+
+# Ignore dist files
+dist/

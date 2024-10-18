@@ -27,19 +27,21 @@ impl Game {
         let connection = &mut establish_connection();
         tribute::table
             .filter(tribute::game_id.eq(self.id))
+            .order_by(tribute::district)
             .load::<Tribute>(connection)
             .expect("Error loading tributes")
     }
 
     pub fn living_tributes(&self) -> Vec<Tribute> {
-        use crate::schema::tribute;
-        let connection = &mut establish_connection();
-        tribute::table
-            .filter(tribute::game_id.eq(self.id))
-            .filter(tribute::status.ne(TributeStatus::Dead.to_string()))
-            .filter(tribute::status.ne(TributeStatus::RecentlyDead.to_string()))
-            .load::<Tribute>(connection)
-            .expect("Error loading tributes")
+            use crate::schema::tribute;
+            let connection = &mut establish_connection();
+            tribute::table
+                .filter(tribute::game_id.eq(self.id))
+                .filter(tribute::status.ne(TributeStatus::Dead.to_string()))
+                .filter(tribute::status.ne(TributeStatus::RecentlyDead.to_string()))
+                .order_by(tribute::district)
+                .load::<Tribute>(connection)
+                .expect("Error loading tributes")
     }
 
     pub fn start(&self) {
@@ -120,9 +122,10 @@ pub struct NewGame<'a> {
     pub day: i32,
 }
 
-pub fn create_game() -> Game {
+pub fn create_game(name: Option<&str>) -> Game {
     let connection = &mut establish_connection();
-    let name = generate_random_name();
+    let random_name = generate_random_name();
+    let name = name.unwrap_or(&random_name);
     let new_game = NewGame { name: &name, day: 0 };
 
     diesel::insert_into(game::table)
@@ -150,17 +153,33 @@ pub fn get_game_by_id(id: i32) -> Result<Game, std::io::Error> {
     Ok(got_game)
 }
 
-pub fn get_games() -> Vec<Game> {
+pub fn get_games(count: Option<u8>) -> Vec<Game> {
     let connection = &mut establish_connection();
     game::table
         .select(game::all_columns)
+        .order_by(game::created_at.desc())
+        .limit(count.unwrap_or(10) as i64)
         .load::<Game>(connection)
         .expect("Error loading games")
 }
 
+pub fn delete_game(game_id: i32) {
+    use crate::schema::tribute;
+
+    let connection = &mut establish_connection();
+    diesel::delete(tribute::table)
+        .filter(tribute::game_id.eq(game_id))
+        .execute(connection)
+        .expect("Error deleting tributes");
+    diesel::delete(game::table)
+        .filter(game::id.eq(game_id))
+        .execute(connection)
+        .expect("Error deleting game");
+}
+
 fn generate_random_name() -> String {
     let wp_gen = witty_phrase_generator::WPGen::new();
-    let name = wp_gen.generic(3, 1, Some(5), Some(25), None).expect("Couldn't generate name");
+    let name = wp_gen.generic(3, 1, Some(5), Some(25), None, None).expect("Couldn't generate name");
     let name = name[0].join("-");
     name.to_string()
 }
@@ -168,8 +187,10 @@ fn generate_random_name() -> String {
 pub fn get_all_living_tributes(game: &Game) -> Vec<Tribute> {
     let conn = &mut establish_connection();
     use crate::schema::tribute;
+
     tribute::table
         .select(tribute::all_columns)
+        .order_by(tribute::district)
         .filter(tribute::game_id.eq(game.id))
         .filter(tribute::status.ne(TributeStatus::Dead.to_string()))
         .filter(tribute::status.ne(TributeStatus::RecentlyDead.to_string()))

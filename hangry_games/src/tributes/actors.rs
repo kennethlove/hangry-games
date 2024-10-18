@@ -77,6 +77,10 @@ impl Tribute {
         }
     }
 
+    pub fn delete(id: i32) {
+        models::tribute::Tribute::delete(id);
+    }
+
     /// Reduces health, triggers death if health reaches 0.
     pub fn takes_physical_damage(&mut self, damage: i32) {
         self.health = std::cmp::max(0, self.health - damage);
@@ -859,8 +863,10 @@ impl From<TributeModel> for Tribute {
     fn from(tribute: models::tribute::Tribute) -> Self {
         use crate::areas::Area;
         use crate::tributes::actions::TributeAction;
+        use crate::models::Area as AreaModel;
 
-        let area = Area::from(tribute.area().unwrap());
+        let area = tribute.area().unwrap_or(AreaModel::from(Area::default()));
+
         let actions: Vec<TributeAction> = tribute.actions()
             .iter()
             .map(TributeAction::from)
@@ -881,7 +887,7 @@ impl From<TributeModel> for Tribute {
             movement: tribute.movement,
             district: tribute.district,
             brain,
-            area: Some(area),
+            area: Some(Area::from(area.clone())),
             day_killed: tribute.day_killed,
             killed_by: tribute.killed_by.clone(),
             kills: tribute.kills,
