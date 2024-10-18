@@ -704,7 +704,7 @@ impl Tribute {
                         },
                         false => {
                             println!("{}", GameMessage::TributeCannotUseItem(self.clone(), item.clone()));
-                            self.short_rest();
+                            self.short_rests();
                             self.take_action(TributeAction::Rest, None);
                         }
                     };
@@ -723,7 +723,7 @@ impl Tribute {
                             },
                             false => {
                                 println!("{}", GameMessage::TributeCannotUseItem(self.clone(), selected_item.unwrap().clone()));
-                                self.short_rest();
+                                self.short_rests();
                                 self.take_action(TributeAction::Rest, None);
                             }
                         };
