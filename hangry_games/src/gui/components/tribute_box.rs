@@ -6,10 +6,10 @@ use crate::tributes::actors::Tribute;
 #[component]
 pub fn TributeBox(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Element {
     rsx! {
-        a {
-            class: "group relative block bg-black",
+        div {
+            class: "group relative block bg-gradient-to-b to-orange-500 from-yellow-300 rounded-md overflow-hidden",
             img {
-                class: "absolute inset-0 h-full w-full object-cover opacity-75 transition-opacity group-hover:opacity-50",
+                class: "absolute inset-0 h-full w-full object-cover opacity-100 transition-opacity group-hover:opacity-75",
                 src: "https://images.unsplash.com/photo-1603871165848-0aa92c869fa1?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=772&q=80"
             }
 
@@ -28,10 +28,10 @@ pub fn TributeBox(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Element {
                     div {
                         class: "translate-y-8 transform opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100",
                         p {
-                            class: "w-full text-center text-sm text-slate-400 mb-4 font-normal",
+                            class: "w-full text-center text-sm text-slate-200 mb-4 font-normal divide-x divide-gray-300",
                             span { class: "material-symbols-outlined text-sm", "favorite" }, " {tribute.status} ",
-                            span { class: "material-symbols-outlined text-sm", "vital_signs" }, " {tribute.health} ",
-                            span { class: "material-symbols-outlined text-sm", "cognition_2" }, " {tribute.sanity} ",
+                            span { class: "material-symbols-outlined text-sm ml-2 pl-2", "vital_signs" }, " {tribute.health} ",
+                            span { class: "material-symbols-outlined text-sm ml-2 pl-2", "cognition_2" }, " {tribute.sanity} ",
                         }
                         TributeActionsGroup { tribute: tribute.clone(), signal: signal.clone() }
                     }
