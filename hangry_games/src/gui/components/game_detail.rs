@@ -37,5 +37,11 @@ pub fn GameDetail(id: i32) -> Element {
         if game.tributes().len() < 24 {
             CreateTribute {signal: tributes.clone(), game_id: game.id.unwrap()}
         }
+
+        Link {
+            class: "text-red-700 underline",
+            to: Routes::Home { },
+            "Back"
+        }
     }
 }
