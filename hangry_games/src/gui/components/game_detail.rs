@@ -5,6 +5,7 @@ use crate::gui::router::Routes;
 use crate::gui::components::create_tribute::CreateTribute;
 use crate::gui::components::tribute_table::TributeTable;
 use crate::gui::components::tribute_actions_group::TributeActionsGroup;
+use crate::gui::components::tribute_boxes::TributeBoxes;
 
 #[component]
 pub fn GameDetail(id: i32) -> Element {
@@ -55,28 +56,16 @@ pub fn GameDetail(id: i32) -> Element {
                         }
                     }
                 }
-                div {
-                    class: "grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4",
-                    dt {
-                        class: "font-medium text-gray-900",
-                        "Tributes"
-                    }
-                    dd {
-                        class: "text-gray-700 sm:col-span-2",
-                        TributeTable { tributes: tributes.clone() }
-                    }
-                }
             }
+        }
+
+        div {
+            class: "mt-4",
+            TributeBoxes { tributes: tributes.clone() }
         }
 
         if game.tributes().len() < 24 {
             CreateTribute {signal: tributes.clone(), game_id: game.id.unwrap()}
-        }
-
-        Link {
-            to: Routes::Home {},
-            class: "underline text-blue-500",
-            "Home"
         }
     }
 }

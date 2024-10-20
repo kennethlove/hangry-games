@@ -10,9 +10,9 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
 
     rsx! {
         div {
-            class: "bg-white overflow-hidden sm:rounded-lg mt-4",
+            class: "mt-4",
             form {
-                class: "flex justify-center",
+                class: "flex justify-end",
                 onsubmit: move |event| {
                     let data = event.data.values();
                     let name = data.get("tribute_name").unwrap().first().unwrap();
@@ -22,7 +22,7 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
                 },
                 input {
                     r#type: "text",
-                    class: "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline",
+                    class: "shadow appearance-none border rounded-sm py-2 px-3 text-red-800 leading-tight focus:outline-none focus:shadow-outline",
                     id: "tribute_name",
                     name: "tribute_name",
                     placeholder: "Tribute Name",
@@ -35,7 +35,7 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
                     }
                 }
                 button {
-                    class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded",
+                    class: "bg-gradient-to-r from-orange-500 to-yellow-300 rounded-sm text-red-800 orbitron-font font-semibold py-2 px-4 ml-2",
                     "Add Tribute"
                 }
             }
