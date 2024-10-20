@@ -231,7 +231,13 @@ pub fn TributeDetail(id: i32) -> Element {
                             }
                             dd {
                                 class: "text-gray-700",
-                                "{tribute.killed_by.unwrap_or(\"unknown\".to_string())}"
+                                {
+                                    if tribute.killed_by.is_none() {
+                                        "unknown"
+                                    } else {
+                                        "{tribute.killed_by.unwrap()}"
+                                    }
+                                }
                             }
                         }
                     }
@@ -240,7 +246,7 @@ pub fn TributeDetail(id: i32) -> Element {
         }
 
         Link {
-            class: "text-blue-700 underline",
+            class: "text-red-700 underline",
             to: Routes::GameDetail { id: tribute.game_id.unwrap() },
             "Back"
         }
