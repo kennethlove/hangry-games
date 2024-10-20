@@ -7,12 +7,14 @@ use crate::gui::components::{
 #[component]
 pub fn Home() -> Element {
     rsx! {
-        p { "Welcome to the Hangry Games!" }
         div {
-            GameTable {}
-        }
-        div {
-            CreateGame {}
+            class: "",
+            div {
+                GameTable {}
+            }
+            div {
+                CreateGame {}
+            }
         }
     }
 }
