@@ -29,7 +29,6 @@ pub fn GameDetail(id: i32) -> Element {
                 "Game Log"
             }
         }
-
         div {
             class: "mt-4",
             TributeBoxes { tributes: tributes.clone() }
