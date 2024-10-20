@@ -16,11 +16,11 @@ pub fn GameDetail(id: i32) -> Element {
         div {
             class: "flex justify-between items-center",
             h2 {
-                class: "text-2xl font-bold text-slate-900",
+                class: "text-2xl font-bold text-slate-900 orbitron-font",
                 "{game.name}"
             }
             h3 {
-                class: "text-lg text-slate-700",
+                class: "text-lg text-slate-700 orbitron-font",
                 "Day {game.day.unwrap_or(0)}"
             }
             Link {
