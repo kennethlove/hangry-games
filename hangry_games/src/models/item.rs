@@ -1,5 +1,5 @@
 use crate::establish_connection;
-use crate::models::{Area, Game};
+use crate::models::{Area, Game, Tribute};
 use crate::schema::item;
 use diesel::prelude::*;
 
@@ -8,6 +8,7 @@ use diesel::prelude::*;
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[diesel(belongs_to(Area, foreign_key = area_id))]
 #[diesel(belongs_to(Game, foreign_key = game_id))]
+#[diesel(belongs_to(Tribute, foreign_key = tribute_id))]
 pub struct Item {
     pub id: i32,
     pub name: String,
