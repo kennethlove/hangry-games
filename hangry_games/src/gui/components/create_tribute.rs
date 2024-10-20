@@ -12,7 +12,7 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
         div {
             class: "mt-4",
             form {
-                class: "flex justify-center",
+                class: "flex justify-end",
                 onsubmit: move |event| {
                     let data = event.data.values();
                     let name = data.get("tribute_name").unwrap().first().unwrap();
