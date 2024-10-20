@@ -22,7 +22,7 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
                 },
                 input {
                     r#type: "text",
-                    class: "block w-half mr-2 text-sm px-2 text-gray-900 border border-orange-700 rounded-lg bg-gray-50 dark:text-gray-400 focus:outline-none dark:bb-gray-700 dark:border-gray-600 dark:placeholder-gray-400",
+                    class: "block w-half mr-2 text-sm px-2 text-gray-900 border border-orange-700 rounded-md bg-yellow-200 dark:text-gray-400 focus:outline-none dark:bb-gray-700 dark:border-gray-600 dark:placeholder-gray-400 placeholder-gray-900",
                     id: "tribute_name",
                     name: "tribute_name",
                     placeholder: "Tribute Name",
@@ -35,14 +35,14 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
                     }
                 }
                 input {
-                    class: "block w-half text-sm px-2 py-2 text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bb-gray-700 dark:border-gray-600 dark:placeholder-gray-400",
+                    class: "block w-half text-sm px-2 py-2 text-gray-900 border border-orange-700 rounded-md cursor-pointer bg-yellow-200 dark:text-gray-400 focus:outline-none dark:bb-gray-700 dark:border-gray-600 dark:placeholder-gray-400",
                     id: "file_input",
                     r#type: "file",
                     placeholder: "Upload Image",
                 }
 
                 button {
-                    class: "bg-gradient-to-r from-orange-500 to-yellow-300 rounded-sm text-red-800 orbitron-font font-semibold py-2 px-4 ml-2",
+                    class: "bg-gradient-to-r from-orange-500 to-yellow-300 rounded-md text-red-800 orbitron-font font-semibold py-2 px-4 ml-2",
                     "Add Tribute"
                 }
             }
