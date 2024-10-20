@@ -14,51 +14,21 @@ pub fn GameDetail(id: i32) -> Element {
 
     rsx! {
         div {
-            class: "flow-root",
-            dl {
-                class: "-my-3 divide-y divide-gray-100 text-sm",
-                div {
-                    class: "grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4",
-                    dt {
-                        class: "font-medium text-gray-900",
-                        "Name"
-                    }
-                    dd {
-                        class: "text-gray-700 sm:col-span-2",
-                        "{game.name}"
-                    }
-                }
-                div {
-                    class: "grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4",
-                    dt {
-                        class: "font-medium text-gray-900",
-                        "Day"
-                    }
-                    dd {
-                        class: "text-gray-700 sm:col-span-2",
-                        "{game.day.unwrap_or(0)}"
-                    }
-                }
-                if game.day.unwrap() > 0 {
-                    div {
-                        class: "grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4",
-                        dt {
-                            class: "font-medium text-gray-900",
-                            "Links"
-                        }
-                        dd {
-                            class: "text-gray-700 sm:col-span-2",
-                            Link {
-                                to: Routes::GameLog { id: game.id.unwrap() },
-                                class: "underline text-blue-500",
-                                "Game Log"
-                            }
-                        }
-                    }
-                }
+            class: "flex justify-between items-center",
+            h2 {
+                class: "text-2xl font-bold text-slate-900",
+                "{game.name}"
+            }
+            h3 {
+                class: "text-lg text-slate-700",
+                "Day {game.day.unwrap_or(0)}"
+            }
+            Link {
+                to: Routes::GameLog { id: game.id.unwrap() },
+                class: "underline text-blue-500",
+                "Game Log"
             }
         }
-
         div {
             class: "mt-4",
             TributeBoxes { tributes: tributes.clone() }
