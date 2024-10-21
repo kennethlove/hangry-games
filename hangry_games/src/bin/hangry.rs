@@ -11,12 +11,7 @@ fn main() {
     let config = Config::new()
         .with_custom_head(r#"
         <script src="https://cdn.tailwindcss.com"></script>
-        <script>
-          tailwind.config = {
-            darkMode: 'selector',
-          }
-        </script>
-        <link rel="stylesheet" href="assets/hangry-games.css">
+        <link rel="stylesheet" href="hangry-games.css">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
@@ -25,7 +20,7 @@ fn main() {
         .with_window(
             WindowBuilder::new()
                 .with_resizable(true)
-                .with_title("Hangry Games")
+                .with_title("The Hangry Games")
                 .with_min_inner_size(LogicalSize::new(800.0, 600.0))
         );
     LaunchBuilder::desktop()
@@ -39,8 +34,6 @@ fn app() -> Element {
     use_global_shortcut("CmdOrCtrl+Q", move || {
         std::process::exit(0);
     }).expect("Failed to register global quit shortcut");
-    use_global_shortcut("CmdOrCtrl+R", move || {
-    }).expect("Failed to register global reload shortcut");
 
     rsx! {
         div {
