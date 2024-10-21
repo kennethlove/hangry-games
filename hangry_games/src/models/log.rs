@@ -42,6 +42,21 @@ pub struct NewLogEntry {
     pub action_target_id: Option<i32>,
 }
 
+impl Default for NewLogEntry {
+    fn default() -> Self {
+        NewLogEntry {
+            game_id: 0,
+            day: 0,
+            message: "".to_string(),
+            tribute_action_id: None,
+            area_id: None,
+            tribute_id: None,
+            action_target_type: None,
+            action_target_id: None,
+        }
+    }
+}
+
 impl LogEntry {
     pub fn create(game_id: i32, message: String) -> LogEntry {
         let connection = &mut establish_connection();

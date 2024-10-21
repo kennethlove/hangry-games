@@ -568,7 +568,7 @@ impl Tribute {
                 Some(get_action("Move").id),
                 Some(area.id()),
                 Some(self.id.unwrap()),
-                None,
+                Some("Area".to_string()),
                 Some(self.area.clone().unwrap().id())
             );
             return self.clone();
@@ -609,7 +609,7 @@ impl Tribute {
                         create_full_log(
                             self.game_id.unwrap(),
                             GameMessage::TributeRest(self.clone()).to_string(),
-                            Some(get_action(action.clone().as_str()).id),
+                            Some(get_action("rest").id),
                             Some(self.area.clone().unwrap().id()),
                             Some(self.id.unwrap()),
                             Some(action.clone().as_str().to_string()),
@@ -704,6 +704,15 @@ impl Tribute {
             TributeAction::TakeItem => {
                 let item = self.take_nearby_item(area);
                 println!("{}", GameMessage::TributeTakeItem(self.clone(), item.clone()));
+                create_full_log(
+                    self.game_id.unwrap(),
+                    GameMessage::TributeTakeItem(self.clone(), item.clone()).to_string(),
+                    Some(get_action(action.clone().as_str()).id),
+                    Some(self.area.clone().unwrap().id()),
+                    Some(self.id.unwrap()),
+                    Some(action.clone().as_str().to_string()),
+                    Some(item.id.unwrap())
+                );
                 self.take_action(action, Some(item.name.clone()));
             },
             TributeAction::UseItem(None) => {
@@ -718,10 +727,28 @@ impl Tribute {
                     match self.use_consumable(item.clone()) {
                         true => {
                             println!("{}", GameMessage::TributeUseItem(self.clone(), item.clone()));
+                            create_full_log(
+                                self.game_id.unwrap(),
+                                GameMessage::TributeUseItem(self.clone(), item.clone()).to_string(),
+                                Some(get_action(action.clone().as_str()).id),
+                                Some(self.area.clone().unwrap().id()),
+                                Some(self.id.unwrap()),
+                                Some(action.clone().as_str().to_string()),
+                                Some(item.id.unwrap())
+                            );
                             self.take_action(action, Some(item.name.clone()));
                         },
                         false => {
                             println!("{}", GameMessage::TributeCannotUseItem(self.clone(), item.clone()));
+                            create_full_log(
+                                self.game_id.unwrap(),
+                                GameMessage::TributeCannotUseItem(self.clone(), item.clone()).to_string(),
+                                Some(get_action("rest").id),
+                                Some(self.area.clone().unwrap().id()),
+                                Some(self.id.unwrap()),
+                                Some(action.clone().as_str().to_string()),
+                                Some(item.id.unwrap())
+                            );
                             self.short_rests();
                             self.take_action(TributeAction::Rest, None);
                         }
@@ -736,10 +763,28 @@ impl Tribute {
                         match self.use_consumable(selected_item.unwrap().clone()) {
                             true => {
                                 println!("{}", GameMessage::TributeUseItem(self.clone(), selected_item.unwrap().clone()));
+                                create_full_log(
+                                    self.game_id.unwrap(),
+                                    GameMessage::TributeUseItem(self.clone(), selected_item.unwrap().clone()).to_string(),
+                                    Some(get_action(action.clone().as_str()).id),
+                                    Some(self.area.clone().unwrap().id()),
+                                    Some(self.id.unwrap()),
+                                    Some(action.clone().as_str().to_string()),
+                                    Some(selected_item.unwrap().id.unwrap())
+                                );
                                 self.take_action(action, Some(selected_item.unwrap().name.clone()));
                             },
                             false => {
                                 println!("{}", GameMessage::TributeCannotUseItem(self.clone(), selected_item.unwrap().clone()));
+                                create_full_log(
+                                    self.game_id.unwrap(),
+                                    GameMessage::TributeCannotUseItem(self.clone(), selected_item.unwrap().clone()).to_string(),
+                                    Some(get_action("rest").id),
+                                    Some(self.area.clone().unwrap().id()),
+                                    Some(self.id.unwrap()),
+                                    Some(action.clone().as_str().to_string()),
+                                    Some(selected_item.unwrap().id.unwrap())
+                                );
                                 self.short_rests();
                                 self.take_action(TributeAction::Rest, None);
                             }
@@ -872,6 +917,15 @@ fn attack_contest(attacker: Tribute, target: Tribute) -> AttackResult {
         weapon.quantity -= 1;
         if weapon.quantity <= 0 {
             println!("{}", GameMessage::WeaponBreak(attacker.clone(), weapon.clone()));
+            create_full_log(
+                attacker.game_id.unwrap(),
+                GameMessage::WeaponBreak(attacker.clone(), weapon.clone()).to_string(),
+                None,
+                Some(attacker.area.clone().unwrap().id()),
+                Some(attacker.id.unwrap()),
+                Some("Weapon".to_string()),
+                Some(weapon.id.unwrap())
+            );
             weapon.delete();
         }
         update_item(models::UpdateItem::from(weapon.clone()).into());
@@ -887,6 +941,15 @@ fn attack_contest(attacker: Tribute, target: Tribute) -> AttackResult {
         shield.quantity -= 1;
         if shield.quantity <= 0 {
             println!("{}", GameMessage::ShieldBreak(target.clone(), shield.clone()));
+            create_full_log(
+                target.game_id.unwrap(),
+                GameMessage::ShieldBreak(target.clone(), shield.clone()).to_string(),
+                None,
+                Some(target.area.clone().unwrap().id()),
+                Some(target.id.unwrap()),
+                Some("Shield".to_string()),
+                Some(shield.id.unwrap())
+            );
             shield.delete();
         }
         update_item(models::UpdateItem::from(shield.clone()).into());
@@ -925,11 +988,29 @@ pub fn pick_target(tribute: TributeModel) -> Option<Tribute> {
             match tribute.sanity {
                 0..=9 => { // attempt suicide
                     println!("{}", GameMessage::TributeSuicide(Tribute::from(tribute.clone())));
+                    create_full_log(
+                        tribute.game_id.unwrap(),
+                        GameMessage::TributeSuicide(Tribute::from(tribute.clone())).to_string(),
+                        Some(get_action("attack").id),
+                        Some(area.id),
+                        Some(tribute.id),
+                        Some("Tribute".to_string()),
+                        Some(tribute.id)
+                    );
                     Some(tribute.into())
                 },
                 10..=19 => match thread_rng().gen_bool(0.2) {
                     true => { // attempt suicide
                         println!("{}", GameMessage::TributeSuicide(Tribute::from(tribute.clone())));
+                        create_full_log(
+                            tribute.game_id.unwrap(),
+                            GameMessage::TributeSuicide(Tribute::from(tribute.clone())).to_string(),
+                            Some(get_action("attack").id),
+                            Some(area.id),
+                            Some(tribute.id),
+                            Some("Tribute".to_string()),
+                            Some(tribute.id)
+                        );
                         Some(tribute.into())
                     },
                     false => None, // Attack no one
