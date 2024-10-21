@@ -131,8 +131,8 @@ pub fn get_log_entry_by_id(id: i32) -> Option<LogEntry> {
 pub fn get_logs_for_game(id: i32) -> Vec<LogEntry> {
     let connection = &mut establish_connection();
     log_entry::table
-        .filter(log_entry::game_id.eq(id))
         .select(log_entry::all_columns)
+        .filter(log_entry::game_id.eq(id))
         .inner_join(tribute_action)
         .inner_join(area)
         .inner_join(game)
@@ -144,9 +144,9 @@ pub fn get_logs_for_game(id: i32) -> Vec<LogEntry> {
 pub fn get_logs_for_game_day(id: i32, day: i32) -> Vec<LogEntry> {
     let connection = &mut establish_connection();
     log_entry::table
+        .select(log_entry::all_columns)
         .filter(log_entry::game_id.eq(id))
         .filter(log_entry::day.eq(day))
-        .select(log_entry::all_columns)
         .inner_join(tribute_action)
         .inner_join(area)
         .inner_join(game)
