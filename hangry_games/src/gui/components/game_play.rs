@@ -11,29 +11,49 @@ pub fn GamePlay(id: i32) -> Element {
         div {
             class: "flow-root",
             h1 { "Game Play" }
-            for day in 1..=game.day.unwrap() {
+            div {
+                class: "flex flex-direction-col justify-between",
                 div {
-                    h2 {
-                        class: "text-xl font-bold",
-                        "Day {day}"
+                    for day in 1..=game.day.unwrap() {
+                        div {
+                            h2 {
+                                class: "text-xl font-bold",
+                                "Day {day}"
+                            }
+                            ol {
+                                for log in get_logs_for_game_day(game.id.unwrap(), day).iter() {
+                                    li { "{log.message}" }
+                                }
+                            }
+                        }
                     }
+                }
+                div {
+                    class: "",
+                    h2 { "Days" }
                     ol {
-                        for log in get_logs_for_game_day(game.id.unwrap(), day).iter() {
-                            li { "{log.message}" }
+                        for day in 1..=game.day.unwrap() {
+                            li {
+                                class: "text-blue-500 underline",
+                                Link {
+                                    to: Routes::GameDayLog { id: game.id.unwrap(), day },
+                                    "Day {day}"
+                                }
+                            }
                         }
                     }
                 }
             }
-            Link {
-                class: "text-blue-500 underline",
-                to: Routes::GameDetail { id: game.id.unwrap() },
-                "Back to Game"
-            }
-            Link {
-                class: "text-blue-500 underline",
-                to: Routes::Home {},
-                "Back to Home"
-            }
+        }
+        Link {
+            class: "text-blue-500 underline",
+            to: Routes::GameDetail { id: game.id.unwrap() },
+            "Back to Game"
+        }
+        Link {
+            class: "text-blue-500 underline",
+            to: Routes::Home {},
+            "Back to Home"
         }
     }
 }
