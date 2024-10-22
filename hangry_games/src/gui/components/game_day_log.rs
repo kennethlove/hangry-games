@@ -15,9 +15,6 @@ pub fn GameDayLog(id: i32, day: i32) -> Element {
                 class: "text-xl font-bold",
                 "Day {day}"
             }
-            h3 {
-                "{game.id.unwrap()}"
-            }
             ol {
                 for log in get_logs_for_game_day(game.id.unwrap(), day).iter() {
                     li { "{log.message}" }
