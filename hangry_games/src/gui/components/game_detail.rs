@@ -45,6 +45,11 @@ pub fn GameDetail(id: i32) -> Element {
                     "{day}"
                 }
             }
+            Link {
+                class: "underline text-red-700",
+                to: Routes::GameLog { id: game.id.unwrap() },
+                "Full Log"
+            }
         }
         div {
             class: "mt-4",
