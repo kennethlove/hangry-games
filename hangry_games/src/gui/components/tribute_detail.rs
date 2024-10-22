@@ -1,15 +1,25 @@
 use dioxus::prelude::*;
-use crate::models::get_tribute_by_id;
+use crate::models::{get_game_by_id, get_tribute_by_id};
 use crate::tributes::actors::Tribute;
 use crate::gui::router::Routes;
 
 #[component]
 pub fn TributeDetail(id: i32) -> Element {
     let tribute = Tribute::from(get_tribute_by_id(id));
+    let game = get_game_by_id(tribute.game_id.unwrap()).expect("Game not found");
 
     rsx! {
         div {
             class: "flow-root",
+            h2 {
+                class: "text-2xl font-bold text-slate-900 orbitron-font tracking-wider",
+                "Game ",
+                Link {
+                    to: Routes::GameDetail { id: game.id },
+                    class: "font-normal text-red-700 tracking-normal",
+                    "{game.name}"
+                },
+            }
             dl {
                 class: "-my-3 divide-y divide-gray-100 text-sm",
                 div {
@@ -241,12 +251,6 @@ pub fn TributeDetail(id: i32) -> Element {
                     }
                 }
             }
-        }
-
-        Link {
-            class: "text-red-700 underline",
-            to: Routes::GameDetail { id: tribute.game_id.unwrap() },
-            "Back to game"
         }
     }
 }
