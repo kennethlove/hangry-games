@@ -16,17 +16,34 @@ pub fn GameDetail(id: i32) -> Element {
         div {
             class: "flex justify-between items-center",
             h2 {
-                class: "text-2xl font-bold text-slate-900 orbitron-font",
-                "{game.name}"
+                class: "text-2xl font-bold text-slate-900 orbitron-font tracking-wider",
+                "Game ",
+                span {
+                    class: "font-normal text-slate-700 tracking-normal",
+                    "{game.name}"
+                },
             }
             h3 {
-                class: "text-lg text-slate-700 orbitron-font",
-                "Day {game.day.unwrap_or(0)}"
+                class: "text-lg text-slate-700 orbitron-font font-bold tracking-wider",
+                "Currently "
+                span {
+                    class: "font-normal text-slate-700 tracking-normal",
+                    "day {game.day.unwrap_or(0)}"
+                }
             }
-            Link {
-                to: Routes::GameLog { id: game.id.unwrap() },
-                class: "underline text-blue-500",
-                "Game Log"
+        }
+        div {
+            class: "flex justify-between items-center",
+            h4 {
+                class: "text-md text-slate-700 orbitron-font",
+                "Day Log"
+            }
+            for day in 1..=game.day.unwrap_or(0) {
+                Link {
+                    class: "underline text-red-700",
+                    to: Routes::GameDayLog { id: game.id.unwrap(), day },
+                    "{day}"
+                }
             }
         }
         div {
@@ -41,7 +58,7 @@ pub fn GameDetail(id: i32) -> Element {
         Link {
             class: "text-red-700 underline",
             to: Routes::Home { },
-            "Back"
+            "Back to Home"
         }
     }
 }

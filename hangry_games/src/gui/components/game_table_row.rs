@@ -9,10 +9,7 @@ pub fn GameTableRow(game: Game) -> Element {
         tr {
             td {
                 class: "whitespace-nowrap px-4 py-2 text-gray-700",
-                Link {
-                    to: Routes::GameDetail { id: game.id.unwrap() },
-                    "{game.name}"
-                }
+                "{game.name}"
             }
             td {
                 "{game.day.unwrap_or(0)}"
