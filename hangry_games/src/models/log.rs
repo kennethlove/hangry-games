@@ -1,9 +1,4 @@
-use diesel::internal::derives::multiconnection::SelectStatementAccessor;
 use crate::schema::log_entry;
-use crate::schema::tribute_action::dsl::tribute_action;
-use crate::schema::tribute::dsl::tribute;
-use crate::schema::area::dsl::area;
-use crate::schema::game::dsl::game;
 use crate::{establish_connection, models};
 use diesel::prelude::*;
 use models::get_game_by_id;
