@@ -1,4 +1,3 @@
-use diesel::internal::derives::multiconnection::SelectStatementAccessor;
 use crate::schema::log_entry;
 use crate::{establish_connection, models};
 use diesel::prelude::*;
