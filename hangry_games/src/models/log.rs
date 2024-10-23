@@ -1,8 +1,4 @@
 use crate::schema::log_entry;
-use crate::schema::tribute_action::dsl::tribute_action;
-use crate::schema::tribute::dsl::tribute;
-use crate::schema::area::dsl::area;
-use crate::schema::game::dsl::game;
 use crate::{establish_connection, models};
 use diesel::prelude::*;
 use models::get_game_by_id;
@@ -40,6 +36,21 @@ pub struct NewLogEntry {
     pub tribute_id: Option<i32>,
     pub action_target_type: Option<String>,
     pub action_target_id: Option<i32>,
+}
+
+impl Default for NewLogEntry {
+    fn default() -> Self {
+        NewLogEntry {
+            game_id: 0,
+            day: 0,
+            message: "".to_string(),
+            tribute_action_id: None,
+            area_id: None,
+            tribute_id: None,
+            action_target_type: None,
+            action_target_id: None,
+        }
+    }
 }
 
 impl LogEntry {
@@ -104,10 +115,6 @@ pub fn get_log_entry_by_id(id: i32) -> Option<LogEntry> {
     let connection = &mut establish_connection();
     log_entry::table.find(id)
         .select(log_entry::all_columns)
-        .inner_join(tribute_action)
-        .inner_join(area)
-        .inner_join(game)
-        .inner_join(tribute)
         .first(connection)
         .optional()
         .expect("Error loading log entry")
@@ -116,12 +123,8 @@ pub fn get_log_entry_by_id(id: i32) -> Option<LogEntry> {
 pub fn get_logs_for_game(id: i32) -> Vec<LogEntry> {
     let connection = &mut establish_connection();
     log_entry::table
-        .filter(log_entry::game_id.eq(id))
         .select(log_entry::all_columns)
-        .inner_join(tribute_action)
-        .inner_join(area)
-        .inner_join(game)
-        .inner_join(tribute)
+        .filter(log_entry::game_id.eq(id))
         .load(connection)
         .expect("Error loading log entries")
 }
@@ -129,13 +132,9 @@ pub fn get_logs_for_game(id: i32) -> Vec<LogEntry> {
 pub fn get_logs_for_game_day(id: i32, day: i32) -> Vec<LogEntry> {
     let connection = &mut establish_connection();
     log_entry::table
+        .select(log_entry::all_columns)
         .filter(log_entry::game_id.eq(id))
         .filter(log_entry::day.eq(day))
-        .select(log_entry::all_columns)
-        .inner_join(tribute_action)
-        .inner_join(area)
-        .inner_join(game)
-        .inner_join(tribute)
         .load(connection)
         .expect("Error loading log entries")
 }
@@ -145,10 +144,6 @@ pub fn get_logs_for_tribute(id: i32) -> Vec<LogEntry> {
     log_entry::table
         .filter(log_entry::tribute_id.eq(id))
         .select(log_entry::all_columns)
-        .inner_join(tribute_action)
-        .inner_join(area)
-        .inner_join(game)
-        .inner_join(tribute)
         .load(connection)
         .expect("Error loading log entries")
 }

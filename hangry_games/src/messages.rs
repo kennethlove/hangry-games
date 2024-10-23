@@ -176,7 +176,7 @@ impl Display for GameMessage {
                 write!(f, "{}", format!("🔥 {} gets burned, loses health", tribute.name))
             }
             GameMessage::TributeHorrified(tribute, damage) => {
-                write!(f, "{}", format!("😱 {} is horrified by the violence, loses {} sanity.", tribute.name, 1))
+                write!(f, "{}", format!("😱 {} is horrified by the violence, loses {} sanity.", tribute.name, damage))
             }
             GameMessage::TributeSuffer(tribute) => {
                 write!(f, "{}", format!("😭 {} suffers from loneliness and terror.", tribute.name))

@@ -2,7 +2,7 @@ use crate::events::AreaEvent;
 use crate::models;
 use crate::models::area::Area as AreaModel;
 use crate::models::tribute::Tribute as ModelTribute;
-use crate::models::{get_game_by_id, update_tribute};
+use crate::models::{create_full_log, get_game_by_id, update_tribute};
 use crate::tributes::actors::Tribute;
 use crate::tributes::statuses::TributeStatus;
 use rand::Rng;
@@ -148,12 +148,21 @@ impl Area {
     }
 
     pub fn do_area_event(game_id: i32) {
-        let event = crate::events::AreaEvent::random();
+        let event = AreaEvent::random();
         let mut game = get_game_by_id(game_id).expect("Game doesn't exist");
         let closed_areas = game.closed_areas();
         let area = Area::random_open_area(closed_areas);
 
         println!("{}", GameMessage::AreaEvent(event.clone(), area.clone()));
+        create_full_log(
+            game_id,
+            GameMessage::AreaEvent(event.clone(), area.clone()).to_string(),
+            None,
+            Some(area.id()),
+            None,
+            None,
+            None,
+        );
 
         let model_area = models::Area::from(area.clone());
         models::AreaEvent::create(event.to_string(), model_area.id, game.id);
@@ -174,10 +183,18 @@ impl Area {
                 .filter(|t| t.day_killed.is_none())
                 .map(|t| Tribute::from(t.clone()))
                 .collect::<Vec<_>>();
-            let area_name = area.as_str().strip_prefix("The ").unwrap_or(area.as_str());
 
             for mut tribute in tributes {
                 println!("{}", GameMessage::TrappedInArea(tribute.clone(), area.clone()));
+                create_full_log(
+                    game_id,
+                    GameMessage::TrappedInArea(tribute.clone(), area.clone()).to_string(),
+                    None,
+                    Some(area.id()),
+                    Some(tribute.id.unwrap()),
+                    None,
+                    None,
+                );
 
                 if rng.gen_bool(tribute.luck.unwrap_or(0) as f64 / 100.0) {
                     // If the tribute is lucky, they're just harmed by the event
@@ -211,6 +228,15 @@ impl Area {
                     tribute.health = 0;
                     tribute.killed_by = Some(last_event.name.clone());
                     println!("{}", GameMessage::DiedInArea(tribute.clone(), area.clone()));
+                    create_full_log(
+                        game_id,
+                        GameMessage::DiedInArea(tribute.clone(), area.clone()).to_string(),
+                        None,
+                        Some(area.id()),
+                        Some(tribute.id.unwrap()),
+                        None,
+                        None,
+                    );
                 }
                 update_tribute(tribute.id.unwrap(), ModelTribute::from(tribute.clone()));
             }
@@ -218,6 +244,15 @@ impl Area {
             // Re-open the area?
             if rng.gen_bool(0.5) {
                 println!("{}", GameMessage::AreaOpen(area.clone()));
+                create_full_log(
+                    game_id,
+                    GameMessage::AreaOpen(area.clone()).to_string(),
+                    None,
+                    Some(area.id()),
+                    None,
+                    None,
+                    None,
+                );
                 game.open_area(&model_area);
             }
         }

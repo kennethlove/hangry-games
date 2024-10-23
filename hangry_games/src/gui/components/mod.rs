@@ -12,3 +12,4 @@ pub mod tribute_table;
 pub mod tribute_detail;
 pub mod game_play;
 pub mod game_log;
+pub mod game_day_log;
