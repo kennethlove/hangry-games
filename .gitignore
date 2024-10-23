@@ -18,3 +18,6 @@ target/
 
 # Ignore dist files
 dist/
+
+# Ignore uploaded avatars
+./hangry_games/avatars
