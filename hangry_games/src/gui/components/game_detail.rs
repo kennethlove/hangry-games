@@ -25,11 +25,11 @@ pub fn GameDetail(id: i32) -> Element {
             }
             h3 {
                 class: "text-lg text-slate-700 orbitron-font font-bold tracking-wider",
-                "Currently "
                 span {
                     class: "font-normal text-slate-700 tracking-normal",
-                    "day {game.day.unwrap_or(0)}"
+                    "Day "
                 }
+                "{game.day.unwrap_or(0)}",
             }
         }
         div {

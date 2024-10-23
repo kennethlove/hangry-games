@@ -20,7 +20,7 @@ pub fn TributeBox(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Element {
                     "District {tribute.district}"
                 }
                 p {
-                    class: "text-xl font-bold text-white sm:text-2xl",
+                    class: "text-xl font-bold text-white sm:text-2xl drop-shadow",
                     "{tribute.name}"
                 }
                 div {
