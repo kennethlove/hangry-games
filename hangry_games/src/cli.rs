@@ -138,7 +138,7 @@ pub fn parse() {
             println!("Game created: {}", game.name);
         }
         Commands::ShowGames => {
-            for _game in get_games(None) {
+            for _game in get_games() {
                 println!("{}, Day {}, Tributes {}/24 {}",
                          _game.name,
                          _game.day.unwrap_or(0),
