@@ -77,7 +77,6 @@ fn GamePlayButton(game: Game) -> Element {
 }
 #[component]
 fn GameLogButton(game: Game) -> Element {
-    let _state = use_context::<Signal<HGState>>();
     let nav = navigator();
     let mut classes = "inline-block px-4 py-2 text-sm font-normal text-slate-800 hover:text-green-700 focus:relative w-full".to_string();
     if game.tributes().len() != 24 || game.status == GameStatus::NotStarted {
