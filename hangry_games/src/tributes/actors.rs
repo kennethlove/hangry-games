@@ -38,12 +38,13 @@ pub struct Tribute {
     pub defense: Option<i32>,
     pub is_hidden: Option<bool>,
     pub dexterity: Option<i32>,
-    pub status: TributeStatus
+    pub status: TributeStatus,
+    pub avatar: Option<String>,
 }
 
 impl Tribute {
     /// Creates a new Tribute with full health, sanity, and movement.
-    pub fn new(name: String, district: Option<i32>) -> Self {
+    pub fn new(name: String, district: Option<i32>, avatar: Option<String>) -> Self {
         let brain = TributeBrain::new();
         let mut rng = thread_rng();
         let district = district.unwrap_or(0);
@@ -75,6 +76,7 @@ impl Tribute {
             is_hidden: Some(false),
             dexterity: Some(rng.gen_range(1..=100)),
             status: TributeStatus::Healthy,
+            avatar,
         }
     }
 
@@ -1232,7 +1234,7 @@ pub fn pick_target(tribute: TributeModel) -> Option<Tribute> {
 
 impl Default for Tribute {
     fn default() -> Self {
-        Self::new("Tribute".to_string(), None)
+        Self::new("Tribute".to_string(), None, None)
     }
 }
 
@@ -1284,6 +1286,7 @@ impl From<TributeModel> for Tribute {
             is_hidden: tribute.is_hidden,
             dexterity: tribute.dexterity,
             status: TributeStatus::from_str(tribute.status.as_str()).unwrap(),
+            avatar: tribute.avatar.clone(),
         }
     }
 }
@@ -1321,6 +1324,7 @@ impl Into<UpdateTribute> for Tribute {
             is_hidden: self.is_hidden,
             dexterity: self.dexterity,
             status: self.status.to_string(),
+            avatar: self.avatar,
         }
     }
 }

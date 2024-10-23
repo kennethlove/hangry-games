@@ -245,7 +245,7 @@ pub fn fill_tributes(game: &Game) -> usize {
     if count < 24 {
         for _ in count..24 {
             let name: String = Name(EN).fake();
-            let mut tribute = models::create_tribute(&name);
+            let mut tribute = models::create_tribute(&name, None);
             tribute.set_game(&game)
         }
     }

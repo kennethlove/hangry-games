@@ -8,10 +8,9 @@ use crate::models::get_game_by_id;
 use crate::tributes::actors::Tribute;
 use dioxus_logger::tracing::info;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct UploadedFile {
     name: String,
-    contents: Vec<u8>
 }
 
 #[component]
@@ -19,6 +18,7 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
     let game = Game::from(get_game_by_id(game_id).unwrap());
     let mut tribute_name = use_signal(String::new);
     let mut files_uploaded = use_signal(|| Vec::new() as Vec<UploadedFile>);
+    let mut avatar_path = use_signal(String::new);
 
     let read_files = move |file_engine: Arc<dyn FileEngine>| async move {
         let files = file_engine.files();
@@ -26,15 +26,15 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
             if let Some(contents) = file_engine.read_file(file_name).await {
                 let extension = Path::new(file_name).extension().unwrap().to_str().unwrap();
                 let file_name = format!("{}.{}", tribute_name.read().as_str().to_lowercase(), extension);
-                let save_path = format!("./avatars/{}/", game_id);
+                let save_path = format!("./assets/avatars/{}/", game_id);
                 let save_path = Path::new(&save_path);
+                avatar_path.set(format!("avatars/{}", file_name));
 
                 std::fs::create_dir_all(save_path).expect("Unable to create directory");
                 std::fs::write(format!("{}{}", save_path.to_str().unwrap(), file_name), &contents).expect("Unable to write file");
 
                 files_uploaded.write().push(UploadedFile {
                     name: file_name.clone(),
-                    contents
                 });
             }
         }
@@ -56,11 +56,14 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
                     let data = event.data.values();
                     let name = data.get("tribute_name").unwrap().first().unwrap();
                     let image = files_uploaded.read();
-                    let image = image.first();
-                    let tribute = game.add_tribute(name.clone());
+                    let image = image.first().clone();
+                    let image = image.as_ref().map(|file| file.name.clone());
+                    info!("{:?}", avatar_path.read().clone());
+
+                    let tribute = game.add_tribute(name.clone(), Some(avatar_path.read().clone()));
+
                     signal.write().push(tribute.expect("Error creating tribute"));
                     tribute_name.set(String::from(""));
-                    info!("{:?}", image);
                 },
                 input {
                     r#type: "text",

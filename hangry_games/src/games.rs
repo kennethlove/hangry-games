@@ -93,9 +93,9 @@ impl Game {
         get_dead_tributes(&game).iter().map(|t| Tribute::from(t.clone())).collect()
     }
 
-    pub fn add_tribute(&self, name: String) -> Result<Tribute, ()> {
+    pub fn add_tribute(&self, name: String, avatar: Option<String>) -> Result<Tribute, ()> {
         let game = get_game(self.name.as_str()).expect("Error loading game");
-        let mut tribute = create_tribute(name.as_str());
+        let mut tribute = create_tribute(name.as_str(), avatar);
         tribute.set_game(&game);
         tribute.game_id = Some(game.id);
 

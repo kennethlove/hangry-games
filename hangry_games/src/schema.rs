@@ -102,6 +102,7 @@ diesel::table! {
         dexterity -> Nullable<Int4>,
         #[max_length = 255]
         status -> Varchar,
+        avatar -> Nullable<Text>,
     }
 }
 

@@ -21,3 +21,4 @@ dist/
 
 # Ignore uploaded avatars
 ./hangry_games/avatars
+./hangry_games/assets/avatars
