@@ -10,7 +10,7 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
 
     rsx! {
         div {
-            class: "bg-white overflow-hidden sm:rounded-lg mt-4",
+            class: "mt-4",
             form {
                 class: "flex justify-center",
                 onsubmit: move |event| {
@@ -22,7 +22,7 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
                 },
                 input {
                     r#type: "text",
-                    class: "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline",
+                    class: "block w-half mr-2 text-sm px-2 text-gray-900 border border-orange-700 rounded-md bg-yellow-200 dark:text-gray-400 focus:outline-none dark:bb-gray-700 dark:border-gray-600 dark:placeholder-gray-400 placeholder-gray-900",
                     id: "tribute_name",
                     name: "tribute_name",
                     placeholder: "Tribute Name",
@@ -34,8 +34,15 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
                         }
                     }
                 }
+                input {
+                    class: "block w-half text-sm px-2 py-2 text-gray-900 border border-orange-700 rounded-md cursor-pointer bg-yellow-200 dark:text-gray-400 focus:outline-none dark:bb-gray-700 dark:border-gray-600 dark:placeholder-gray-400",
+                    id: "file_input",
+                    r#type: "file",
+                    placeholder: "Upload Image",
+                }
+
                 button {
-                    class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded",
+                    class: "bg-gradient-to-r from-orange-500 to-yellow-300 rounded-md text-red-800 orbitron-font font-semibold py-2 px-4 ml-2",
                     "Add Tribute"
                 }
             }

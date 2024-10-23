@@ -5,39 +5,36 @@ use crate::models::{get_game_by_id, get_logs_for_game_day};
 
 #[component]
 pub fn GameDayLog(id: i32, day: i32) -> Element {
-    let game = Game::from(get_game_by_id(id).expect("Game not found"));
+    let game = Game::from(get_game_by_id(id).unwrap());
 
     rsx! {
         div {
-            class: "flow-root",
-            h1 { "Game Play" }
             h2 {
-                class: "text-xl font-bold",
-                "Day {day}"
+                class: "text-2xl font-bold text-slate-900 orbitron-font tracking-wider",
+                "Game ",
+                Link {
+                    to: Routes::GameDetail { id: game.id.unwrap() },
+                    class: "font-normal text-red-700 tracking-normal",
+                    "{game.name}"
+                },
             }
-            h3 {
-                "{game.id.unwrap()}"
-            }
-            ol {
-                for log in get_logs_for_game_day(game.id.unwrap(), day).iter() {
-                    li { "{log.message}" }
+            div {
+                h2 {
+                    class: "text-xl font-bold orbitron-font tracking-wider",
+                    "Day {day}"
+                }
+                ol {
+                    class: "indent-4 mb-4",
+                    for log in get_logs_for_game_day(game.id.unwrap(), day).iter() {
+                        li { "{log.message}" }
+                    }
                 }
             }
-            Link {
-                class: "text-blue-500 underline",
-                to: Routes::GamePlay { id: game.id.unwrap() },
-                "Back to Game Play"
-            }
-            Link {
-                class: "text-blue-500 underline",
-                to: Routes::GameDetail { id: game.id.unwrap() },
-                "Back to Game"
-            }
-            Link {
-                class: "text-blue-500 underline",
-                to: Routes::Home {},
-                "Back to Home"
-            }
+        }
+        Link {
+            class: "text-red-700 underline",
+            to: Routes::Home {},
+            "Back to Home"
         }
     }
 }
