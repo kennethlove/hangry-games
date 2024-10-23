@@ -153,12 +153,11 @@ pub fn get_game_by_id(id: i32) -> Result<Game, std::io::Error> {
     Ok(got_game)
 }
 
-pub fn get_games(count: Option<u8>) -> Vec<Game> {
+pub fn get_games() -> Vec<Game> {
     let connection = &mut establish_connection();
     game::table
         .select(game::all_columns)
         .order_by(game::created_at.desc())
-        .limit(count.unwrap_or(10) as i64)
         .load::<Game>(connection)
         .expect("Error loading games")
 }
