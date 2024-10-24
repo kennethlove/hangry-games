@@ -72,7 +72,7 @@ pub fn parse() {
         // Tributes
         Commands::AddTribute { name, game_id: game } => {
             let game = get_game(&game).expect("Game not found");
-            let mut tribute = create_tribute(&name);
+            let mut tribute = create_tribute(&name, None);
             tribute.try_set_game(&game).expect("Error adding tribute to game");
             dbg!(&tribute);
         }

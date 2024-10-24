@@ -6,6 +6,7 @@ use crate::gui::components::create_tribute::CreateTribute;
 use crate::gui::components::tribute_table::TributeTable;
 use crate::gui::components::tribute_actions_group::TributeActionsGroup;
 use crate::gui::components::tribute_boxes::TributeBoxes;
+use crate::gui::components::tribute_list::TributeList;
 
 #[component]
 pub fn GameDetail(id: i32) -> Element {
@@ -51,13 +52,14 @@ pub fn GameDetail(id: i32) -> Element {
                 "Full Log"
             }
         }
-        div {
-            class: "mt-4",
-            TributeBoxes { tributes: tributes.clone() }
-        }
 
         if game.tributes().len() < 24 {
             CreateTribute {signal: tributes.clone(), game_id: game.id.unwrap()}
+        }
+
+        div {
+            class: "mt-4",
+            TributeList { tributes: tributes.clone() }
         }
 
         Link {

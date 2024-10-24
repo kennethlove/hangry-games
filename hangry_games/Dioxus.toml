@@ -23,7 +23,7 @@ title = "Hangry Games"
 reload_html = true
 
 # Which files or dirs will be monitored
-watch_path = ["src", "assets"]
+watch_path = ["src"]
 
 # Include style or script assets
 [web.resource]

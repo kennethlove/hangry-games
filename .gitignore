@@ -14,7 +14,11 @@ target/
 .vscode/
 
 # Ignore logfile from log_tributes CLI
-./hangry_games/log
+hangry_games/log
 
 # Ignore dist files
 dist/
+
+# Ignore uploaded avatars
+hangry_games/avatars
+hangry_games/assets/avatars/**

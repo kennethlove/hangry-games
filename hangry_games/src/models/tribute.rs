@@ -38,6 +38,7 @@ pub struct Tribute {
     pub is_hidden: Option<bool>,
     pub dexterity: Option<i32>,
     pub status: String,
+    pub avatar: Option<String>,
 }
 
 impl Tribute {
@@ -189,6 +190,7 @@ impl From<crate::tributes::actors::Tribute> for Tribute {
             is_hidden: tribute.is_hidden,
             dexterity: tribute.dexterity,
             status: tribute.status.to_string(),
+            avatar: tribute.avatar,
         };
         out_tribute
     }
@@ -209,6 +211,7 @@ pub struct NewTribute {
     pub defense: Option<i32>,
     pub dexterity: Option<i32>,
     pub status: String,
+    pub avatar: Option<String>,
 }
 
 impl From<crate::tributes::actors::Tribute> for NewTribute {
@@ -226,6 +229,7 @@ impl From<crate::tributes::actors::Tribute> for NewTribute {
             defense: tribute.defense,
             dexterity: tribute.dexterity,
             status: tribute.status.to_string(),
+            avatar: tribute.avatar,
         };
         out_tribute
     }
@@ -260,9 +264,10 @@ pub struct UpdateTribute {
     pub is_hidden: Option<bool>,
     pub dexterity: Option<i32>,
     pub status: String,
+    pub avatar: Option<String>
 }
 
-pub fn create_tribute(name: &str) -> Tribute {
+pub fn create_tribute(name: &str, avatar: Option<String>) -> Tribute {
     use crate::schema::tribute;
     let conn = &mut establish_connection();
 
@@ -275,7 +280,7 @@ pub fn create_tribute(name: &str) -> Tribute {
     let district = district as i32;
     let district = district % 12 + 1;
 
-    let tribute = TributeActor::new(name.to_string(), Some(district));
+    let tribute = TributeActor::new(name.to_string(), Some(district), avatar);
     let new_tribute = NewTribute::from(tribute);
 
     diesel::insert_into(tribute::table)
@@ -351,6 +356,7 @@ pub fn update_tribute(tribute_id: i32, tribute: Tribute) {
         is_hidden: tribute.is_hidden,
         dexterity: tribute.dexterity,
         status: tribute.status,
+        avatar: tribute.avatar,
     };
     diesel::update(tribute::table.find(tribute_id))
         .set(&update_tribute)

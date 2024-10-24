@@ -1,16 +1,24 @@
 use dioxus::prelude::*;
+use dioxus_logger::tracing::info;
 use crate::gui::router::Routes;
 use crate::gui::components::tribute_actions_group::TributeActionsGroup;
 use crate::tributes::actors::Tribute;
 
 #[component]
 pub fn TributeBox(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Element {
+    let mut avatar = tribute.avatar.clone();
+    if avatar.is_some() {
+        avatar = Some(format!("{}", avatar.as_ref().unwrap()));
+    } else {
+        avatar = Some("https://images.unsplash.com/photo-1603871165848-0aa92c869fa1?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=772&q=80".to_string());
+    }
+
     rsx! {
         div {
             class: "group relative block bg-gradient-to-b to-orange-500 from-yellow-300 rounded-md overflow-hidden",
             img {
                 class: "absolute inset-0 h-full w-full object-cover opacity-100 transition-opacity group-hover:opacity-75",
-                src: "https://images.unsplash.com/photo-1603871165848-0aa92c869fa1?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=772&q=80"
+                src: avatar.unwrap()
             }
 
             div {
