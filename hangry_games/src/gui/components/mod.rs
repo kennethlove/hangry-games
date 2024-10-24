@@ -13,5 +13,6 @@ pub mod tribute_actions_group;
 pub mod tribute_box;
 pub mod tribute_boxes;
 pub mod tribute_detail;
+pub mod tribute_list;
 pub mod tribute_list_item;
 pub mod tribute_table;
