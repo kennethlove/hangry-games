@@ -1,30 +1,44 @@
 use dioxus::prelude::*;
 use dioxus_logger::tracing::info;
+use serde::__private::de::IdentifierDeserializer;
 use crate::gui::router::Routes;
 use crate::gui::components::tribute_actions_group::TributeActionsGroup;
 use crate::tributes::actors::Tribute;
 
 #[component]
 pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Element {
-    let mut avatar = tribute.avatar.clone();
-    if avatar.is_some() {
-        avatar = Some(format!("{}", avatar.as_ref().unwrap()));
-    } else {
-        avatar = Some("https://images.unsplash.com/photo-1603871165848-0aa92c869fa1?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=772&q=80".to_string());
-    }
+    let avatar = Some(
+        format!("{}", tribute.avatar.as_ref().unwrap_or(&"hangry-games.png".to_string()))
+    );
+
+    let surrounding_border = match tribute.health {
+        1..=25 => "border-red-500",
+        26..=50 => "border-yellow-500",
+        51..=75 => "border-green-500",
+        76..=100 => "border-blue-500",
+        _ => "border-gray-900",
+    };
+
+    let gradient_stop = match tribute.health {
+        1..=25 => "from-gray-900 to-red-700",
+        26..=50 => "from-gray-900 to-yellow-700",
+        51..=75 => "from-gray-900 to-green-700",
+        76..=100 => "from-gray-900 to-blue-700",
+        _ => "from-gray-900 to-gray-700",
+    };
 
     rsx! {
         div {
-            class: "rounded-full border-4 p-2 bg-gray-800 flex flex-row border-green-500 bg-gradient-to-b from-slate-700 to-slate-950",
+            class: "rounded-full border-4 p-2 mb-2 bg-gray-800 flex flex-row bg-gradient-to-b {gradient_stop}",
             img {
-                class: "rounded-full w-16 h-16",
-                src: avatar.unwrap()
+                class: "rounded-full border-2 {surrounding_border} mr-2 min-h-16 max-h-16 min-w-16 max-w-16",
+                src: avatar.unwrap(),
             }
 
             div {
-                class: "ml-4 w-1/2 mt-2",
+                class: "w-1/2 mt-2",
                 h1 {
-                    class: "text-lg text-orange-500 leading-6",
+                    class: "text-lg text-orange-500 leading-none",
                     "{tribute.name}"
                 }
                 h2 {
@@ -33,23 +47,26 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Elemen
                 }
             }
             div {
-                class: "w-full text-sm text-white mt-2",
-                dl {
-                    class: "grid grid-cols-2",
-                    dt {
-                        class: "text-right pr-2 text-orange-500",
-                        "Status"
+                class: "text-xs text-white mt-1",
+                div {
+                    class: "flex flex-row gap-1",
+                    span {
+                        class: "text-orange-500 material-symbols-outlined",
+                        "monitor_heart"
                     }
-                    dd {
-                        class: "",
+                    span {
+                        class: "mt-1",
                         "{tribute.status}"
                     }
-                    dt {
-                        class: "text-right pr-2 text-orange-500",
-                        "Location"
+                }
+                div {
+                    class: "flex flex-row",
+                    span {
+                        class: "text-orange-500 material-symbols-outlined",
+                        "location_on"
                     }
-                    dd {
-                        class: "",
+                    span {
+                        class: "mt-1",
                         "{tribute.area.unwrap()}"
                     }
                 }
