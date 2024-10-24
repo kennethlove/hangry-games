@@ -26,9 +26,9 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
             if let Some(contents) = file_engine.read_file(file_name).await {
                 let extension = Path::new(file_name).extension().unwrap().to_str().unwrap();
                 let file_name = format!("{}.{}", tribute_name.read().as_str().to_lowercase(), extension);
-                let save_path = format!("./assets/avatars/{}/", game_id);
+                let save_path = format!("./avatars/{}/", game_id);
                 let save_path = Path::new(&save_path);
-                avatar_path.set(format!("avatars/{}", file_name));
+                avatar_path.set(format!("avatars/{}/{}", game_id, file_name));
 
                 std::fs::create_dir_all(save_path).expect("Unable to create directory");
                 std::fs::write(format!("{}{}", save_path.to_str().unwrap(), file_name), &contents).expect("Unable to write file");

@@ -7,7 +7,6 @@ use crate::tributes::actors::Tribute;
 #[component]
 pub fn TributeBox(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Element {
     let mut avatar = tribute.avatar.clone();
-    info!("{:?}", avatar);
     if avatar.is_some() {
         avatar = Some(format!("{}", avatar.as_ref().unwrap()));
     } else {
