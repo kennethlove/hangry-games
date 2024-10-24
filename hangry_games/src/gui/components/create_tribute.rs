@@ -11,6 +11,7 @@ use dioxus_logger::tracing::info;
 #[derive(Clone, Debug)]
 struct UploadedFile {
     name: String,
+    contents: Vec<u8>
 }
 
 #[component]
@@ -24,17 +25,9 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
         let files = file_engine.files();
         for file_name in &files {
             if let Some(contents) = file_engine.read_file(file_name).await {
-                let extension = Path::new(file_name).extension().unwrap().to_str().unwrap();
-                let file_name = format!("{}.{}", tribute_name.read().as_str().to_lowercase(), extension);
-                let save_path = format!("./avatars/{}/", game_id);
-                let save_path = Path::new(&save_path);
-                avatar_path.set(format!("avatars/{}/{}", game_id, file_name));
-
-                std::fs::create_dir_all(save_path).expect("Unable to create directory");
-                std::fs::write(format!("{}{}", save_path.to_str().unwrap(), file_name), &contents).expect("Unable to write file");
-
                 files_uploaded.write().push(UploadedFile {
                     name: file_name.clone(),
+                    contents: contents.clone()
                 });
             }
         }
@@ -56,11 +49,16 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
                     let data = event.data.values();
                     let name = data.get("tribute_name").unwrap().first().unwrap();
                     let image = files_uploaded.read();
-                    let image = image.first().clone();
-                    let image = image.as_ref().map(|file| file.name.clone());
-                    info!("{:?}", avatar_path.read().clone());
+                    let image = image.first().unwrap().clone();
 
-                    let tribute = game.add_tribute(name.clone(), Some(avatar_path.read().clone()));
+                    let extension = Path::new(&image.name).extension().unwrap().to_str().unwrap().to_lowercase();
+                    let filename = format!("{}.{}", name.to_lowercase(), extension);
+                    let avatar_path = format!("avatars/{}/", game_id);
+                    let save_path = format!("./assets/{}/", avatar_path);
+                    let tribute = game.add_tribute(name.clone(), Some(format!("{}{}", avatar_path, filename)));
+
+                    std::fs::create_dir_all(&save_path).expect("Unable to create directory");
+                    std::fs::write(format!("{}{}", save_path, filename), &image.contents).expect("Unable to write file");
 
                     signal.write().push(tribute.expect("Error creating tribute"));
                     tribute_name.set(String::from(""));
