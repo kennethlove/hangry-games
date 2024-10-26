@@ -1,5 +1,6 @@
 pub mod create_game;
 pub mod create_tribute;
+pub mod fill_tributes_button;
 pub mod game_actions_group;
 pub mod game_day_log;
 pub mod game_detail;
