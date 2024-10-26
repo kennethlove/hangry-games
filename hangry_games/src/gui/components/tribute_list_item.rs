@@ -7,9 +7,15 @@ use crate::tributes::actors::Tribute;
 
 #[component]
 pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Element {
-    let avatar = Some(
+    let mut avatar = Some(
         format!("{}", tribute.avatar.as_ref().unwrap_or(&"hangry-games.png".to_string()))
     );
+
+    if cfg!(target_family = "windows") {
+        avatar = Some(
+            format!("assets/{}", avatar.unwrap())
+        );
+    }
 
     let surrounding_border = match tribute.health {
         1..=25 => "border-red-500",
