@@ -25,7 +25,8 @@ fn main() {
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />"#.to_string();
     head.push_str(&custom_head());
 
-    let config = Config::new().with_custom_head(head)
+    let config = Config::new()
+        .with_custom_head(head)
         .with_window(
             WindowBuilder::new()
                 .with_resizable(true)
