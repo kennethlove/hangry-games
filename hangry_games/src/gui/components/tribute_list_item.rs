@@ -45,7 +45,10 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Elemen
                 class: "w-1/2 mt-2",
                 h1 {
                     class: "text-lg text-orange-500 leading-none",
-                    "{tribute.name}"
+                    Link {
+                        to: Routes::TributeDetail { id: tribute.id.unwrap() },
+                        "{tribute.name}"
+                    }
                 }
                 h2 {
                     class: "text-sm text-white",
