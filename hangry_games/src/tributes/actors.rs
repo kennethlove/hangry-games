@@ -305,7 +305,7 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeTravel(self.clone(), area.clone(), suggested_area.clone().unwrap()).to_string(),
-                    Some(get_action("Move").id),
+                    Some(get_action("move").id),
                     Some(area.id()),
                     Some(self.id.unwrap()),
                     Some("Move".to_string()),
@@ -365,7 +365,7 @@ impl Tribute {
                             create_full_log(
                                 self.game_id.unwrap(),
                                 GameMessage::TributeTravelFollow(self.clone(), area.clone()).to_string(),
-                                Some(get_action("Move").id),
+                                Some(get_action("move").id),
                                 Some(self.area.clone().unwrap().id()),
                                 Some(self.id.unwrap()),
                                 Some("Move".to_string()),
@@ -385,7 +385,7 @@ impl Tribute {
                             create_full_log(
                                 self.game_id.unwrap(),
                                 GameMessage::TributeTravelStay(self.clone(), area.clone()).to_string(),
-                                Some(get_action("Move").id),
+                                Some(get_action("move").id),
                                 Some(area.id()),
                                 Some(self.id.unwrap()),
                                 Some("Move".to_string()),
@@ -402,7 +402,7 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeTravel(self.clone(), area.clone(), new_area.clone()).to_string(),
-                    Some(get_action("Move").id),
+                    Some(get_action("move").id),
                     Some(area.id()),
                     Some(self.id.unwrap()),
                     Some("Move".to_string()),
@@ -895,6 +895,8 @@ impl Tribute {
             TributeAction::TakeItem => {
                 let item = self.take_nearby_item(area);
                 println!("{}", GameMessage::TributeTakeItem(self.clone(), item.clone()));
+                dbg!(&item);
+                dbg!(&action);
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeTakeItem(self.clone(), item.clone()).to_string(),
