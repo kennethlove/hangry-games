@@ -66,11 +66,10 @@ fn GamePlayButton(game: Game) -> Element {
             class: classes,
             title: "Play Next Day",
             onclick: move |_| {
-                if game.status != GameStatus::NotStarted {
+                if game.status == GameStatus::NotStarted {
                     game.start();
                 }
-                game.run_day_night_cycle();
-                nav.push(Routes::GameDayLog { id: game.id.unwrap(), day: game.day.unwrap() });
+                nav.push(Routes::GamePlay { id: game.id.unwrap() });
             },
             span {
                 class: "material-symbols-outlined",
