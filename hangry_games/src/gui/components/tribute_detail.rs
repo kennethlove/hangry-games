@@ -12,7 +12,7 @@ pub fn TributeDetail(id: i32) -> Element {
         div {
             class: "flex flex-row justify-left items-top gap-4",
             img {
-                class: "rounded-m border-2 border-gray-900 size-64",
+                class: "rounded-m size-64",
                 src: format!("{}", tribute.avatar.as_ref().unwrap_or(&"hangry-games.png".to_string())),
             }
             div {

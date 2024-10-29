@@ -6,15 +6,12 @@ pub fn FillTributesButton() -> Element {
     let mut state = use_context::<Signal<ShowModal>>();
 
     rsx! {
-        div {
-            class: "mt-4",
-            button {
-                class: "bg-gradient-to-r from-orange-500 to-yellow-300 rounded-md text-red-800 orbitron-font font-semibold py-2 px-4 b-1 border border-orange-700",
-                onclick: move |_| {
-                    state.write().show = true;
-                },
-                "Fill game"
-            }
+        button {
+            class: "orbitron-font b-1 w-min whitespace-nowrap rounded-md border border-orange-700 bg-gradient-to-r from-orange-500 to-yellow-300 px-2 py-1 text-red-800",
+            onclick: move |_| {
+                state.write().show = true;
+            },
+            "Fill game"
         }
     }
 }

@@ -7,15 +7,8 @@ use crate::gui::components::{
 #[component]
 pub fn Home() -> Element {
     rsx! {
-        div {
-            class: "",
-            div {
-                GameTable {}
-            }
-            div {
-                CreateGame {}
-            }
-        }
+        CreateGame {}
+        GameTable {}
     }
 }
 
