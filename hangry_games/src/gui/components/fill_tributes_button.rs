@@ -1,7 +1,5 @@
 use dioxus::prelude::*;
-use crate::games::Game;
 use crate::gui::components::game_detail::ShowModal;
-use crate::models::{fill_tributes, get_game_by_id};
 
 #[component]
 pub fn FillTributesButton() -> Element {

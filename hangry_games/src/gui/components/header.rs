@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use crate::gui::router::Routes;
 
 #[component]
 pub fn Header() -> Element {

@@ -290,7 +290,6 @@ impl Tribute {
             create_full_log(
                 self.game_id.unwrap(),
                 GameMessage::TributeTravelAlreadyThere(self.clone(), suggested_area.clone().unwrap()).to_string(),
-                None,
                 Some(area.id()),
                 Some(self.id.unwrap()),
                 None,
@@ -305,7 +304,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeTravel(self.clone(), area.clone(), suggested_area.clone().unwrap()).to_string(),
-                    Some(get_action("move").id),
                     Some(area.id()),
                     Some(self.id.unwrap()),
                     Some("Move".to_string()),
@@ -323,7 +321,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeTravelTooTired(self.clone(), area.clone()).to_string(),
-                    None,
                     Some(area.id()),
                     Some(self.id.unwrap()),
                     None,
@@ -340,7 +337,6 @@ impl Tribute {
                         create_full_log(
                             self.game_id.unwrap(),
                             GameMessage::TributeTravelTooTired(self.clone(), area.clone()).to_string(),
-                            None,
                             Some(area.id()),
                             Some(self.id.unwrap()),
                             None,
@@ -365,7 +361,6 @@ impl Tribute {
                             create_full_log(
                                 self.game_id.unwrap(),
                                 GameMessage::TributeTravelFollow(self.clone(), area.clone()).to_string(),
-                                Some(get_action("move").id),
                                 Some(self.area.clone().unwrap().id()),
                                 Some(self.id.unwrap()),
                                 Some("Move".to_string()),
@@ -385,7 +380,6 @@ impl Tribute {
                             create_full_log(
                                 self.game_id.unwrap(),
                                 GameMessage::TributeTravelStay(self.clone(), area.clone()).to_string(),
-                                Some(get_action("move").id),
                                 Some(area.id()),
                                 Some(self.id.unwrap()),
                                 Some("Move".to_string()),
@@ -402,7 +396,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeTravel(self.clone(), area.clone(), new_area.clone()).to_string(),
-                    Some(get_action("move").id),
                     Some(area.id()),
                     Some(self.id.unwrap()),
                     Some("Move".to_string()),
@@ -422,7 +415,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeBleeds(self.clone()).to_string(),
-                    None,
                     Some(self.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     None,
@@ -436,7 +428,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeSick(self.clone()).to_string(),
-                    None,
                     Some(self.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     None,
@@ -449,7 +440,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeElectrocuted(self.clone()).to_string(),
-                    None,
                     Some(self.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     None,
@@ -462,7 +452,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeFrozen(self.clone()).to_string(),
-                    None,
                     Some(self.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     None,
@@ -475,7 +464,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeOverheated(self.clone()).to_string(),
-                    None,
                     Some(self.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     None,
@@ -488,7 +476,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeDehydrated(self.clone()).to_string(),
-                    None,
                     Some(self.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     None,
@@ -501,7 +488,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeStarving(self.clone()).to_string(),
-                    None,
                     Some(self.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     None,
@@ -514,7 +500,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributePoisoned(self.clone()).to_string(),
-                    None,
                     Some(self.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     None,
@@ -533,7 +518,6 @@ impl Tribute {
                     create_full_log(
                         self.game_id.unwrap(),
                         GameMessage::TributeBrokenLeg(self.clone()).to_string(),
-                        None,
                         Some(self.area.clone().unwrap().id()),
                         Some(self.id.unwrap()),
                         None,
@@ -545,7 +529,6 @@ impl Tribute {
                     create_full_log(
                         self.game_id.unwrap(),
                         GameMessage::TributeBrokenArm(self.clone()).to_string(),
-                        None,
                         Some(self.area.clone().unwrap().id()),
                         Some(self.id.unwrap()),
                         None,
@@ -560,7 +543,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeInfected(self.clone()).to_string(),
-                    None,
                     Some(self.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     None,
@@ -574,7 +556,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeDrowned(self.clone()).to_string(),
-                    None,
                     Some(self.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     None,
@@ -589,7 +570,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeMauled(self.clone(), number_of_animals, animal.clone(), damage).to_string(),
-                    None,
                     Some(self.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     None,
@@ -602,7 +582,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeBurned(self.clone()).to_string(),
-                    None,
                     Some(self.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     None,
@@ -617,7 +596,6 @@ impl Tribute {
             create_full_log(
                 self.game_id.unwrap(),
                 GameMessage::TributeDiesFromStatus(self.clone(), self.status.clone()).to_string(),
-                None,
                 Some(self.area.clone().unwrap().id()),
                 Some(self.id.unwrap()),
                 None,
@@ -672,7 +650,6 @@ impl Tribute {
             create_full_log(
                 self.game_id.unwrap(),
                 GameMessage::TributeDiesFromTributeEvent(self.clone(), tribute_event.clone()).to_string(),
-                None,
                 Some(self.area.clone().unwrap().id()),
                 Some(self.id.unwrap()),
                 None,
@@ -690,7 +667,6 @@ impl Tribute {
             create_full_log(
                 self.game_id.unwrap(),
                 GameMessage::TributeAlreadyDead(self.clone()).to_string(),
-                None,
                 Some(self.area.clone().unwrap().id()),
                 Some(self.id.unwrap()),
                 None,
@@ -723,7 +699,6 @@ impl Tribute {
                     self.game_id.unwrap(),
                     GameMessage::SponsorGift(self.clone(), item.clone()).to_string(),
                     None,
-                    None,
                     Some(self.id.unwrap()),
                     None,
                     None
@@ -737,7 +712,6 @@ impl Tribute {
             create_full_log(
                 self.game_id.unwrap(),
                 GameMessage::TributeDead(self.clone()).to_string(),
-                None,
                 Some(self.area.clone().unwrap().id()),
                 Some(self.id.unwrap()),
                 None,
@@ -756,7 +730,6 @@ impl Tribute {
             create_full_log(
                 self.game_id.unwrap(),
                 GameMessage::TributeTravel(self.clone(), area.clone(), self.area.clone().unwrap()).to_string(),
-                Some(get_action("Move").id),
                 Some(area.id()),
                 Some(self.id.unwrap()),
                 Some("Area".to_string()),
@@ -788,7 +761,6 @@ impl Tribute {
                         create_full_log(
                             self.game_id.unwrap(),
                             GameMessage::TributeTravel(self.clone(), self.area.clone().unwrap(), area.clone()).to_string(),
-                            Some(get_action(action.clone().as_str()).id),
                             Some(self.area.clone().unwrap().id()),
                             Some(self.id.unwrap()),
                             Some(action.clone().as_str().to_string()),
@@ -800,7 +772,6 @@ impl Tribute {
                         create_full_log(
                             self.game_id.unwrap(),
                             GameMessage::TributeRest(self.clone()).to_string(),
-                            Some(get_action("rest").id),
                             Some(self.area.clone().unwrap().id()),
                             Some(self.id.unwrap()),
                             None,
@@ -816,7 +787,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeHide(self.clone()).to_string(),
-                    Some(get_action(action.clone().as_str()).id),
                     Some(self.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     Some(action.clone().as_str().to_string()),
@@ -830,7 +800,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeLongRest(self.clone()).to_string(),
-                    Some(get_action(action.clone().as_str()).id),
                     Some(self.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     None,
@@ -863,7 +832,6 @@ impl Tribute {
                                 create_full_log(
                                     self.game_id.unwrap(),
                                     GameMessage::TributeAttackKill(attacker.clone(), target.clone()).to_string(),
-                                    Some(get_action(action.as_str()).id),
                                     Some(self.area.clone().unwrap().id()),
                                     Some(attacker.id.unwrap()),
                                     Some(action.as_str().to_string()),
@@ -878,7 +846,6 @@ impl Tribute {
                         create_full_log(
                             self.game_id.unwrap(),
                             GameMessage::TributeAttackHidden(self.clone(), target.clone()).to_string(),
-                            Some(get_action(action.clone().as_str()).id),
                             Some(self.area.clone().unwrap().id()),
                             Some(self.id.unwrap()),
                             Some(action.clone().as_str().to_string()),
@@ -900,7 +867,6 @@ impl Tribute {
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeTakeItem(self.clone(), item.clone()).to_string(),
-                    Some(get_action(action.clone().as_str()).id),
                     Some(self.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     Some(action.clone().as_str().to_string()),
@@ -923,7 +889,6 @@ impl Tribute {
                             create_full_log(
                                 self.game_id.unwrap(),
                                 GameMessage::TributeUseItem(self.clone(), item.clone()).to_string(),
-                                Some(get_action(action.clone().as_str()).id),
                                 Some(self.area.clone().unwrap().id()),
                                 Some(self.id.unwrap()),
                                 Some(action.clone().as_str().to_string()),
@@ -936,7 +901,6 @@ impl Tribute {
                             create_full_log(
                                 self.game_id.unwrap(),
                                 GameMessage::TributeCannotUseItem(self.clone(), item.clone()).to_string(),
-                                Some(get_action("rest").id),
                                 Some(self.area.clone().unwrap().id()),
                                 Some(self.id.unwrap()),
                                 Some(action.clone().as_str().to_string()),
@@ -959,7 +923,6 @@ impl Tribute {
                                 create_full_log(
                                     self.game_id.unwrap(),
                                     GameMessage::TributeUseItem(self.clone(), selected_item.unwrap().clone()).to_string(),
-                                    Some(get_action(action.clone().as_str()).id),
                                     Some(self.area.clone().unwrap().id()),
                                     Some(self.id.unwrap()),
                                     Some(action.clone().as_str().to_string()),
@@ -972,7 +935,6 @@ impl Tribute {
                                 create_full_log(
                                     self.game_id.unwrap(),
                                     GameMessage::TributeCannotUseItem(self.clone(), selected_item.unwrap().clone()).to_string(),
-                                    Some(get_action("rest").id),
                                     Some(self.area.clone().unwrap().id()),
                                     Some(self.id.unwrap()),
                                     Some(action.clone().as_str().to_string()),
@@ -1113,7 +1075,6 @@ fn attack_contest(attacker: Tribute, target: Tribute) -> AttackResult {
             create_full_log(
                 attacker.game_id.unwrap(),
                 GameMessage::WeaponBreak(attacker.clone(), weapon.clone()).to_string(),
-                None,
                 Some(attacker.area.clone().unwrap().id()),
                 Some(attacker.id.unwrap()),
                 Some("Weapon".to_string()),
@@ -1137,7 +1098,6 @@ fn attack_contest(attacker: Tribute, target: Tribute) -> AttackResult {
             create_full_log(
                 target.game_id.unwrap(),
                 GameMessage::ShieldBreak(target.clone(), shield.clone()).to_string(),
-                None,
                 Some(target.area.clone().unwrap().id()),
                 Some(target.id.unwrap()),
                 Some("Shield".to_string()),
@@ -1184,7 +1144,6 @@ pub fn pick_target(tribute: TributeModel) -> Option<Tribute> {
                     create_full_log(
                         tribute.game_id.unwrap(),
                         GameMessage::TributeSuicide(Tribute::from(tribute.clone())).to_string(),
-                        Some(get_action("attack").id),
                         Some(area.id),
                         Some(tribute.id),
                         Some("Tribute".to_string()),
@@ -1198,7 +1157,6 @@ pub fn pick_target(tribute: TributeModel) -> Option<Tribute> {
                         create_full_log(
                             tribute.game_id.unwrap(),
                             GameMessage::TributeSuicide(Tribute::from(tribute.clone())).to_string(),
-                            Some(get_action("attack").id),
                             Some(area.id),
                             Some(tribute.id),
                             Some("Tribute".to_string()),
@@ -1240,7 +1198,7 @@ impl Default for Tribute {
     }
 }
 
-use crate::models::{create_full_log, get_action, get_all_living_tributes, get_area, get_area_by_id, get_game_by_id, update_item, update_tribute, Action, Tribute as TributeModel};
+use crate::models::{create_full_log, get_all_living_tributes, get_area, get_area_by_id, get_game_by_id, update_item, update_tribute, Action, Tribute as TributeModel};
 impl From<TributeModel> for Tribute {
     fn from(tribute: models::tribute::Tribute) -> Self {
         use crate::areas::Area;

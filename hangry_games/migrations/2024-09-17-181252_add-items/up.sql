@@ -14,7 +14,7 @@ CREATE TABLE item (
     attribute VARCHAR(255) NOT NULL,
     effect INT NOT NULL,
 
-    CONSTRAINT fk_game_id FOREIGN KEY (game_id) REFERENCES game(id),
-    CONSTRAINT fk_area_id FOREIGN KEY (area_id) REFERENCES area(id),
-    CONSTRAINT fk_tribute_id FOREIGN KEY (tribute_id) REFERENCES tribute(id)
+    CONSTRAINT fk_game_id FOREIGN KEY (game_id) REFERENCES game(id) ON DELETE CASCADE,
+    CONSTRAINT fk_area_id FOREIGN KEY (area_id) REFERENCES area(id) ON DELETE CASCADE,
+    CONSTRAINT fk_tribute_id FOREIGN KEY (tribute_id) REFERENCES tribute(id) ON DELETE CASCADE
 );

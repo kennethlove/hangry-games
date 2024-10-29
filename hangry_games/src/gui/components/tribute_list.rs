@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use crate::gui::router::Routes;
 use crate::gui::components::tribute_list_item::TributeListItem;
 use crate::tributes::actors::Tribute;
 

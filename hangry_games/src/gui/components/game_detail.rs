@@ -3,13 +3,8 @@ use crate::games::Game;
 use crate::models::{fill_tributes, get_game_by_id};
 use crate::gui::router::Routes;
 use crate::gui::components::create_tribute::CreateTribute;
-use crate::gui::components::tribute_table::TributeTable;
-use crate::gui::components::tribute_actions_group::TributeActionsGroup;
-use crate::gui::components::tribute_boxes::TributeBoxes;
 use crate::gui::components::tribute_list::TributeList;
 use crate::gui::components::fill_tributes_button::FillTributesButton;
-use crate::gui::functions::list_of_games;
-use crate::gui::states::HGState;
 use crate::tributes::actors::Tribute;
 
 #[derive(Clone, Debug)]
@@ -18,8 +13,7 @@ pub struct ShowModal { pub(crate) show: bool }
 #[component]
 pub fn GameDetail(id: i32) -> Element {
     let game = Game::from(get_game_by_id(id).unwrap());
-    let mut tributes: Signal<Vec<Tribute>> = use_signal(|| game.tributes());
-    let nav = navigator();
+    let tributes: Signal<Vec<Tribute>> = use_signal(|| game.tributes());
     use_context_provider(|| Signal::new(ShowModal { show: false}));
 
     rsx! {

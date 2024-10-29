@@ -1,5 +1,5 @@
 use crate::establish_connection;
-use crate::models::{create_full_log, Action, Tribute};
+use crate::models::{get_game_by_id, get_game_tributes, Action, Tribute};
 use crate::schema::action;
 use crate::schema::tribute_action;
 use diesel::prelude::*;
@@ -62,4 +62,16 @@ impl TributeAction {
 
 pub fn take_action(tribute: &Tribute, action: &Action, target: Option<String>) -> TributeAction {
     TributeAction::create(tribute.id, action.id, target.clone())
+}
+
+pub fn delete_game_tribute_actions(game_id: i32) {
+    let connection = &mut establish_connection();
+    let game = get_game_by_id(game_id).expect("Game not found");
+    let tributes = get_game_tributes(&game);
+    let tributes = tributes.iter().map(|t| t.id);
+
+    let count = diesel::delete(tribute_action::table.filter(tribute_action::tribute_id.eq_any(tributes)))
+        .execute(connection)
+        .expect("Error deleting tribute actions");
+    println!("Deleted {} tribute actions", count);
 }

@@ -1,6 +1,4 @@
 use dioxus::prelude::*;
-use dioxus_logger::tracing::info;
-use crate::gui::router::Routes;
 use crate::gui::components::tribute_actions_group::TributeActionsGroup;
 use crate::tributes::actors::Tribute;
 

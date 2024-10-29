@@ -1,12 +1,10 @@
-use std::io::Bytes;
 use std::path::Path;
 use std::sync::Arc;
 use dioxus::prelude::*;
-use dioxus::{html::HasFileData, prelude::dioxus_elements::FileEngine};
+use dioxus::{prelude::dioxus_elements::FileEngine};
 use crate::games::Game;
 use crate::models::get_game_by_id;
 use crate::tributes::actors::Tribute;
-use dioxus_logger::tracing::info;
 
 #[derive(Clone, Debug)]
 struct UploadedFile {
@@ -19,7 +17,6 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
     let game = Game::from(get_game_by_id(game_id).unwrap());
     let mut tribute_name = use_signal(String::new);
     let mut files_uploaded = use_signal(|| Vec::new() as Vec<UploadedFile>);
-    let mut avatar_path = use_signal(String::new);
 
     let read_files = move |file_engine: Arc<dyn FileEngine>| async move {
         let files = file_engine.files();

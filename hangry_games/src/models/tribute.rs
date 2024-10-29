@@ -151,6 +151,19 @@ impl Tribute {
 
     pub fn delete(id: i32) {
         let connection = &mut establish_connection();
+        use crate::schema::log_entry;
+        use crate::schema::tribute_action;
+        use crate::schema::tribute;
+
+        diesel::delete(log_entry::table.filter(log_entry::tribute_id.eq(id)))
+            .execute(connection)
+            .expect("Error deleting log entries");
+
+        diesel::delete(tribute_action::table
+            .filter(tribute_action::tribute_id.eq(id)))
+            .execute(connection)
+            .expect("Error deleting tribute actions");
+
         diesel::delete(tribute::table.find(id))
             .execute(connection)
             .expect("Error deleting tribute");
