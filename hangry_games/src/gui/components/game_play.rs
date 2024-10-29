@@ -1,59 +1,20 @@
 use dioxus::prelude::*;
-use crate::games::Game;
+use crate::games::{Game, GameStatus};
 use crate::gui::router::Routes;
-use crate::models::{get_game_by_id, get_logs_for_game_day};
+use crate::models::get_game_by_id;
 
 #[component]
 pub fn GamePlay(id: i32) -> Element {
-    let game = Game::from(get_game_by_id(id).expect("Game not found"));
+    let mut game = Game::from(get_game_by_id(id).expect("Game not found"));
+    let nav = navigator();
+    game.run_day_night_cycle();
 
-    rsx! {
-        div {
-            class: "flow-root",
-            h1 { "Game Play" }
-            div {
-                class: "flex flex-direction-col justify-between",
-                div {
-                    for day in 1..=game.day.unwrap() {
-                        div {
-                            h2 {
-                                class: "text-xl font-bold",
-                                "Day {day}"
-                            }
-                            ol {
-                                for log in get_logs_for_game_day(game.id.unwrap(), day).iter() {
-                                    li { "{log.message}" }
-                                }
-                            }
-                        }
-                    }
-                }
-                div {
-                    class: "",
-                    h2 { "Days" }
-                    ol {
-                        for day in 1..=game.day.unwrap() {
-                            li {
-                                class: "text-blue-500 underline",
-                                Link {
-                                    to: Routes::GameDayLog { id: game.id.unwrap(), day },
-                                    "Day {day}"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        Link {
-            class: "text-blue-500 underline",
-            to: Routes::GameDetail { id: game.id.unwrap() },
-            "Back to Game"
-        }
-        Link {
-            class: "text-blue-500 underline",
-            to: Routes::Home {},
-            "Back to Home"
-        }
+    if game.status == GameStatus::InProgress && game.living_tributes().len() <= 1 {
+        game.status = GameStatus::Finished;
+        game.end();
     }
+
+    nav.replace(Routes::GameDayLog { id: game.id.unwrap(), day: game.day.unwrap_or(0) });
+
+    rsx! { "Playing game" }
 }

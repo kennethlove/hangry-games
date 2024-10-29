@@ -54,6 +54,27 @@ pub fn GameDetail(id: i32) -> Element {
                 to: Routes::GameLog { id: game.id.unwrap() },
                 "Full Log"
             }
+
+            if game.status == crate::games::GameStatus::InProgress {
+                Link {
+                    class: "underline text-red-700",
+                    to: Routes::GamePlay { id: game.id.unwrap() },
+                    "Play Next Day"
+                }
+            }
+        }
+
+        ConfirmFillModal { id: game.id.unwrap(), tributes }
+
+        if game.status == crate::games::GameStatus::Finished {
+            h4 {
+                class: "text-xl text-slate-700 orbitron-font text-center mt-4",
+                if game.winner().is_some() {
+                    "{game.winner().unwrap().name} wins!"
+                } else {
+                    "No one wins!"
+                }
+            }
         }
 
         if tributes.read().len() < 24 {
@@ -78,9 +99,6 @@ pub fn GameDetail(id: i32) -> Element {
             to: Routes::Home { },
             "Back to Home"
         }
-
-        ConfirmFillModal { id: game.id.unwrap(), tributes }
-
     }
 }
 

@@ -862,6 +862,8 @@ impl Tribute {
             TributeAction::TakeItem => {
                 let item = self.take_nearby_item(area);
                 println!("{}", GameMessage::TributeTakeItem(self.clone(), item.clone()));
+                dbg!(&item);
+                dbg!(&action);
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeTakeItem(self.clone(), item.clone()).to_string(),

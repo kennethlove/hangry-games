@@ -97,11 +97,17 @@ pub fn create_full_log(
         action_target_id,
     };
 
-    diesel::insert_into(log_entry::table)
+    match diesel::insert_into(log_entry::table)
         .values(&new_log_entry)
         .returning(LogEntry::as_returning())
-        .get_result(connection)
-        .expect("Error saving new log entry")
+        .get_result(connection) {
+            Ok(log) => log,
+            Err(e) => {
+                dbg!(&new_log_entry);
+                dbg!(&e);
+                panic!("Error saving new log entry: {}", e)
+            }
+    }
 }
 
 pub fn get_log_entry_by_id(id: i32) -> Option<LogEntry> {

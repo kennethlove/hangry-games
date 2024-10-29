@@ -30,11 +30,16 @@ impl TributeAction {
         let connection = &mut establish_connection();
         let new_tribute_action = NewTributeAction { tribute_id, action_id, target };
 
-        diesel::insert_into(tribute_action::table)
+        match diesel::insert_into(tribute_action::table)
             .values(&new_tribute_action)
             .returning(TributeAction::as_returning())
-            .get_result(connection)
-            .expect("Error saving new tribute action")
+            .get_result(connection) {
+                Ok(tribute_action) => tribute_action,
+                Err(e) => {
+                    dbg!(new_tribute_action);
+                    panic!("Error saving new tribute action: {:?}", e);
+                },
+        }
     }
 
     pub fn get_all_for_tribute(tribute_id: i32) -> Vec<TributeAction> {
