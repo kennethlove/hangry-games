@@ -18,8 +18,10 @@ pub struct NewAction<'a> {
 
 pub fn get_action(name: &str) -> Action {
     let connection = &mut establish_connection();
-    action::table
-        .filter(action::name.ilike(name))
+    let action = action::table
+        .filter(action::name.ilike(format!("{}%", name)))
         .first(connection)
-        .expect("Error loading action")
+        .expect("Error loading action");
+    dbg!(&action);
+    action
 }

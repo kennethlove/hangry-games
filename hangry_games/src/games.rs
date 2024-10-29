@@ -46,6 +46,11 @@ impl Game {
         }
     }
 
+    pub fn end(&self) {
+        let game = get_game(self.name.as_str()).expect("Error loading game");
+        game.end();
+    }
+
     // Runs at the start of the game
     pub fn start(&self) {
         let game = get_game(self.name.as_str()).expect("Error loading game");
@@ -91,6 +96,16 @@ impl Game {
     pub fn dead_tributes(&self) -> Vec<Tribute> {
         let game = get_game(self.name.as_str()).expect("Error loading game");
         get_dead_tributes(&game).iter().map(|t| Tribute::from(t.clone())).collect()
+    }
+
+    pub fn winner(&self) -> Option<Tribute> {
+        let game = get_game(self.name.as_str()).expect("Error loading game");
+        let winner = get_all_living_tributes(&game);
+        if winner.len() == 1 {
+            Some(Tribute::from(winner[0].clone()))
+        } else {
+            None
+        }
     }
 
     pub fn add_tribute(&self, name: String, avatar: Option<String>) -> Result<Tribute, ()> {

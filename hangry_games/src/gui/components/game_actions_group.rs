@@ -64,8 +64,11 @@ fn GamePlayButton(game: Game) -> Element {
     rsx! {
         button {
             class: classes,
-            title: "Play Game",
+            title: "Play Next Day",
             onclick: move |_| {
+                if game.status == GameStatus::NotStarted {
+                    game.start();
+                }
                 nav.push(Routes::GamePlay { id: game.id.unwrap() });
             },
             span {
