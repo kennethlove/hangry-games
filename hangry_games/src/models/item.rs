@@ -195,3 +195,11 @@ impl From<crate::items::Item> for NewItem {
         }
     }
 }
+
+pub fn delete_game_items(game_id: i32) {
+    use crate::schema::item;
+    let connection = &mut establish_connection();
+    diesel::delete(item::table.filter(item::game_id.eq(game_id)))
+        .execute(connection)
+        .expect("Error deleting items");
+}

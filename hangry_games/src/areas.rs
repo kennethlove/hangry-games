@@ -157,7 +157,6 @@ impl Area {
         create_full_log(
             game_id,
             GameMessage::AreaEvent(event.clone(), area.clone()).to_string(),
-            None,
             Some(area.id()),
             None,
             None,
@@ -189,7 +188,6 @@ impl Area {
                 create_full_log(
                     game_id,
                     GameMessage::TrappedInArea(tribute.clone(), area.clone()).to_string(),
-                    None,
                     Some(area.id()),
                     Some(tribute.id.unwrap()),
                     None,
@@ -231,7 +229,6 @@ impl Area {
                     create_full_log(
                         game_id,
                         GameMessage::DiedInArea(tribute.clone(), area.clone()).to_string(),
-                        None,
                         Some(area.id()),
                         Some(tribute.id.unwrap()),
                         None,
@@ -247,7 +244,6 @@ impl Area {
                 create_full_log(
                     game_id,
                     GameMessage::AreaOpen(area.clone()).to_string(),
-                    None,
                     Some(area.id()),
                     None,
                     None,

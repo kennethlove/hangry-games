@@ -2,7 +2,7 @@ use crate::areas::Area;
 use crate::events::TributeEvent;
 use crate::items::{Attribute, Item};
 use crate::models::game::{get_game, Game as GameModel};
-use crate::models::{create_full_log, create_game, create_item, create_tribute, delete_game, get_all_living_tributes, get_dead_tributes, get_recently_dead_tributes, update_tribute, NewItem};
+use crate::models::{create_full_log, create_game, create_item, create_tribute, delete_game, delete_game_area_events, delete_game_items, delete_game_logs, delete_game_tribute_actions, delete_game_tributes, get_all_living_tributes, get_dead_tributes, get_recently_dead_tributes, update_tribute, NewItem};
 use crate::tributes::actions::TributeAction;
 use crate::tributes::actors::Tribute;
 use crate::tributes::statuses::TributeStatus;
@@ -10,7 +10,6 @@ use rand::prelude::SliceRandom;
 use rand::Rng;
 use std::fmt::Display;
 use std::str::FromStr;
-use dioxus::prelude::*;
 use crate::items::ItemType::{Consumable, Weapon};
 use crate::messages::GameMessage;
 
@@ -29,7 +28,12 @@ impl Game {
     }
 
     pub fn delete(game_id: i32) {
-        let _ = delete_game(game_id);
+        delete_game_logs(game_id);
+        delete_game_area_events(game_id);
+        delete_game_items(game_id);
+        delete_game_tribute_actions(game_id);
+        delete_game_tributes(game_id);
+        delete_game(game_id);
     }
 
     pub fn as_str(&self) -> &str {
@@ -115,7 +119,7 @@ impl Game {
             0 => {
                 let message = GameMessage::NoOneWins;
                 println!("{}", message);
-                create_full_log(game.id, message.to_string(), None, None, None, None, None);
+                create_full_log(game.id, message.to_string(), None, None, None, None);
                 game.end();
                 return;
             }
@@ -123,7 +127,7 @@ impl Game {
                 let winner = living_tributes[0].clone();
                 let message = GameMessage::TributeWins(Tribute::from(winner.clone()));
                 println!("{}", message);
-                create_full_log(game.id, message.to_string(), None, None, Some(winner.id), None, None);
+                create_full_log(game.id, message.to_string(), None, Some(winner.id), None, None);
                 game.end();
                 return;
             }
@@ -134,20 +138,20 @@ impl Game {
         match self.day {
             Some(1) => {
                 println!("{}", GameMessage::FirstDayStart);
-                create_full_log(game.id, GameMessage::FirstDayStart.to_string(), None, None, None, None, None);
+                create_full_log(game.id, GameMessage::FirstDayStart.to_string(), None, None, None, None);
             }
             Some(3) => {
                 println!("{}", GameMessage::FeastDayStart);
-                create_full_log(game.id, GameMessage::FeastDayStart.to_string(), None, None, None, None, None);
+                create_full_log(game.id, GameMessage::FeastDayStart.to_string(), None, None, None, None);
             }
             _ => {
                 println!("{}", GameMessage::GameDayStart(self.day.unwrap()));
-                create_full_log(game.id, GameMessage::GameDayStart(self.day.unwrap()).to_string(), None, None, None, None, None);
+                create_full_log(game.id, GameMessage::GameDayStart(self.day.unwrap()).to_string(), None, None, None, None);
             }
         }
 
         println!("{}", GameMessage::TributesLeft(living_tributes.len() as i32));
-        create_full_log(game.id, GameMessage::TributesLeft(living_tributes.len() as i32).to_string(), None, None, None, None, None);
+        create_full_log(game.id, GameMessage::TributesLeft(living_tributes.len() as i32).to_string(), None, None, None, None);
 
         // Run the day
         self.do_day_night_cycle(true);
@@ -156,7 +160,7 @@ impl Game {
         self.clean_up_recent_deaths();
 
         println!("{}", GameMessage::GameNightStart(self.day.unwrap()));
-        create_full_log(game.id, GameMessage::GameNightStart(self.day.unwrap()).to_string(), None, None, None, None, None);
+        create_full_log(game.id, GameMessage::GameNightStart(self.day.unwrap()).to_string(), None, None, None, None);
 
         // Run the night
         self.do_day_night_cycle(false);
@@ -268,11 +272,11 @@ impl Game {
         let dead_tributes = get_recently_dead_tributes(&game);
 
         println!("{}", GameMessage::DailyDeathAnnouncement(dead_tributes.len() as i32));
-        create_full_log(game.id, GameMessage::DailyDeathAnnouncement(dead_tributes.len() as i32).to_string(), None, None, None, None, None);
+        create_full_log(game.id, GameMessage::DailyDeathAnnouncement(dead_tributes.len() as i32).to_string(), None, None, None, None);
 
         for tribute in dead_tributes {
             println!("{}", GameMessage::DeathAnnouncement(Tribute::from(tribute.clone())));
-            create_full_log(game.id, GameMessage::DeathAnnouncement(Tribute::from(tribute.clone())).to_string(), None, None, Some(tribute.id), None, None);
+            create_full_log(game.id, GameMessage::DeathAnnouncement(Tribute::from(tribute.clone())).to_string(), None, Some(tribute.id), None, None);
             tribute.dies();
         }
     }

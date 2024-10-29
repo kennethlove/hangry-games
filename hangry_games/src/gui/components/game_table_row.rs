@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 use crate::games::Game;
 use crate::gui::components::game_actions_group::GameActionsGroup;
-use crate::gui::router::Routes;
 
 #[component]
 pub fn GameTableRow(game: Game) -> Element {

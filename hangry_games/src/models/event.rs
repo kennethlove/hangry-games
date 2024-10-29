@@ -53,3 +53,13 @@ impl AreaEvent {
             .expect("Error loading area events")
     }
 }
+
+pub fn delete_game_area_events(game_id: i32) {
+    let connection = &mut establish_connection();
+
+    // Delete game
+    diesel::delete(area_event::table)
+        .filter(area_event::game_id.eq(game_id))
+        .execute(connection)
+        .expect("Error deleting area events");
+}

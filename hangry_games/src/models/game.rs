@@ -163,13 +163,9 @@ pub fn get_games() -> Vec<Game> {
 }
 
 pub fn delete_game(game_id: i32) {
-    use crate::schema::tribute;
-
     let connection = &mut establish_connection();
-    diesel::delete(tribute::table)
-        .filter(tribute::game_id.eq(game_id))
-        .execute(connection)
-        .expect("Error deleting tributes");
+
+    // Delete game
     diesel::delete(game::table)
         .filter(game::id.eq(game_id))
         .execute(connection)
@@ -250,4 +246,16 @@ pub fn fill_tributes(game: &Game) -> usize {
         }
     }
     24 - count
+}
+
+pub fn delete_game_tributes(game_id: i32) {
+    use crate::schema::tribute;
+
+    let connection = &mut establish_connection();
+
+    // Delete tributes
+    diesel::delete(tribute::table)
+        .filter(tribute::game_id.eq(game_id))
+        .execute(connection)
+        .expect("Error deleting tributes");
 }
