@@ -1,10 +1,11 @@
 use dioxus::prelude::*;
+use crate::games::{Game, GameStatus};
 use crate::gui::components::{SelectedItem, ShowModal};
 use crate::gui::router::Routes;
 use crate::tributes::actors::Tribute;
 
 #[component]
-pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Element {
+pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>, game: Game) -> Element {
     let mut avatar = Some(
         format!("{}", tribute.avatar.as_ref().unwrap_or(&"hangry-games.png".to_string()))
     );
@@ -92,16 +93,18 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Elemen
                                 "edit_square"
                             }
                         }
-                        li {
-                            class: "lineheight-0 cursor-pointer",
-                            span {
-                                class: "text-white material-symbols-outlined",
-                                title: "Delete Tribute",
-                                onclick: move |_| {
-                                    selected_tribute.write().id = tribute.id.unwrap();
-                                    state.write().show = true;
-                                },
-                                "delete"
+                        if game.status == GameStatus::NotStarted {
+                            li {
+                                class: "lineheight-0 cursor-pointer",
+                                span {
+                                    class: "text-white material-symbols-outlined",
+                                    title: "Delete Tribute",
+                                    onclick: move |_| {
+                                        selected_tribute.write().id = tribute.id.unwrap();
+                                        state.write().show = true;
+                                    },
+                                    "delete"
+                                }
                             }
                         }
                     }

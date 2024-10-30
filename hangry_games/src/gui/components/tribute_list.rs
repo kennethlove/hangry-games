@@ -1,10 +1,11 @@
 use dioxus::prelude::*;
+use crate::games::Game;
 use crate::gui::components::tribute_list_item::TributeListItem;
 use crate::tributes::actors::Tribute;
 use crate::gui::components::{SelectedItem, ShowModal};
 
 #[component]
-pub fn TributeList(tributes: Signal<Vec<Tribute>>) -> Element {
+pub fn TributeList(tributes: Signal<Vec<Tribute>>, game: Game) -> Element {
     use_context_provider(|| Signal::new(ShowModal { show: false}));
     use_context_provider(|| Signal::new(SelectedItem { id: -1 }));
 
@@ -23,7 +24,7 @@ pub fn TributeList(tributes: Signal<Vec<Tribute>>) -> Element {
                     }
 
                     for tribute in tribute_pair {
-                        TributeListItem { tribute: tribute.clone(), signal: tributes.clone() }
+                        TributeListItem { tribute: tribute.clone(), signal: tributes.clone(), game: game.clone() }
                     }
                 }
             }

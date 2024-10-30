@@ -86,7 +86,7 @@ pub fn GameDetail(id: i32) -> Element {
 
         div {
             class: "mt-4",
-            TributeList { tributes: tributes.clone() }
+            TributeList { tributes: tributes.clone(), game: game.clone() }
         }
 
         Link {
