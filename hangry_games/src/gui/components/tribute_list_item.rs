@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use crate::gui::components::ShowModal;
 use crate::gui::router::Routes;
 use crate::tributes::actors::Tribute;
 
@@ -30,9 +31,12 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Elemen
         _ => "from-gray-900 to-gray-700",
     };
 
+    let mut selected_tribute = use_context::<Signal<crate::gui::components::tribute_list::SelectedTribute>>();
+    let mut state = use_context::<Signal<ShowModal>>();
+
     rsx! {
         div {
-            class: "group relative block overflow-hidden rounded-full border-4 p-2 mb-2 bg-gray-800 bg-gradient-to-b {gradient_stop}",
+            class: "group relative block overflow-hidden rounded-full border-4 border-orange-200 p-2 mb-2 bg-gray-800 bg-gradient-to-b {gradient_stop}",
             div {
                 class: "flex flex-row gap-2",
                 img {
@@ -41,9 +45,9 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Elemen
                 }
 
                 div {
-                    class: "w-1/2 mt-2 flex-grow",
+                    class: "",
                     h1 {
-                        class: "text-lg text-orange-500 leading-none",
+                        class: "text-lg text-orange-500",
                         Link {
                             to: Routes::TributeDetail { id: tribute.id.unwrap() },
                             "{tribute.name}"
@@ -52,34 +56,34 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Elemen
                     div {
                         class: "text-xs text-white flex flex-row gap-0",
                         span {
-                            class: "text-orange-500 material-symbols-outlined text-sm",
+                            class: "text-orange-300 material-symbols-outlined text-sm",
                             "location_on"
                         }
                         span {
-                            class: "whitespace-nowrap",
+                            class: "whitespace-nowrap mt-0.5 uppercase",
                             "{tribute.area.unwrap()}"
                         }
                     }
                     div {
                         class: "text-xs text-white flex flex-row gap-1",
                         span {
-                            class: "text-orange-500 material-symbols-outlined text-sm",
+                            class: "text-orange-300 material-symbols-outlined text-sm",
                             "monitor_heart"
                         }
                         span {
-                            class: "",
+                            class: "uppercase mt-0.5",
                             "{tribute.status}"
                         }
                     }
                 }
                 span {
-                    class: "text-9xl text-white absolute top-0 right-0 opacity-25",
+                    class: "text-9xl tracking-tighter text-white absolute bottom-0 top-0 right-0 opacity-25",
                     "{tribute.district}"
                 }
                 div {
                     class: "absolute w-full top-12 translate-y-4 transform opacity-0 transition-all group-hover:opacity-100",
                     ul {
-                        class: "flex flex-row justify-end gap-4 pr-9",
+                        class: "flex flex-row justify-end gap-2 pr-9",
                         li {
                             class: "lineheight-0 cursor-pointer",
                             span {
@@ -93,6 +97,10 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Elemen
                             span {
                                 class: "text-white material-symbols-outlined",
                                 title: "Delete Tribute",
+                                onclick: move |_| {
+                                    selected_tribute.write().id = tribute.id.unwrap();
+                                    state.write().show = true;
+                                },
                                 "delete"
                             }
                         }

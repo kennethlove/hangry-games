@@ -1,14 +1,12 @@
 use dioxus::prelude::*;
 use crate::games::Game;
 use crate::models::{fill_tributes, get_game_by_id};
+use crate::gui::components::ShowModal;
 use crate::gui::router::Routes;
 use crate::gui::components::create_tribute::CreateTribute;
 use crate::gui::components::tribute_list::TributeList;
 use crate::gui::components::fill_tributes_button::FillTributesButton;
 use crate::tributes::actors::Tribute;
-
-#[derive(Clone, Debug)]
-pub struct ShowModal { pub(crate) show: bool }
 
 #[component]
 pub fn GameDetail(id: i32) -> Element {
@@ -27,13 +25,18 @@ pub fn GameDetail(id: i32) -> Element {
                     "{game.name}"
                 },
             }
-            h3 {
-                class: "text-lg text-slate-700 orbitron-font font-bold tracking-wider",
-                span {
-                    class: "font-normal text-slate-700 tracking-normal",
-                    "Day "
+            if game.status == crate::games::GameStatus::InProgress {
+                button {
+                    class: "bg-gradient-to-r from-orange-500 to-yellow-300 rounded-md text-red-800 orbitron-font py-1 px-2 border border-orange-700",
+                    onclick: move |_| {
+                        let nav = navigator();
+                        nav.push(Routes::GamePlay { id: game.id.unwrap() });
+                    },
+                    span {
+                        class: "text-red-800 orbitron-font",
+                        "Play Next Day"
+                    }
                 }
-                "{game.day.unwrap_or(0)}",
             }
         }
         div {
@@ -55,16 +58,7 @@ pub fn GameDetail(id: i32) -> Element {
                 "Full Log"
             }
 
-            if game.status == crate::games::GameStatus::InProgress {
-                Link {
-                    class: "underline text-red-700",
-                    to: Routes::GamePlay { id: game.id.unwrap() },
-                    "Play Next Day"
-                }
-            }
         }
-
-        ConfirmFillModal { id: game.id.unwrap(), tributes }
 
         if game.status == crate::games::GameStatus::Finished {
             h4 {
@@ -87,6 +81,7 @@ pub fn GameDetail(id: i32) -> Element {
                 }
                 FillTributesButton { }
             }
+            ConfirmFillModal { id: game.id.unwrap(), tributes }
         }
 
         div {
