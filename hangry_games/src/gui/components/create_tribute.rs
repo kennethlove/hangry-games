@@ -37,58 +37,56 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
     };
 
     rsx! {
-        div {
-            class: "mt-4",
-            form {
-                class: "flex justify-center",
-                enctype: "multipart/form-data",
-                onsubmit: move |event| {
-                    let data = event.data.values();
-                    let name = data.get("tribute_name").unwrap().first().unwrap();
-                    let image = files_uploaded.read();
-                    let image = image.first().unwrap().clone();
+        form {
+            // class: "flex flex-row justify-between gap-2",
+            class: "flex flex-row justify-items-stretch gap-2",
+            enctype: "multipart/form-data",
+            onsubmit: move |event| {
+                let data = event.data.values();
+                let name = data.get("tribute_name").unwrap().first().unwrap();
+                let image = files_uploaded.read();
+                let image = image.first().unwrap().clone();
 
-                    let extension = Path::new(&image.name).extension().unwrap().to_str().unwrap().to_lowercase();
-                    let filename = format!("{}.{}", name.to_lowercase(), extension);
-                    let avatar_path = format!("avatars/{}/", game_id);
-                    let save_path = format!("./assets/{}/", avatar_path);
-                    let tribute = game.add_tribute(name.clone(), Some(format!("{}{}", avatar_path, filename)));
+                let extension = Path::new(&image.name).extension().unwrap().to_str().unwrap().to_lowercase();
+                let filename = format!("{}.{}", name.to_lowercase(), extension);
+                let avatar_path = format!("avatars/{}/", game_id);
+                let save_path = format!("./assets/{}/", avatar_path);
+                let tribute = game.add_tribute(name.clone(), Some(format!("{}{}", avatar_path, filename)));
 
-                    std::fs::create_dir_all(&save_path).expect("Unable to create directory");
-                    std::fs::write(format!("{}{}", save_path, filename), &image.contents).expect("Unable to write file");
+                std::fs::create_dir_all(&save_path).expect("Unable to create directory");
+                std::fs::write(format!("{}{}", save_path, filename), &image.contents).expect("Unable to write file");
 
-                    signal.write().push(tribute.expect("Error creating tribute"));
-                    tribute_name.set(String::from(""));
-                },
-                input {
-                    r#type: "text",
-                    class: "block w-half mr-2 text-sm px-2 text-gray-900 border border-orange-700 rounded-md bg-yellow-200 focus:outline-none placeholder-gray-900",
-                    id: "tribute_name",
-                    name: "tribute_name",
-                    placeholder: "Tribute Name",
-                    value: "{tribute_name}",
-                    oninput: move |event| tribute_name.set(event.value().clone()),
-                    onkeypress: move |event| {
-                        if event.key() == Key::Enter {
-                            tribute_name.set(String::from(""))
-                        }
+                signal.write().push(tribute.expect("Error creating tribute"));
+                tribute_name.set(String::from(""));
+            },
+            input {
+                r#type: "text",
+                class: "w-full rounded-md border border-orange-700 bg-yellow-200 px-2 py-1 text-gray-900 placeholder-gray-900 focus:outline-none",
+                id: "tribute_name",
+                name: "tribute_name",
+                placeholder: "Name",
+                value: "{tribute_name}",
+                oninput: move |event| tribute_name.set(event.value().clone()),
+                onkeypress: move |event| {
+                    if event.key() == Key::Enter {
+                        tribute_name.set(String::from(""))
                     }
                 }
-                input {
-                    class: "block w-half text-sm px-2 py-2 text-gray-900 border border-orange-700 rounded-md cursor-pointer bg-yellow-200 focus:outline-none",
-                    id: "file_input",
-                    r#type: "file",
-                    placeholder: "Upload Image",
-                    accept: "image/png,image/gif,image/jpg",
-                    multiple: false,
+            }
+            input {
+                class: "w-full cursor-pointer rounded-md border border-orange-700 bg-yellow-200 px-2 py-1 text-gray-900 focus:outline-none",
+                id: "file_input",
+                r#type: "file",
+                placeholder: "Upload Image",
+                accept: "image/png,image/gif,image/jpg",
+                multiple: false,
 
-                    onchange: upload_files
-                }
+                onchange: upload_files
+            }
 
-                button {
-                    class: "bg-gradient-to-r from-orange-500 to-yellow-300 rounded-md text-red-800 orbitron-font font-semibold py-2 px-4 ml-2 border border-orange-700",
-                    "Add Tribute"
-                }
+            button {
+                class: "orbitron-font w-min whitespace-nowrap rounded-md border border-orange-700 bg-gradient-to-r from-orange-500 to-yellow-300 px-2 py-1 text-red-800",
+                "Add Tribute"
             }
         }
     }

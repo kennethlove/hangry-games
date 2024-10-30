@@ -13,7 +13,7 @@ pub fn CreateGame() -> Element {
         div {
             class: "mt-4",
             form {
-                class: "flex justify-center",
+                class: "flex flex-row justify-center gap-2",
                 onsubmit: move |event| {
                     let data = event.data.values();
                     let game_name = data.get("game_name").unwrap().first().unwrap();
@@ -26,7 +26,7 @@ pub fn CreateGame() -> Element {
                     class: "",
 
                     input {
-                        class: "shadow appearance-none border rounded-sm py-2 px-3 text-red-800 leading-tight focus:outline-none focus:shadow-outline",
+                        class: "block w-half px-2 py-1 text-gray-900 border border-orange-700 rounded-md bg-yellow-200 focus:outline-none placeholder-gray-900",
                         r#type: "text",
                         placeholder: "Game Name",
                         id: "game_name",
@@ -41,7 +41,7 @@ pub fn CreateGame() -> Element {
                     }
                 }
                 button {
-                    class: "bg-gradient-to-r from-orange-500 to-yellow-300 rounded-sm text-red-800 orbitron-font font-semibold py-2 px-4 ml-2",
+                    class: "bg-gradient-to-r from-orange-500 to-yellow-300 rounded-md text-red-800 orbitron-font py-1 px-2 border border-orange-700",
                     onclick: move |_| {
                     },
                     "Create Game"

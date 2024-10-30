@@ -79,10 +79,10 @@ pub fn GameDetail(id: i32) -> Element {
 
         if tributes.read().len() < 24 {
             div {
-                class: "flex flex-row justify-between items-center",
+                class: "items-justify mt-4 flex flex-row justify-start gap-2",
                 CreateTribute {signal: tributes.clone(), game_id: game.id.unwrap()}
                 span {
-                    class: "align-bottom text-sm text-slate-700 mt-4",
+                    class: "leading-9 text-sm text-slate-700 w-min",
                     "or"
                 }
                 FillTributesButton { }

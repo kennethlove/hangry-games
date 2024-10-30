@@ -3,7 +3,6 @@ html {
    background-attachment: fixed;
    background-image: url("./hangry-games.png");
    background-position: center center;
-   background-size: contain;
    background-repeat: no-repeat;
 }
 

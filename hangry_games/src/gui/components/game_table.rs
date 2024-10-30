@@ -8,6 +8,7 @@ pub fn GameTable() -> Element {
 
     rsx! {
         div {
+            class: "mt-4",
             table {
                 class: "min-w-full divide-y-2 divide-gray-200 text-sm",
                 thead {
