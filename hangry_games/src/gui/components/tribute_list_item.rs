@@ -32,7 +32,7 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Elemen
 
     rsx! {
         div {
-            class: "group relative block rounded-full border-4 p-2 mb-2 bg-gray-800 bg-gradient-to-b {gradient_stop}",
+            class: "group relative block overflow-hidden rounded-full border-4 p-2 mb-2 bg-gray-800 bg-gradient-to-b {gradient_stop}",
             div {
                 class: "flex flex-row gap-2",
                 img {
@@ -49,58 +49,50 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Elemen
                             "{tribute.name}"
                         }
                     }
-                    h2 {
-                        class: "text-sm text-white",
-                        "District {tribute.district}"
-                    }
-                }
-                div {
-                    class: "text-xs text-white mt-1 flex-grow",
                     div {
-                        class: "flex flex-row gap-1",
+                        class: "text-xs text-white flex flex-row gap-0",
                         span {
-                            class: "text-orange-500 material-symbols-outlined",
-                            "monitor_heart"
-                        }
-                        span {
-                            class: "mt-1",
-                            "{tribute.status}"
-                        }
-                    }
-                    div {
-                        class: "flex flex-row gap-1",
-                        span {
-                            class: "text-orange-500 material-symbols-outlined",
+                            class: "text-orange-500 material-symbols-outlined text-sm",
                             "location_on"
                         }
                         span {
-                            class: "mt-1 whitespace-nowrap",
+                            class: "whitespace-nowrap",
                             "{tribute.area.unwrap()}"
                         }
                     }
+                    div {
+                        class: "text-xs text-white flex flex-row gap-1",
+                        span {
+                            class: "text-orange-500 material-symbols-outlined text-sm",
+                            "monitor_heart"
+                        }
+                        span {
+                            class: "",
+                            "{tribute.status}"
+                        }
+                    }
+                }
+                span {
+                    class: "text-9xl text-white absolute top-0 right-0 opacity-25",
+                    "{tribute.district}"
                 }
                 div {
-                    class: "absolute w-full h-full top-12 translate-y-4 transform opacity-0 transition-all group-hover:opacity-100",
+                    class: "absolute w-full top-12 translate-y-4 transform opacity-0 transition-all group-hover:opacity-100",
                     ul {
-                        class: "flex flex-row justify-center gap-4",
+                        class: "flex flex-row justify-end gap-4 pr-9",
                         li {
+                            class: "lineheight-0 cursor-pointer",
                             span {
-                                class: "text-orange-500 material-symbols-outlined",
-                                "monitor_heart"
-                            }
-                            span {
-                                class: "mt-1",
-                                "edit"
+                                class: "text-white material-symbols-outlined",
+                                title: "Edit Tribute",
+                                "edit_square"
                             }
                         }
                         li {
-                            class: "lineheight-0",
+                            class: "lineheight-0 cursor-pointer",
                             span {
-                                class: "text-orange-500 material-symbols-outlined",
-                                "monitor_heart"
-                            }
-                            span {
-                                class: "mt-1",
+                                class: "text-white material-symbols-outlined",
+                                title: "Delete Tribute",
                                 "delete"
                             }
                         }
