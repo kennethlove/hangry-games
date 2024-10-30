@@ -20,3 +20,7 @@ pub mod tribute_table;
 
 #[derive(Clone, Debug)]
 pub struct ShowModal { pub show: bool }
+
+#[derive(Clone, Debug)]
+pub struct SelectedItem { pub id: i32 }
+

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use crate::gui::components::ShowModal;
+use crate::gui::components::{SelectedItem, ShowModal};
 use crate::gui::router::Routes;
 use crate::tributes::actors::Tribute;
 
@@ -31,7 +31,7 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Elemen
         _ => "from-gray-900 to-gray-700",
     };
 
-    let mut selected_tribute = use_context::<Signal<crate::gui::components::tribute_list::SelectedTribute>>();
+    let mut selected_tribute = use_context::<Signal<SelectedItem>>();
     let mut state = use_context::<Signal<ShowModal>>();
 
     rsx! {

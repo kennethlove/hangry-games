@@ -105,44 +105,54 @@ fn ConfirmFillModal(id: i32, mut tributes: Signal<Vec<Tribute>>) -> Element {
     rsx! {
         dialog {
             open: state.read().show,
-            class: "rounded-xl border border-orange-500 bg-white p-4 dark:bg-gray-800",
+            class: "relative z-10",
             role: "alert",
+            div { class: "fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"}
             div {
-                class: "flex items-start gap-4",
+                class: "fixed inset-0 z-10 w-screen overflow-y-hidden",
                 div {
-                    class: "flex-1",
-                    strong {
-                        class: "block font-medium text-gray-900 dark:text-gray-50",
-                        "Fill game?"
-                    }
-                    p {
-                        class: "mt-1 text-sm text-gray-700 dark:text-gray-300",
-                        "Are you sure you want to fill the game with random tributes?"
-                    }
-                }
-            }
-            div {
-                class: "flex justify-end gap-4 mt-4",
-                button {
-                    class: "block rounded-lg px-4 py-2 bg-orange-500",
-                    onclick: move |_| {
-                        fill_tributes(&game);
-                        tributes.set(Game::from(game.clone()).tributes());
-                        state.write().show = false;
-                    },
-                    span {
-                        class: "text-red-800 font-semibold orbitron-font",
-                        "Fill"
-                    }
-                }
-                button {
-                    class: "block rounded-lg px-4 py-2 text-red-700 bg-gray-500",
-                    onclick: move |_| {
-                        state.write().show = false;
-                    },
-                    span {
-                        class: "text-red-800 font-semibold orbitron-font",
-                        "Close"
+                    class: "flex items-center gap-4 min-h-full justify-center",
+                    div {
+                        class: "relative transform overflow-hidden",
+                        div {
+                            class: "mx-auto bg-white border border-orange-500 rounded-xl dark:bg-gray-800 p-4",
+                            div {
+                                class: "flex-1",
+                                strong {
+                                    class: "block font-medium text-gray-900 dark:text-gray-50",
+                                    "Fill with tributes?"
+                                }
+                                p {
+                                    class: "mt-1 text-sm text-gray-700 dark:text-gray-300",
+                                    {format!("Are you sure you want to fill {} with tributes?", game.name)}
+                                }
+                            }
+                            div {
+                                class: "flex justify-end gap-4 mt-4",
+                                button {
+                                    class: "block rounded-lg px-4 py-2 bg-orange-500",
+                                    onclick: move |_| {
+                                        fill_tributes(&game);
+                                        tributes.set(Game::from(game.clone()).tributes());
+                                        state.write().show = false;
+                                    },
+                                    span {
+                                        class: "text-red-800 orbitron-font",
+                                        "Yes"
+                                    }
+                                }
+                                button {
+                                    class: "block rounded-lg px-4 py-2 text-red-700 bg-gray-500",
+                                    onclick: move |_| {
+                                        state.write().show = false;
+                                    },
+                                    span {
+                                        class: "text-red-800 orbitron-font",
+                                        "Cancel"
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
