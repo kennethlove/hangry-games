@@ -13,7 +13,7 @@ use std::str::FromStr;
 use crate::items::ItemType::{Consumable, Weapon};
 use crate::messages::GameMessage;
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct Game {
     pub id: Option<i32>,
     pub name: String,
@@ -338,8 +338,9 @@ impl From<String> for Game {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub enum GameStatus {
+    #[default]
     NotStarted,
     InProgress,
     Finished,

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use crate::games::{Game, GameStatus};
-use crate::gui::states::HGState;
+use crate::gui::components::{SelectedItem, ShowModal};
 use crate::gui::router::Routes;
 
 #[component]
@@ -18,14 +18,16 @@ pub fn GameActionsGroup(game: Game) -> Element {
 
 #[component]
 fn GameDeleteButton(game: Game) -> Element {
-    let mut state = use_context::<Signal<HGState>>();
+    let mut show_modal = use_context::<Signal<ShowModal>>();
+    let mut selected_game = use_context::<Signal<SelectedItem>>();
+
     rsx! {
         button {
             class: "inline-block px-4 py-2 text-sm font-normal text-slate-800 hover:text-red-700 focus:relative w-full",
             title: "Delete Game",
             onclick: move |_| {
-                Game::delete(game.id.unwrap());
-                state.write().games.retain(|g| g.id != game.id);
+                selected_game.write().id = game.id.unwrap();
+                show_modal.write().show = true;
             },
             span {
                 class: "material-symbols-outlined",

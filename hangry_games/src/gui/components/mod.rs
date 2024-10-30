@@ -17,3 +17,10 @@ pub mod tribute_detail;
 pub mod tribute_list;
 pub mod tribute_list_item;
 pub mod tribute_table;
+
+#[derive(Clone, Debug)]
+pub struct ShowModal { pub show: bool }
+
+#[derive(Clone, Debug)]
+pub struct SelectedItem { pub id: i32 }
+

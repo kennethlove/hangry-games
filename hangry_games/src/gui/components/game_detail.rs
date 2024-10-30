@@ -1,14 +1,12 @@
 use dioxus::prelude::*;
 use crate::games::Game;
 use crate::models::{fill_tributes, get_game_by_id};
+use crate::gui::components::ShowModal;
 use crate::gui::router::Routes;
 use crate::gui::components::create_tribute::CreateTribute;
 use crate::gui::components::tribute_list::TributeList;
 use crate::gui::components::fill_tributes_button::FillTributesButton;
 use crate::tributes::actors::Tribute;
-
-#[derive(Clone, Debug)]
-pub struct ShowModal { pub(crate) show: bool }
 
 #[component]
 pub fn GameDetail(id: i32) -> Element {
@@ -27,13 +25,18 @@ pub fn GameDetail(id: i32) -> Element {
                     "{game.name}"
                 },
             }
-            h3 {
-                class: "text-lg text-slate-700 orbitron-font font-bold tracking-wider",
-                span {
-                    class: "font-normal text-slate-700 tracking-normal",
-                    "Day "
+            if game.status == crate::games::GameStatus::InProgress {
+                button {
+                    class: "bg-gradient-to-r from-orange-500 to-yellow-300 rounded-md text-red-800 orbitron-font py-1 px-2 border border-orange-700",
+                    onclick: move |_| {
+                        let nav = navigator();
+                        nav.push(Routes::GamePlay { id: game.id.unwrap() });
+                    },
+                    span {
+                        class: "text-red-800 orbitron-font",
+                        "Play Next Day"
+                    }
                 }
-                "{game.day.unwrap_or(0)}",
             }
         }
         div {
@@ -55,16 +58,7 @@ pub fn GameDetail(id: i32) -> Element {
                 "Full Log"
             }
 
-            if game.status == crate::games::GameStatus::InProgress {
-                Link {
-                    class: "underline text-red-700",
-                    to: Routes::GamePlay { id: game.id.unwrap() },
-                    "Play Next Day"
-                }
-            }
         }
-
-        ConfirmFillModal { id: game.id.unwrap(), tributes }
 
         if game.status == crate::games::GameStatus::Finished {
             h4 {
@@ -87,11 +81,12 @@ pub fn GameDetail(id: i32) -> Element {
                 }
                 FillTributesButton { }
             }
+            ConfirmFillModal { id: game.id.unwrap(), tributes }
         }
 
         div {
             class: "mt-4",
-            TributeList { tributes: tributes.clone() }
+            TributeList { tributes: tributes.clone(), game: game.clone() }
         }
 
         Link {
@@ -110,44 +105,54 @@ fn ConfirmFillModal(id: i32, mut tributes: Signal<Vec<Tribute>>) -> Element {
     rsx! {
         dialog {
             open: state.read().show,
-            class: "rounded-xl border border-orange-500 bg-white p-4 dark:bg-gray-800",
+            class: "relative z-10",
             role: "alert",
+            div { class: "fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"}
             div {
-                class: "flex items-start gap-4",
+                class: "fixed inset-0 z-10 w-screen overflow-y-hidden",
                 div {
-                    class: "flex-1",
-                    strong {
-                        class: "block font-medium text-gray-900 dark:text-gray-50",
-                        "Fill game?"
-                    }
-                    p {
-                        class: "mt-1 text-sm text-gray-700 dark:text-gray-300",
-                        "Are you sure you want to fill the game with random tributes?"
-                    }
-                }
-            }
-            div {
-                class: "flex justify-end gap-4 mt-4",
-                button {
-                    class: "block rounded-lg px-4 py-2 bg-orange-500",
-                    onclick: move |_| {
-                        fill_tributes(&game);
-                        tributes.set(Game::from(game.clone()).tributes());
-                        state.write().show = false;
-                    },
-                    span {
-                        class: "text-red-800 font-semibold orbitron-font",
-                        "Fill"
-                    }
-                }
-                button {
-                    class: "block rounded-lg px-4 py-2 text-red-700 bg-gray-500",
-                    onclick: move |_| {
-                        state.write().show = false;
-                    },
-                    span {
-                        class: "text-red-800 font-semibold orbitron-font",
-                        "Close"
+                    class: "flex items-center gap-4 min-h-full justify-center",
+                    div {
+                        class: "relative transform overflow-hidden",
+                        div {
+                            class: "mx-auto bg-white border border-orange-500 rounded-xl dark:bg-gray-800 p-4",
+                            div {
+                                class: "flex-1",
+                                strong {
+                                    class: "block font-medium text-gray-900 dark:text-gray-50",
+                                    "Fill with tributes?"
+                                }
+                                p {
+                                    class: "mt-1 text-sm text-gray-700 dark:text-gray-300",
+                                    {format!("Are you sure you want to fill {} with tributes?", game.name)}
+                                }
+                            }
+                            div {
+                                class: "flex justify-end gap-4 mt-4",
+                                button {
+                                    class: "block rounded-lg px-4 py-2 bg-orange-500",
+                                    onclick: move |_| {
+                                        fill_tributes(&game);
+                                        tributes.set(Game::from(game.clone()).tributes());
+                                        state.write().show = false;
+                                    },
+                                    span {
+                                        class: "text-red-800 orbitron-font",
+                                        "Yes"
+                                    }
+                                }
+                                button {
+                                    class: "block rounded-lg px-4 py-2 text-red-700 bg-gray-500",
+                                    onclick: move |_| {
+                                        state.write().show = false;
+                                    },
+                                    span {
+                                        class: "text-red-800 orbitron-font",
+                                        "Cancel"
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

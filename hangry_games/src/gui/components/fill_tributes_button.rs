@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use crate::gui::components::game_detail::ShowModal;
+use crate::gui::components::ShowModal;
 
 #[component]
 pub fn FillTributesButton() -> Element {
