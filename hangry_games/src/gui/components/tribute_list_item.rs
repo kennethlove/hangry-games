@@ -32,48 +32,78 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>) -> Elemen
 
     rsx! {
         div {
-            class: "rounded-full border-4 p-2 mb-2 bg-gray-800 flex flex-row bg-gradient-to-b {gradient_stop}",
-            img {
-                class: "rounded-full border-2 {surrounding_border} mr-2 min-h-16 max-h-16 min-w-16 max-w-16",
-                src: avatar.unwrap(),
-            }
+            class: "group relative block rounded-full border-4 p-2 mb-2 bg-gray-800 bg-gradient-to-b {gradient_stop}",
+            div {
+                class: "flex flex-row gap-2",
+                img {
+                    class: "rounded-full border-3 {surrounding_border} mr-2 size-20 basis-20",
+                    src: avatar.unwrap(),
+                }
 
-            div {
-                class: "w-1/2 mt-2",
-                h1 {
-                    class: "text-lg text-orange-500 leading-none",
-                    Link {
-                        to: Routes::TributeDetail { id: tribute.id.unwrap() },
-                        "{tribute.name}"
-                    }
-                }
-                h2 {
-                    class: "text-sm text-white",
-                    "District {tribute.district}"
-                }
-            }
-            div {
-                class: "text-xs text-white mt-1",
                 div {
-                    class: "flex flex-row gap-1",
-                    span {
-                        class: "text-orange-500 material-symbols-outlined",
-                        "monitor_heart"
+                    class: "w-1/2 mt-2 flex-grow",
+                    h1 {
+                        class: "text-lg text-orange-500 leading-none",
+                        Link {
+                            to: Routes::TributeDetail { id: tribute.id.unwrap() },
+                            "{tribute.name}"
+                        }
                     }
-                    span {
-                        class: "mt-1",
-                        "{tribute.status}"
+                    h2 {
+                        class: "text-sm text-white",
+                        "District {tribute.district}"
                     }
                 }
                 div {
-                    class: "flex flex-row",
-                    span {
-                        class: "text-orange-500 material-symbols-outlined",
-                        "location_on"
+                    class: "text-xs text-white mt-1 flex-grow",
+                    div {
+                        class: "flex flex-row gap-1",
+                        span {
+                            class: "text-orange-500 material-symbols-outlined",
+                            "monitor_heart"
+                        }
+                        span {
+                            class: "mt-1",
+                            "{tribute.status}"
+                        }
                     }
-                    span {
-                        class: "mt-1",
-                        "{tribute.area.unwrap()}"
+                    div {
+                        class: "flex flex-row gap-1",
+                        span {
+                            class: "text-orange-500 material-symbols-outlined",
+                            "location_on"
+                        }
+                        span {
+                            class: "mt-1 whitespace-nowrap",
+                            "{tribute.area.unwrap()}"
+                        }
+                    }
+                }
+                div {
+                    class: "absolute w-full h-full top-12 translate-y-4 transform opacity-0 transition-all group-hover:opacity-100",
+                    ul {
+                        class: "flex flex-row justify-center gap-4",
+                        li {
+                            span {
+                                class: "text-orange-500 material-symbols-outlined",
+                                "monitor_heart"
+                            }
+                            span {
+                                class: "mt-1",
+                                "edit"
+                            }
+                        }
+                        li {
+                            class: "lineheight-0",
+                            span {
+                                class: "text-orange-500 material-symbols-outlined",
+                                "monitor_heart"
+                            }
+                            span {
+                                class: "mt-1",
+                                "delete"
+                            }
+                        }
                     }
                 }
             }
