@@ -3,7 +3,6 @@ use crate::games::Game;
 use crate::gui::states::HGState;
 use crate::gui::components::game_table_row::GameTableRow;
 use crate::gui::components::{SelectedItem, ShowModal};
-use crate::tributes::actors::Tribute;
 
 #[component]
 pub fn GameTable() -> Element {
