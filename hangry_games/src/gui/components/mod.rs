@@ -25,3 +25,8 @@ pub struct ShowModal { pub show: bool }
 #[derive(Clone, Debug)]
 pub struct SelectedItem { pub id: i32 }
 
+#[derive(Clone, Debug)]
+pub struct UploadedFile {
+    name: String,
+    contents: Vec<u8>
+}

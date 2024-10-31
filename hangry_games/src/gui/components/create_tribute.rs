@@ -3,14 +3,10 @@ use std::sync::Arc;
 use dioxus::prelude::*;
 use dioxus::{prelude::dioxus_elements::FileEngine};
 use crate::games::Game;
+use crate::gui::components::UploadedFile;
 use crate::models::get_game_by_id;
 use crate::tributes::actors::Tribute;
 
-#[derive(Clone, Debug)]
-struct UploadedFile {
-    name: String,
-    contents: Vec<u8>
-}
 
 #[component]
 pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {

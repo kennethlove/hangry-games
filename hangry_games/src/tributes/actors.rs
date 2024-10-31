@@ -84,6 +84,11 @@ impl Tribute {
         models::tribute::Tribute::delete(id);
     }
 
+    pub fn update(&self, update: UpdateTribute) {
+        let tribute_model = models::Tribute::from(self.clone());
+        tribute_model.update(update);
+    }
+
     /// Reduces health, triggers death if health reaches 0.
     pub fn takes_physical_damage(&mut self, damage: i32) {
         self.health = std::cmp::max(0, self.health - damage);
@@ -1198,7 +1203,7 @@ impl Default for Tribute {
     }
 }
 
-use crate::models::{create_full_log, get_all_living_tributes, get_area, get_area_by_id, get_game_by_id, update_item, update_tribute, Action, Tribute as TributeModel};
+use crate::models::{create_full_log, get_all_living_tributes, get_area, get_area_by_id, get_game_by_id, update_item, update_tribute, Action, EditTribute, Tribute as TributeModel};
 impl From<TributeModel> for Tribute {
     fn from(tribute: models::tribute::Tribute) -> Self {
         use crate::areas::Area;

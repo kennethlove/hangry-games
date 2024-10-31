@@ -112,6 +112,14 @@ impl Tribute {
         Ok(())
     }
 
+    pub fn update(&self, tribute: UpdateTribute) {
+        let connection = &mut establish_connection();
+        diesel::update(tribute::table.find(self.id))
+            .set(&tribute)
+            .execute(connection)
+            .expect("Error updating tribute");
+    }
+
     pub fn dies(&self) {
         let connection = &mut establish_connection();
         let game = get_game_by_id(self.game_id.unwrap()).unwrap();
@@ -278,6 +286,22 @@ pub struct UpdateTribute {
     pub dexterity: Option<i32>,
     pub status: String,
     pub avatar: Option<String>
+}
+
+#[derive(Insertable, Debug, AsChangeset)]
+#[diesel(table_name = tribute)]
+pub struct EditTribute {
+    pub name: String,
+    pub district: i32,
+    pub avatar: Option<String>
+}
+
+pub fn edit_tribute(tribute_id: i32, tribute: EditTribute) {
+    let conn = &mut establish_connection();
+    diesel::update(tribute::table.find(tribute_id))
+        .set(&tribute)
+        .execute(conn)
+        .expect("Error updating tribute");
 }
 
 pub fn create_tribute(name: &str, avatar: Option<String>) -> Tribute {
