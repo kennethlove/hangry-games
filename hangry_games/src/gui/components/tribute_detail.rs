@@ -9,6 +9,11 @@ pub fn TributeDetail(id: i32) -> Element {
     let game = get_game_by_id(tribute.game_id.unwrap()).expect("Game not found");
 
     rsx! {
+        Link {
+            to: Routes::Home {},
+            class: "flex flex-row items-center gap-2 justify-center",
+            "Home"
+        }
         div {
             class: "flex flex-row justify-left items-top gap-4",
             img {

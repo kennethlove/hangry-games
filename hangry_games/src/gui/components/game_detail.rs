@@ -15,6 +15,11 @@ pub fn GameDetail(id: i32) -> Element {
     use_context_provider(|| Signal::new(ShowModal { show: false}));
 
     rsx! {
+        Link {
+            to: Routes::Home {},
+            class: "flex flex-row items-center gap-2 justify-center",
+            "Home"
+        }
         div {
             class: "flex justify-between items-center",
             h2 {

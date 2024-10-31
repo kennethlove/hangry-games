@@ -14,29 +14,31 @@ pub fn GameTable() -> Element {
         div {
             ConfirmDeleteGameModal {}
             table {
-                class: "min-w-full divide-y-2 divide-gray-200 text-sm",
+                class: "min-w-full mt-4 divide-y divide-yellow-200/50",
                 thead {
+                    class: "text-sm text-left text-red-950 tracking-wide",
                     tr {
+                        class: "",
                         th {
-                            class: "whitespace-nowrap px-4 py-2 font-medium text-gray-900",
+                            class: "whitespace-nowrap font-semibold pl-4",
                             "Game Name"
                         }
                         th {
-                            class: "whitespace-nowrap px-4 py-2 font-medium text-gray-900",
+                            class: "font-semibold",
                             "Day"
                         }
                         th {
-                            class: "whitespace-nowrap px-4 py-2 font-medium text-gray-900",
-                            "Tributes"
+                            class: "whitespace-nowrap font-semibold",
+                            "Living Tributes"
                         }
                         th {
-                            class: "px-4 py-2",
+                            class: "font-semibold text-right pr-4",
                             "Actions"
                         }
                     }
                 }
                 tbody {
-                    class: "divide-y divide-gray-200",
+                    class: "text-slate-800",
                     for game in state.read().games.iter() {
                         GameTableRow { game: game.clone() }
                     }

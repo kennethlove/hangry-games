@@ -42,7 +42,7 @@ fn app() -> Element {
 
     rsx! {
         div {
-            class: "container mx-auto mt-6 p-4 bg-gradient-to-r from-yellow-300 to-orange-500 rounded-lg",
+            class: "container mx-auto mt-6 p-4 bg-gradient-to-b from-yellow-200/50 to-orange-500 rounded-lg border b-1 border-orange-200",
             header::Header {}
             Router::<Routes> {}
         }

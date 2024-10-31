@@ -34,6 +34,11 @@ pub fn TributeEdit(id: i32) -> Element {
     };
 
     rsx! {
+        Link {
+            to: Routes::Home {},
+            class: "flex flex-row items-center gap-2 justify-center",
+            "Home"
+        }
         form {
             class: "flex flex-row justify-items-stretch gap-2",
             enctype: "multipart/form-data",

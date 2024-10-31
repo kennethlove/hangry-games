@@ -1300,7 +1300,7 @@ mod tests {
 
     #[test]
     fn new() {
-        let tribute = Tribute::new("Katniss".to_string(), None);
+        let tribute = Tribute::new("Katniss".to_string(), None, None);
         assert_eq!(tribute.health, 100);
         assert_eq!(tribute.sanity, 100);
         assert_eq!(tribute.movement, 100);
@@ -1309,21 +1309,21 @@ mod tests {
 
     #[test]
     fn takes_physical_damage() {
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        let mut tribute = Tribute::new("Katniss".to_string(), None, None);
         tribute.takes_physical_damage(10);
         assert_eq!(tribute.health, 90);
     }
 
     #[test]
     fn takes_mental_damage() {
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        let mut tribute = Tribute::new("Katniss".to_string(), None, None);
         tribute.takes_mental_damage(10);
         assert_eq!(tribute.sanity, 90);
     }
 
     #[test]
     fn moves_and_rests() {
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        let mut tribute = Tribute::new("Katniss".to_string(), None, None);
         tribute.speed = Some(50);
         tribute.moves();
         assert_eq!(tribute.movement, 50);
@@ -1333,7 +1333,7 @@ mod tests {
 
     #[test]
     fn is_hidden_true() {
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        let mut tribute = Tribute::new("Katniss".to_string(), None, None);
         tribute.intelligence = Some(100);
         tribute.is_hidden = Some(true);
         assert!(!tribute.is_visible());
