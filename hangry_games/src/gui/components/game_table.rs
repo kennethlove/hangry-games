@@ -16,7 +16,7 @@ pub fn GameTable() -> Element {
             table {
                 class: "min-w-full mt-4 divide-y divide-yellow-200/50",
                 thead {
-                    class: "text-sm text-left text-red-950 tracking-wide",
+                    class: "text-sm text-left text-red-950 tracking-wide font-semibold",
                     tr {
                         class: "",
                         th {
