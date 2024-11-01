@@ -34,15 +34,16 @@ pub fn TributeEdit(id: i32) -> Element {
     };
 
     rsx! {
-        Link {
-            to: Routes::Home {},
+        div {
             class: "flex flex-row items-center gap-2 justify-center",
-            "Home"
-        }
-        Link {
-            to: Routes::GameDetail { id: tribute.read().game_id.unwrap() },
-            class: "font-normal text-red-700 tracking-normal",
-            "Back to game"
+            Link {
+                to: Routes::Home {},
+                "Home"
+            }
+            Link {
+                to: Routes::GameDetail { id: tribute.read().game_id.unwrap() },
+                "Back to game"
+            }
         }
         div {
             class: "grid grid-row justify-left items-top gap-4",
@@ -105,7 +106,7 @@ pub fn TributeEdit(id: i32) -> Element {
                 div {
                     img {
                         class: "rounded-lg size-64",
-                        src: format!("{}", tribute.read().avatar.as_ref().unwrap_or(&"hangry-games.png".to_string())),
+                        src: tribute.read().avatar()
                     }
                     input {
                         class: "w-64 cursor-pointer rounded-md border border-orange-700 bg-yellow-200 px-2 py-1 text-gray-900 focus:outline-none mt-2",

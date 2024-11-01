@@ -89,6 +89,14 @@ impl Tribute {
         tribute_model.update(update);
     }
 
+    pub fn avatar(&self) -> String {
+        if cfg!(target_family = "windows") {
+            format!("assets/{}", self.avatar.clone().unwrap_or("hangry-games.png".to_string()))
+        } else {
+            self.avatar.clone().unwrap_or("hangry-games.png".to_string())
+        }
+    }
+
     /// Reduces health, triggers death if health reaches 0.
     pub fn takes_physical_damage(&mut self, damage: i32) {
         self.health = std::cmp::max(0, self.health - damage);
