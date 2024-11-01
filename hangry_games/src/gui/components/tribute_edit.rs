@@ -2,6 +2,7 @@ use std::path::Path;
 use std::sync::Arc;
 use dioxus::html::FileEngine;
 use dioxus::prelude::*;
+use dioxus_logger::tracing::error;
 use crate::games::Game;
 use crate::gui::components::UploadedFile;
 use crate::gui::router::Routes;
@@ -14,6 +15,7 @@ pub fn TributeEdit(id: i32) -> Element {
     let tribute = use_signal(|| Tribute::from(get_tribute_by_id(id)));
     let mut tribute_name = use_signal(|| tribute.read().name.clone());
     let mut files_uploaded = use_signal(|| Vec::new() as Vec<crate::gui::components::UploadedFile>);
+    let mut current_field = use_signal(|| String::from(""));
 
     let read_files = move |file_engine: Arc<dyn FileEngine>| async move {
         let files = file_engine.files();
@@ -46,7 +48,7 @@ pub fn TributeEdit(id: i32) -> Element {
             }
         }
         div {
-            class: "grid grid-row justify-left items-top gap-4",
+            class: "gap-4",
             form {
                 class: "flex flex-row justify-items-stretch gap-2",
                 enctype: "multipart/form-data",
@@ -119,38 +121,49 @@ pub fn TributeEdit(id: i32) -> Element {
                         onchange: upload_files
                     }
                 }
-            div {
-                h1 {
-                    class: "text-3xl font-bold text-slate-900 orbitron-font tracking-wider",
-                    "{tribute_name}"
-                    input {
-                        r#type: "text",
-                        class: "w-full rounded-md border border-orange-700 bg-yellow-200 px-2 py-1 text-gray-900 placeholder-gray-900 focus:outline-none",
-                        id: "tribute_name",
-                        name: "tribute_name",
-                        placeholder: "Name",
-                        value: "{tribute_name}",
-                        oninput: move |event| tribute_name.set(event.value().clone()),
-                        onkeypress: move |event| {
-                            if event.key() == Key::Enter {
-                                tribute_name.set(String::from(""))
+                div {
+                    h1 {
+                        class: "text-3xl font-bold text-slate-900 orbitron-font tracking-wider",
+                        span {
+                            hidden: current_field.read().to_string() == "tribute_name",
+                            onclick: move |_| {
+                                current_field.set("tribute_name".to_string());
+                            },
+                            "{tribute_name}"
+                        }
+                        input {
+                            hidden: current_field.read().to_string() != "tribute_name",
+                            r#type: "text",
+                            class: "w-full rounded-md border border-orange-700 bg-yellow-200 px-2 py-1 text-gray-900 placeholder-gray-900 focus:outline-none",
+                            id: "tribute_name",
+                            name: "tribute_name",
+                            placeholder: "Name",
+                            value: "{tribute_name}",
+                            oninput: move |event| tribute_name.set(event.value().clone()),
+                            onkeypress: move |event| {
+                                if event.key() == Key::Enter {
+                                    tribute_name.set(String::from(""))
+                                }
+                            },
+                            onblur: move |_| {
+                                current_field.set("".to_string());
                             }
                         }
                     }
-                }
-                h2 {
-                    class: "text-xl text-slate-900 orbitron-font font-bold tracking-wider",
-                    "District ",
-                    span {
-                        class: "font-normal text-slate-700 tracking-normal",
-                        "{tribute.read().district}"
+                    h2 {
+                        class: "text-xl text-slate-900 orbitron-font font-bold tracking-wider",
+                        "District ",
+                        span {
+                            class: "font-normal text-slate-700 tracking-normal",
+                            "{tribute.read().district}"
+                        }
                     }
                 }
-            }
-        }
-            button {
-                class: "orbitron-font w-min whitespace-nowrap rounded-md border border-orange-700 bg-gradient-to-r from-orange-500 to-yellow-300 px-2 py-1 text-red-800",
-                "Update Tribute"
+                button {
+                    class: "orbitron-font w-min whitespace-nowrap rounded-md border border-orange-700 bg-gradient-to-r from-orange-500 to-yellow-300 px-2 py-1 text-red-800 flex-grow",
+                    r#type: "submit",
+                    "Update Tribute"
+                }
             }
         }
     }
