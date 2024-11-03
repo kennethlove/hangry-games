@@ -3,6 +3,7 @@ use crate::games::Game;
 use crate::gui::components::tribute_list_item::TributeListItem;
 use crate::tributes::actors::Tribute;
 use crate::gui::components::{SelectedItem, ShowModal};
+use crate::gui::components::button::Button;
 
 #[component]
 pub fn TributeList(tributes: Signal<Vec<Tribute>>, game: Game) -> Element {
@@ -18,9 +19,9 @@ pub fn TributeList(tributes: Signal<Vec<Tribute>>, game: Game) -> Element {
                     class: "grid grid-cols-2 gap-1",
                     span {
                         class:"flex items-center col-span-2 mb-2",
-                        span { class:"h-px flex-1 bg-black" }
-                        span { class:"shrink-0 px-6", "District {tribute_pair[0].district}" }
-                        span { class:"h-px flex-1 bg-black" }
+                        span { class:"h-px flex-1 bg-red-800 dark:bg-yellow-500" }
+                        span { class:"shrink-0 px-6 text-red-800 dark:text-yellow-500", "District {tribute_pair[0].district}" }
+                        span { class:"h-px flex-1 bg-red-800 dark:bg-yellow-500" }
                     }
 
                     for tribute in tribute_pair {
@@ -66,28 +67,21 @@ fn ConfirmDeleteTributeModal(id: i32, mut tributes: Signal<Vec<Tribute>>) -> Ele
                             }
                             div {
                                 class: "flex justify-end gap-4 mt-4",
-                                button {
-                                    class: "block rounded-lg px-4 py-2 bg-orange-500",
+                                Button {
+                                    text: "Yes",
                                     onclick: move |_| {
                                         Tribute::delete(selected_tribute.read().id);
                                         tributes.write().retain(|t| t.id.unwrap() != selected_tribute.read().id);
                                         selected_tribute.write().id = -1;
                                         state.write().show = false;
-                                    },
-                                    span {
-                                        class: "text-red-800 orbitron-font",
-                                        "Yes"
                                     }
                                 }
-                                button {
-                                    class: "block rounded-lg px-4 py-2 text-red-700 bg-gray-500",
+                                Button {
+                                    text: "No",
+                                    extra_css_classes: "bg-gray-500 bg-none".to_string(),
                                     onclick: move |_| {
                                         selected_tribute.write().id = -1;
                                         state.write().show = false;
-                                    },
-                                    span {
-                                        class: "text-red-800 orbitron-font",
-                                        "Cancel"
                                     }
                                 }
                             }

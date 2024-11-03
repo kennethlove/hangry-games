@@ -27,7 +27,21 @@ fn main() {
                 .with_resizable(true)
                 .with_title("The Hangry Games")
                 .with_min_inner_size(LogicalSize::new(800.0, 600.0))
-        );
+        )
+        .with_custom_index(
+        r#"
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dioxus app</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body>
+    <div id="main"></div>
+  </body>
+</html>
+        "#
+                .into());
     LaunchBuilder::desktop()
         .with_cfg(config)
         .launch(app)
@@ -42,7 +56,7 @@ fn app() -> Element {
 
     rsx! {
         div {
-            class: "container mx-auto mt-6 p-4 bg-gradient-to-b from-yellow-200/50 to-orange-500 rounded-lg border b-1 border-orange-200 backdrop-blur-md",
+            class: "container mx-auto mt-6 p-4 bg-gray-200/50 dark:bg-gray-900/50 rounded-lg border border-1 border-orange-400 backdrop-blur-md",
             header::Header {}
             Router::<Routes> {}
         }

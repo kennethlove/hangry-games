@@ -3,6 +3,7 @@ use crate::games::Game;
 use crate::gui::states::HGState;
 use crate::gui::components::game_table_row::GameTableRow;
 use crate::gui::components::{SelectedItem, ShowModal};
+use crate::gui::components::button::Button;
 
 #[component]
 pub fn GameTable() -> Element {
@@ -14,9 +15,9 @@ pub fn GameTable() -> Element {
         div {
             ConfirmDeleteGameModal {}
             table {
-                class: "min-w-full mt-4 divide-y divide-yellow-200/50",
+                class: "min-w-full mt-4 divide-y dark:divide-yellow-200 divide-yellow-500",
                 thead {
-                    class: "text-sm text-left text-red-950 tracking-wide font-semibold",
+                    class: "text-sm text-left dark:text-yellow-500 text-yellow-900 tracking-wide font-semibold",
                     tr {
                         class: "",
                         th {
@@ -38,7 +39,6 @@ pub fn GameTable() -> Element {
                     }
                 }
                 tbody {
-                    class: "text-slate-800",
                     for game in state.read().games.iter() {
                         GameTableRow { game: game.clone() }
                     }
@@ -83,28 +83,21 @@ fn ConfirmDeleteGameModal() -> Element {
                             }
                             div {
                                 class: "flex justify-end gap-4 mt-4",
-                                button {
-                                    class: "block rounded-lg px-4 py-2 bg-orange-500",
+                                Button {
+                                    text: "Yes",
                                     onclick: move |_| {
                                         Game::delete(selected_game.read().id);
                                         state.write().games.retain(|g| g.id.unwrap() != selected_game.read().id);
                                         selected_game.write().id = -1;
                                         show_modal.write().show = false;
-                                    },
-                                    span {
-                                        class: "text-red-800 orbitron-font",
-                                        "Yes"
                                     }
                                 }
-                                button {
-                                    class: "block rounded-lg px-4 py-2 text-red-700 bg-gray-500",
+                                Button {
+                                    text: "No",
+                                    extra_css_classes: "bg-none bg-gray-200 dark:bg-gray-500".to_string(),
                                     onclick: move |_| {
                                         selected_game.write().id = -1;
                                         show_modal.write().show = false;
-                                    },
-                                    span {
-                                        class: "text-red-800 orbitron-font",
-                                        "Cancel"
                                     }
                                 }
                             }

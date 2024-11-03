@@ -6,7 +6,7 @@ use crate::gui::components::game_actions_group::GameActionsGroup;
 pub fn GameTableRow(game: Game) -> Element {
     rsx! {
         tr {
-            class: "group text-black hover:font-semibold",
+            class: "group text-yellow-700 dark:text-yellow-700 hover:text-yellow-900 dark:hover:text-yellow-300",
             td {
                 class: "whitespace-nowrap pl-4 rounded-l-lg",
                 "{game.name}"

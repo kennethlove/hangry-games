@@ -1,17 +1,14 @@
 use std::path::Path;
 use std::rc::Rc;
-use std::str::FromStr;
 use std::sync::Arc;
 use dioxus::html::FileEngine;
 use dioxus::prelude::*;
 use crate::gui::components::UploadedFile;
+use crate::gui::components::button::Button;
+use crate::gui::components::input_with_label::InputWithLabel;
 use crate::gui::router::Routes;
 use crate::models::{get_tribute_by_id, UpdateTribute};
 use crate::tributes::actors::Tribute;
-use crate::gui::components::input_with_label::InputWithLabel;
-use crate::tributes::statuses::TributeStatus;
-use crate::animals::Animal;
-use strum::IntoEnumIterator;
 
 #[component]
 pub fn TributeEdit(id: i32) -> Element {
@@ -19,8 +16,6 @@ pub fn TributeEdit(id: i32) -> Element {
     let mut tribute = use_signal(|| Tribute::from(get_tribute_by_id(id)));
     let mut tribute_name = use_signal(|| tribute.read().name.clone());
     let mut files_uploaded = use_signal(|| Vec::new() as Vec<crate::gui::components::UploadedFile>);
-    let tribute_status = tribute.read().status.clone();
-    dbg!(tribute_status);
 
     let read_files = move |file_engine: Arc<dyn FileEngine>| async move {
         let files = file_engine.files();
@@ -42,13 +37,14 @@ pub fn TributeEdit(id: i32) -> Element {
 
     rsx! {
         div {
-            class: "flex flex-row items-center gap-2 justify-center",
+            class: "flex flex-row items-center gap-2 justify-center text-yellow-900 dark:text-yellow-500 divide-x divide-yellow-900 dark:divide-yellow-500 mb-4 underline",
             Link {
                 to: Routes::Home {},
                 "Home"
             }
             Link {
                 to: Routes::GameDetail { id: tribute.read().game_id.unwrap() },
+                class: "pl-2",
                 "Back to game"
             }
         }
@@ -110,7 +106,7 @@ pub fn TributeEdit(id: i32) -> Element {
                 },
 
                 div {
-                    class: "justify-self-end pr-16",
+                    class: "justify-self-end pr-16 mr-4",
                     img {
                         class: "rounded-lg size-64",
                         src: tribute.read().avatar()
@@ -234,10 +230,9 @@ pub fn TributeEdit(id: i32) -> Element {
                         }
                     }
                 }
-                button {
-                    class: "mr-32 orbitron-font w-min whitespace-nowrap rounded-md border border-orange-700 bg-gradient-to-r from-orange-500 to-yellow-300 px-2 py-1 text-red-800 flex-grow",
-                    r#type: "submit",
-                    "Update Tribute"
+                Button {
+                    text: "Update Tribute",
+                    extra_css_classes: "justify-self-end mr-20 w-min flex-grow"
                 }
             }
         }
