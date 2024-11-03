@@ -10,6 +10,6 @@ module.exports = {
   theme: {
     extend: {},
   },
-  plugins: [require("@catppuccin/tailwindcss")]
+  plugins: []
 }
 

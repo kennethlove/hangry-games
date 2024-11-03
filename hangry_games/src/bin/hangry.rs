@@ -27,21 +27,7 @@ fn main() {
                 .with_resizable(true)
                 .with_title("The Hangry Games")
                 .with_min_inner_size(LogicalSize::new(800.0, 600.0))
-        )
-        .with_custom_index(
-        r#"
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Dioxus app</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  </head>
-  <body>
-    <div id="main"></div>
-  </body>
-</html>
-        "#
-                .into());
+        );
     LaunchBuilder::desktop()
         .with_cfg(config)
         .launch(app)

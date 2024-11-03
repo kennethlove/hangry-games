@@ -106,7 +106,7 @@ pub fn TributeEdit(id: i32) -> Element {
                 },
 
                 div {
-                    class: "justify-self-end pr-16 mr-4",
+                    class: "justify-self-end pr-16 mr-4 text-gray-900 dark:text-gray-300",
                     img {
                         class: "rounded-lg size-64",
                         src: tribute.read().avatar()
@@ -123,7 +123,7 @@ pub fn TributeEdit(id: i32) -> Element {
                     }
                 }
                 div {
-                    class: "flex flex-row flex-wrap gap-2 h-min",
+                    class: "flex flex-row flex-wrap gap-2 h-min text-gray-900 dark:text-gray-300",
                     div {
                         class: "flex flex-row flex-nowrap gap-2 w-full mb-2",
                         InputWithLabel {
