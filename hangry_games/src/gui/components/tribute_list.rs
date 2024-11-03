@@ -3,7 +3,6 @@ use crate::games::Game;
 use crate::gui::components::tribute_list_item::TributeListItem;
 use crate::tributes::actors::Tribute;
 use crate::gui::components::{SelectedItem, ShowModal};
-use crate::gui::router::Routes;
 
 #[component]
 pub fn TributeList(tributes: Signal<Vec<Tribute>>, game: Game) -> Element {

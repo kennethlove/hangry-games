@@ -180,7 +180,7 @@ impl Tribute {
 
 impl From<crate::tributes::actors::Tribute> for Tribute {
     fn from(tribute: crate::tributes::actors::Tribute) -> Self {
-        let current_tribute = get_tribute(&tribute.name);
+        let current_tribute = get_tribute_by_id(tribute.id.expect("Tribute has no ID"));
         let area = get_area(tribute.area.unwrap().as_str());
         let game_id = current_tribute.game_id.unwrap();
 

@@ -10,6 +10,7 @@ pub mod game_table;
 pub mod game_table_row;
 pub mod header;
 pub mod home;
+pub mod input_with_label;
 pub mod tribute_actions_group;
 pub mod tribute_box;
 pub mod tribute_boxes;

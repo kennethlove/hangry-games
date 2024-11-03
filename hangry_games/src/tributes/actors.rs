@@ -1211,7 +1211,7 @@ impl Default for Tribute {
     }
 }
 
-use crate::models::{create_full_log, get_all_living_tributes, get_area, get_area_by_id, get_game_by_id, update_item, update_tribute, Action, EditTribute, Tribute as TributeModel};
+use crate::models::{create_full_log, get_all_living_tributes, get_area, get_area_by_id, get_game_by_id, update_item, update_tribute, Action, Tribute as TributeModel};
 impl From<TributeModel> for Tribute {
     fn from(tribute: models::tribute::Tribute) -> Self {
         use crate::areas::Area;

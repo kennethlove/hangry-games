@@ -1,9 +1,11 @@
 use rand::Rng;
 use std::fmt::Display;
 use std::str::FromStr;
+use strum::EnumIter;
 
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Default, EnumIter, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Animal {
+    #[default]
     Squirrel,
     Bear,
     Wolf,

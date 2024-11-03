@@ -1,8 +1,11 @@
 use std::fmt::Display;
 use std::str::FromStr;
+use dioxus::dioxus_core::AttributeValue;
 use crate::animals::Animal;
+use dioxus::prelude::IntoAttributeValue;
+use strum::EnumIter;
 
-#[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Default, EnumIter, Eq, Ord, PartialEq, PartialOrd)]
 pub enum TributeStatus {
     #[default]
     Healthy,
@@ -22,6 +25,12 @@ pub enum TributeStatus {
     Burned,
     Buried,
     Mauled(Animal),
+}
+
+impl IntoAttributeValue for TributeStatus {
+    fn into_value(self) -> AttributeValue {
+        AttributeValue::Text(self.to_string())
+    }
 }
 
 impl FromStr for TributeStatus {
