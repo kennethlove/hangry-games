@@ -30,16 +30,16 @@ pub fn GameDayLog(id: i32, day: i32) -> Element {
                 class: "text-2xl font-bold text-yellow-900 dark:text-yellow-700 orbitron-font tracking-wider",
                 "Game ",
                 span {
-                    class: "font-normal text-red-700 tracking-normal",
+                    class: "font-normal text-red-700 dark:text-yellow-500 tracking-normal",
                     "{game.name}"
                 }
             }
             div {
                 h2 {
-                    class: "text-xl font-bold orbitron-font text-yellow-900 dark:text-yellow-700 tracking-wider",
-                    "Day ",
+                    class: "text-xl font-bold orbitron-font tracking-wider text-yellow-800",
+                    "Day "
                     span {
-                        class: "font-normal text-red-700 tracking-normal",
+                        class: "font-normal text-red-800 dark:text-yellow-500 tracking-normal",
                         "{day}"
                     }
                 }
