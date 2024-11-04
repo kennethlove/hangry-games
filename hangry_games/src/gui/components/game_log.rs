@@ -14,14 +14,25 @@ pub fn GameLog(id: i32) -> Element {
             "Home"
         }
         div {
+            class: "flex flex-row items-center gap-2 justify-center text-yellow-900 dark:text-yellow-500 divide-x divide-yellow-900 dark:divide-yellow-500 mb-4 underline",
+            Link {
+                to: Routes::Home {},
+                "Home"
+            }
+            Link {
+                to: Routes::GameDetail { id: game.id.unwrap() },
+                class: "pl-2",
+                "Back to game"
+            }
+        }
+        div {
             h2 {
-                class: "text-2xl font-bold text-slate-900 orbitron-font tracking-wider",
+                class: "text-2xl font-bold text-yellow-800 orbitron-font tracking-wider",
                 "Game ",
-                Link {
-                    to: Routes::GameDetail { id: game.id.unwrap() },
-                    class: "font-normal text-red-700 tracking-normal",
+                span {
+                    class: "font-normal text-red-800 dark:text-yellow-500 tracking-normal",
                     "{game.name}"
-                },
+                }
             }
             div {
                 class: "flex flex-direction-col justify-between",
@@ -29,11 +40,16 @@ pub fn GameLog(id: i32) -> Element {
                     for day in 1..=game.day.unwrap() {
                         div {
                             h2 {
-                                class: "text-xl font-bold orbitron-font tracking-wider",
-                                "Day {day}"
+                                class: "text-xl font-bold orbitron-font tracking-wider text-yellow-800",
+                                id: "day-{day}",
+                                "Day "
+                                span {
+                                    class: "font-normal text-red-800 dark:text-yellow-500 tracking-normal",
+                                    "{day}"
+                                }
                             }
                             ol {
-                                class: "indent-4 mb-4",
+                                class: "indent-4 mb-4 text-yellow-900 dark:text-yellow-200",
                                 for log in get_logs_for_game_day(game.id.unwrap(), day).iter() {
                                     li { "{log.message}" }
                                 }
@@ -43,13 +59,13 @@ pub fn GameLog(id: i32) -> Element {
                 }
                 div {
                     h2 {
-                        class: "text-lg orbitron-font font-bold tracking-wider",
+                        class: "text-lg orbitron-font font-bold tracking-wider text-yellow-800",
                         "Days"
                     }
                     ol {
                         for day in 1..=game.day.unwrap() {
                             li {
-                                class: "text-red-700 underline",
+                                class: "text-yellow-900 dark:text-yellow-500 underline",
                                 Link {
                                     to: Routes::GameDayLog { id: game.id.unwrap(), day },
                                     "Day {day}"
@@ -59,11 +75,6 @@ pub fn GameLog(id: i32) -> Element {
                     }
                 }
             }
-        }
-        Link {
-            class: "text-red-700 underline",
-            to: Routes::Home {},
-            "Back to Home"
         }
     }
 }

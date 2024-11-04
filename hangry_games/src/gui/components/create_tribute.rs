@@ -6,6 +6,7 @@ use crate::games::Game;
 use crate::gui::components::UploadedFile;
 use crate::models::get_game_by_id;
 use crate::tributes::actors::Tribute;
+use crate::gui::components::button::Button;
 
 
 #[component]
@@ -34,23 +35,27 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
 
     rsx! {
         form {
-            // class: "flex flex-row justify-between gap-2",
             class: "flex flex-row justify-items-stretch gap-2",
             enctype: "multipart/form-data",
             onsubmit: move |event| {
                 let data = event.data.values();
                 let name = data.get("tribute_name").unwrap().first().unwrap();
                 let image = files_uploaded.read();
-                let image = image.first().unwrap().clone();
+                let mut new_avatar_path = None;
 
-                let extension = Path::new(&image.name).extension().unwrap().to_str().unwrap().to_lowercase();
-                let filename = format!("{}.{}", name.to_lowercase(), extension);
-                let avatar_path = format!("avatars/{}/", game_id);
-                let save_path = format!("./assets/{}/", avatar_path);
-                let tribute = game.add_tribute(name.clone(), Some(format!("{}{}", avatar_path, filename)));
+                if image.len() != 0 {
+                    let image = image.first().unwrap().clone();
 
-                std::fs::create_dir_all(&save_path).expect("Unable to create directory");
-                std::fs::write(format!("{}{}", save_path, filename), &image.contents).expect("Unable to write file");
+                    let extension = Path::new(&image.name).extension().unwrap().to_str().unwrap().to_lowercase();
+                    let filename = format!("{}.{}", name.to_lowercase(), extension);
+                    let avatar_path = format!("avatars/{}/", game_id);
+                    let save_path = format!("./assets/{}/", avatar_path);
+
+                    std::fs::create_dir_all(&save_path).expect("Unable to create directory");
+                    std::fs::write(format!("{}{}", save_path, filename), &image.contents).expect("Unable to write file");
+                    new_avatar_path = Some(format!("{}{}", avatar_path, filename));
+                }
+                let tribute = game.add_tribute(name.clone(), new_avatar_path);
 
                 signal.write().push(tribute.expect("Error creating tribute"));
                 tribute_name.set(String::from(""));
@@ -80,10 +85,7 @@ pub fn CreateTribute(signal: Signal<Vec<Tribute>>, game_id: i32) -> Element {
                 onchange: upload_files
             }
 
-            button {
-                class: "orbitron-font w-min whitespace-nowrap rounded-md border border-orange-700 bg-gradient-to-r from-orange-500 to-yellow-300 px-2 py-1 text-red-800",
-                "Add Tribute"
-            }
+            Button { text: "Add Tribute" }
         }
     }
 }

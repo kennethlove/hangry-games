@@ -5,9 +5,9 @@ use crate::gui::router::Routes;
 
 #[component]
 pub fn TributeDetail(id: i32) -> Element {
-    let tribute = Tribute::from(get_tribute_by_id(id));
-    let avatar = tribute.avatar();
-    let game = get_game_by_id(tribute.game_id.unwrap()).expect("Game not found");
+    let tribute = use_signal(|| Tribute::from(get_tribute_by_id(id)));
+    let avatar = tribute.read().avatar();
+    let game = get_game_by_id(tribute.read().game_id.unwrap()).expect("Game not found");
 
     rsx! {
         Link {
@@ -16,45 +16,57 @@ pub fn TributeDetail(id: i32) -> Element {
             "Home"
         }
         div {
+            class: "flex flex-row items-center gap-2 justify-center text-yellow-900 dark:text-yellow-500 divide-x divide-yellow-900 dark:divide-yellow-500 mb-4 underline",
+            Link {
+                to: Routes::Home {},
+                "Home"
+            }
+            Link {
+                to: Routes::GameDetail { id: tribute.read().game_id.unwrap() },
+                class: "pl-2",
+                "Back to game"
+            }
+        }
+        div {
             class: "flex flex-row justify-left items-top gap-4",
             img {
-                class: "rounded-m size-64",
+                class: "rounded-m size-64 mr-4",
                 src: avatar,
             }
             div {
+                class: "dark:text-gray-300 dark:bg-yellow-100/20 backdrop-blur-sm py-4 px-6 rounded-lg",
                 h1 {
-                    class: "text-3xl font-bold text-slate-900 orbitron-font tracking-wider",
-                    "{tribute.name}"
+                    class: "text-3xl font-bold orbitron-font tracking-wider dark:text-yellow-500",
+                    "{tribute.read().name}"
                 }
                 h2 {
-                    class: "text-xl text-slate-900 orbitron-font font-bold tracking-wider",
+                    class: "text-xl orbitron-font font-bold tracking-wider dark:text-yellow-800",
                     "District ",
                     span {
-                        class: "font-normal text-slate-700 tracking-normal",
-                        "{tribute.district}"
+                        class: "font-normal dark:text-yellow-500 tracking-normal",
+                        "{tribute.read().district}"
                     },
                 }
                 h3 {
-                    class: "text-large font-bold text-slate-700 orbitron-font tracking-wider",
+                    class: "text-large font-bold orbitron-font tracking-wider dark:text-yellow-800",
                     "Game ",
-                    Link {
-                        to: Routes::GameDetail { id: game.id },
-                        class: "font-normal text-red-700 tracking-normal",
+                    span {
+                        class: "font-normal dark:text-yellow-500 tracking-normal",
                         "{game.name}"
-                    },
+                    }
                 }
                 dl {
                     class: "mt-4 grid grid-cols-3 gap-1",
                     dt {
-                        class: "font-medium text-gray-900 text-right pr-4",
+                        class: "font-medium text-right pr-4",
                         "Status"
                     }
                     dd {
                         class: "col-span-2",
-                        "{tribute.status}"
+                        "{tribute.read().status}"
                     }
                     dt {
-                        class: "font-medium text-gray-900 text-right pr-4",
+                        class: "font-medium text-right pr-4",
                         "Attributes"
                     }
                     dd {
@@ -65,78 +77,78 @@ pub fn TributeDetail(id: i32) -> Element {
                                 "Health"
                             }
                             dd {
-                                "{tribute.health}/100"
+                                "{tribute.read().health}/100"
                             }
                             dt {
                                 "Sanity"
                             }
                             dd {
-                                "{tribute.sanity}/100"
+                                "{tribute.read().sanity}/100"
                             }
                             dt {
                                 "Movement"
                             }
                             dd {
-                                "{tribute.movement}/100"
+                                "{tribute.read().movement}/100"
                             }
                             dt {
                                 "Strength"
                             }
                             dd {
-                                "{tribute.strength.unwrap()}/50"
+                                "{tribute.read().strength.unwrap()}/50"
                             }
                             dt {
                                 "Defense"
                             }
                             dd {
-                                "{tribute.defense.unwrap()}/50"
+                                "{tribute.read().defense.unwrap()}/50"
                             }
                             dt {
                                 "Bravery"
                             }
                             dd {
-                                "{tribute.bravery.unwrap()}/100"
+                                "{tribute.read().bravery.unwrap()}/100"
                             }
                             dt {
                                 "Loyalty"
                             }
                             dd {
-                                "{tribute.loyalty.unwrap()}/100"
+                                "{tribute.read().loyalty.unwrap()}/100"
                             }
                             dt {
                                 "Speed"
                             }
                             dd {
-                                "{tribute.speed.unwrap()}/100"
+                                "{tribute.read().speed.unwrap()}/100"
                             }
                             dt {
                                 "Intelligence"
                             }
                             dd {
-                                "{tribute.intelligence.unwrap()}/100"
+                                "{tribute.read().intelligence.unwrap()}/100"
                             }
                             dt {
                                 "Persuasion"
                             }
                             dd {
-                                "{tribute.persuasion.unwrap()}/100"
+                                "{tribute.read().persuasion.unwrap()}/100"
                             }
                             dt {
                                 "Luck"
                             }
                             dd {
-                                "{tribute.luck.unwrap()}/100"
+                                "{tribute.read().luck.unwrap()}/100"
                             }
                             dt {
                                 "Dexterity"
                             }
                             dd {
-                                "{tribute.dexterity.unwrap()}/100"
+                                "{tribute.read().dexterity.unwrap()}/100"
                             }
                         }
                     }
                     dt {
-                        class: "font-medium text-gray-900 text-right pr-4",
+                        class: "font-medium text-right pr-4",
                         "Statistics"
                     }
                     dd {
@@ -147,37 +159,37 @@ pub fn TributeDetail(id: i32) -> Element {
                                 "Kills"
                             }
                             dd {
-                                "{tribute.kills.unwrap_or(0)}"
+                                "{tribute.read().kills.unwrap_or(0)}"
                             }
                             dt {
                                 "Wins"
                             }
                             dd {
-                                "{tribute.wins.unwrap_or(0)}"
+                                "{tribute.read().wins.unwrap_or(0)}"
                             }
                             dt {
                                 "Defeats"
                             }
                             dd {
-                                "{tribute.defeats.unwrap_or(0)}"
+                                "{tribute.read().defeats.unwrap_or(0)}"
                             }
                             dt {
                                 "Draws"
                             }
                             dd {
-                                "{tribute.draws.unwrap_or(0)}"
+                                "{tribute.read().draws.unwrap_or(0)}"
                             }
                             dt {
                                 "Games"
                             }
                             dd {
-                                "{tribute.games.unwrap_or(0)}"
+                                "{tribute.read().games.unwrap_or(0)}"
                             }
                         }
                     }
-                    if !tribute.is_alive() {
+                    if !tribute.read().is_alive() {
                         dt {
-                            class: "font-medium text-gray-900 text-right pr-4",
+                            class: "font-medium text-right pr-4",
                             "Death"
                         }
                         dd {
@@ -187,16 +199,18 @@ pub fn TributeDetail(id: i32) -> Element {
                                     "Day Killed"
                                 }
                                 dd {
-                                    "{tribute.day_killed.unwrap_or(0)}"
+                                    "{tribute.read().day_killed.unwrap_or(0)}"
                                 }
                                 dt {
                                     "Killed By"
                                 }
                                 dd {
-                                    if tribute.killed_by.is_none() {
-                                        ""
-                                    } else {
-                                        "{tribute.killed_by.unwrap()}"
+                                    {
+                                        let mut killer = "Unknown";
+                                        if tribute.read().killed_by.is_some() {
+                                            killer = tribute.read().killed_by.as_ref().unwrap();
+                                        }
+                                        "{killer}"
                                     }
                                 }
                             }

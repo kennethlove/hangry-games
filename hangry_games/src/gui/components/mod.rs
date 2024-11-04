@@ -1,3 +1,4 @@
+pub mod button;
 pub mod create_game;
 pub mod create_tribute;
 pub mod fill_tributes_button;
@@ -10,6 +11,7 @@ pub mod game_table;
 pub mod game_table_row;
 pub mod header;
 pub mod home;
+pub mod input;
 pub mod input_with_label;
 pub mod tribute_actions_group;
 pub mod tribute_box;
