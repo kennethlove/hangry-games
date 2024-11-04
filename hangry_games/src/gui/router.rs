@@ -6,6 +6,7 @@ use crate::gui::components::{
     game_log::GameLog,
     game_play::GamePlay,
     tribute_detail::TributeDetail,
+    tribute_edit::TributeEdit,
 };
 
 // All of our routes will be a variant of this Route enum
@@ -23,4 +24,6 @@ pub enum Routes {
     GameDayLog { id: i32, day: i32 },
     #[route("/tribute/:id")]
     TributeDetail { id: i32 },
+    #[route("/tribute/:id/edit")]
+    TributeEdit { id: i32 },
 }

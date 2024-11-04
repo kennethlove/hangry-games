@@ -3,7 +3,6 @@ use crate::games::Game;
 use crate::gui::states::HGState;
 use crate::gui::components::game_table_row::GameTableRow;
 use crate::gui::components::{SelectedItem, ShowModal};
-use crate::tributes::actors::Tribute;
 
 #[component]
 pub fn GameTable() -> Element {
@@ -15,29 +14,31 @@ pub fn GameTable() -> Element {
         div {
             ConfirmDeleteGameModal {}
             table {
-                class: "min-w-full divide-y-2 divide-gray-200 text-sm",
+                class: "min-w-full mt-4 divide-y divide-yellow-200/50",
                 thead {
+                    class: "text-sm text-left text-red-950 tracking-wide font-semibold",
                     tr {
+                        class: "",
                         th {
-                            class: "whitespace-nowrap px-4 py-2 font-medium text-gray-900",
+                            class: "whitespace-nowrap font-semibold pl-4",
                             "Game Name"
                         }
                         th {
-                            class: "whitespace-nowrap px-4 py-2 font-medium text-gray-900",
+                            class: "font-semibold",
                             "Day"
                         }
                         th {
-                            class: "whitespace-nowrap px-4 py-2 font-medium text-gray-900",
-                            "Tributes"
+                            class: "whitespace-nowrap font-semibold",
+                            "Living Tributes"
                         }
                         th {
-                            class: "px-4 py-2",
+                            class: "font-semibold text-right pr-4",
                             "Actions"
                         }
                     }
                 }
                 tbody {
-                    class: "divide-y divide-gray-200",
+                    class: "text-slate-800",
                     for game in state.read().games.iter() {
                         GameTableRow { game: game.clone() }
                     }

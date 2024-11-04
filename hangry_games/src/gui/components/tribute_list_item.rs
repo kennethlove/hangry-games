@@ -32,9 +32,6 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>, game: Gam
         _ => "from-gray-900 to-gray-700",
     };
 
-    let mut selected_tribute = use_context::<Signal<SelectedItem>>();
-    let mut state = use_context::<Signal<ShowModal>>();
-
     rsx! {
         div {
             class: "group relative block overflow-hidden rounded-full border-4 border-orange-200 p-2 mb-2 bg-gray-800 bg-gradient-to-b {gradient_stop}",
@@ -62,7 +59,7 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>, game: Gam
                         }
                         span {
                             class: "whitespace-nowrap mt-0.5 uppercase",
-                            "{tribute.area.unwrap()}"
+                            "{tribute.clone().area.unwrap()}"
                         }
                     }
                     div {
@@ -83,30 +80,43 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>, game: Gam
                 }
                 div {
                     class: "absolute w-full top-12 translate-y-4 transform opacity-0 transition-all group-hover:opacity-100",
-                    ul {
-                        class: "flex flex-row justify-end gap-2 pr-9",
-                        li {
-                            class: "lineheight-0 cursor-pointer",
-                            span {
-                                class: "text-white material-symbols-outlined",
-                                title: "Edit Tribute",
-                                "edit_square"
-                            }
-                        }
-                        if game.status == GameStatus::NotStarted {
-                            li {
-                                class: "lineheight-0 cursor-pointer",
-                                span {
-                                    class: "text-white material-symbols-outlined",
-                                    title: "Delete Tribute",
-                                    onclick: move |_| {
-                                        selected_tribute.write().id = tribute.id.unwrap();
-                                        state.write().show = true;
-                                    },
-                                    "delete"
-                                }
-                            }
-                        }
+                    TributeListActions { tribute: tribute.clone(), game: game.clone() }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn TributeListActions(tribute: Tribute, game: Game) -> Element {
+    let mut selected_tribute = use_context::<Signal<SelectedItem>>();
+    let mut state = use_context::<Signal<ShowModal>>();
+
+    rsx! {
+        ul {
+            class: "flex flex-row justify-end gap-2 pr-9",
+            li {
+                class: "lineheight-0 cursor-pointer",
+                Link {
+                    to: Routes::TributeEdit { id: tribute.id.unwrap() },
+                    span {
+                        class: "text-white material-symbols-outlined",
+                        title: "Edit Tribute",
+                        "edit_square"
+                    }
+                }
+            }
+            if game.status == GameStatus::NotStarted {
+                li {
+                    class: "lineheight-0 cursor-pointer",
+                    span {
+                        class: "text-white material-symbols-outlined",
+                        title: "Delete Tribute",
+                        onclick: move |_| {
+                            selected_tribute.write().id = tribute.id.unwrap();
+                            state.write().show = true;
+                        },
+                        "delete"
                     }
                 }
             }

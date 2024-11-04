@@ -6,14 +6,20 @@ use crate::gui::router::Routes;
 #[component]
 pub fn TributeDetail(id: i32) -> Element {
     let tribute = Tribute::from(get_tribute_by_id(id));
+    let avatar = tribute.avatar();
     let game = get_game_by_id(tribute.game_id.unwrap()).expect("Game not found");
 
     rsx! {
+        Link {
+            to: Routes::Home {},
+            class: "flex flex-row items-center gap-2 justify-center",
+            "Home"
+        }
         div {
             class: "flex flex-row justify-left items-top gap-4",
             img {
                 class: "rounded-m size-64",
-                src: format!("{}", tribute.avatar.as_ref().unwrap_or(&"hangry-games.png".to_string())),
+                src: avatar,
             }
             div {
                 h1 {

@@ -84,6 +84,19 @@ impl Tribute {
         models::tribute::Tribute::delete(id);
     }
 
+    pub fn update(&self, update: UpdateTribute) {
+        let tribute_model = models::Tribute::from(self.clone());
+        tribute_model.update(update);
+    }
+
+    pub fn avatar(&self) -> String {
+        if cfg!(target_family = "windows") {
+            format!("assets/{}", self.avatar.clone().unwrap_or("hangry-games.png".to_string()))
+        } else {
+            self.avatar.clone().unwrap_or("hangry-games.png".to_string())
+        }
+    }
+
     /// Reduces health, triggers death if health reaches 0.
     pub fn takes_physical_damage(&mut self, damage: i32) {
         self.health = std::cmp::max(0, self.health - damage);
@@ -1295,7 +1308,7 @@ mod tests {
 
     #[test]
     fn new() {
-        let tribute = Tribute::new("Katniss".to_string(), None);
+        let tribute = Tribute::new("Katniss".to_string(), None, None);
         assert_eq!(tribute.health, 100);
         assert_eq!(tribute.sanity, 100);
         assert_eq!(tribute.movement, 100);
@@ -1304,21 +1317,21 @@ mod tests {
 
     #[test]
     fn takes_physical_damage() {
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        let mut tribute = Tribute::new("Katniss".to_string(), None, None);
         tribute.takes_physical_damage(10);
         assert_eq!(tribute.health, 90);
     }
 
     #[test]
     fn takes_mental_damage() {
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        let mut tribute = Tribute::new("Katniss".to_string(), None, None);
         tribute.takes_mental_damage(10);
         assert_eq!(tribute.sanity, 90);
     }
 
     #[test]
     fn moves_and_rests() {
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        let mut tribute = Tribute::new("Katniss".to_string(), None, None);
         tribute.speed = Some(50);
         tribute.moves();
         assert_eq!(tribute.movement, 50);
@@ -1328,7 +1341,7 @@ mod tests {
 
     #[test]
     fn is_hidden_true() {
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        let mut tribute = Tribute::new("Katniss".to_string(), None, None);
         tribute.intelligence = Some(100);
         tribute.is_hidden = Some(true);
         assert!(!tribute.is_visible());

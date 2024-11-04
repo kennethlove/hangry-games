@@ -18,3 +18,4 @@ reqwest = "0.12.7"
 dioxus = { version = "0.5.6", features = ["desktop", "router"] }
 manganis = "0.2.2"
 dioxus-logger = "0.5.1"
+strum = { version = "0.26.3", features = ["derive"] }

@@ -6,8 +6,9 @@ use crate::gui::components::game_actions_group::GameActionsGroup;
 pub fn GameTableRow(game: Game) -> Element {
     rsx! {
         tr {
+            class: "group text-black hover:font-semibold",
             td {
-                class: "whitespace-nowrap px-4 py-2 text-gray-700",
+                class: "whitespace-nowrap pl-4 rounded-l-lg",
                 "{game.name}"
             }
             td {
@@ -17,7 +18,7 @@ pub fn GameTableRow(game: Game) -> Element {
                 "{game.tributes().len()}/24"
             }
             td {
-                class: "flex-end",
+                class: "flex justify-end pr-2 py-2",
                 GameActionsGroup { game: game.clone() }
             }
         }

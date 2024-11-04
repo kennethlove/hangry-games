@@ -7,7 +7,7 @@ use crate::gui::router::Routes;
 pub fn GameActionsGroup(game: Game) -> Element {
     rsx! {
         div {
-            class: "inline-flex rounded-lg bg-gradient-to-r from-orange-500 to-yellow-300 p-1, divide-x w-full",
+            class: "inline-flex items-end rounded-lg bg-gradient-to-r from-orange-500 to-yellow-200 p-1 divide-x divide-yellow-200/50 border border-yellow-200/50 h-min opacity-50 group-hover:opacity-80",
             GameDeleteButton { game: game.clone() }
             GameDetailsButton { game: game.clone() }
             GameLogButton { game: game.clone() }
@@ -23,7 +23,7 @@ fn GameDeleteButton(game: Game) -> Element {
 
     rsx! {
         button {
-            class: "inline-block px-4 py-2 text-sm font-normal text-slate-800 hover:text-red-700 focus:relative w-full",
+            class: "inline-block p-2 text-sm font-normal text-slate-800 hover:text-red-700 focus:relative",
             title: "Delete Game",
             onclick: move |_| {
                 selected_game.write().id = game.id.unwrap();
@@ -43,7 +43,7 @@ fn GameDetailsButton(game: Game) -> Element {
 
     rsx! {
         button {
-            class: "inline-block px-4 py-2 text-sm font-normal text-slate-800 hover:text-blue-700 focus:relative w-full",
+            class: "inline-block p-2 text-sm font-normal text-slate-800 hover:text-blue-700 focus:relative w-full",
             title: "View Game Details",
             onclick: move |_| {
                 nav.push(Routes::GameDetail { id: game.id.unwrap() });
@@ -59,7 +59,7 @@ fn GameDetailsButton(game: Game) -> Element {
 #[component]
 fn GamePlayButton(game: Game) -> Element {
     let nav = navigator();
-    let mut classes = "inline-block px-4 py-2 text-sm font-normal text-slate-800 hover:text-green-700 focus:relative w-full".to_string();
+    let mut classes = "inline-block p-2 text-sm font-normal text-slate-800 hover:text-green-700 focus:relative w-full".to_string();
     if game.tributes().len() < 24 || game.status == GameStatus::Finished {
         classes += " hidden";
     }
@@ -83,7 +83,7 @@ fn GamePlayButton(game: Game) -> Element {
 #[component]
 fn GameLogButton(game: Game) -> Element {
     let nav = navigator();
-    let mut classes = "inline-block px-4 py-2 text-sm font-normal text-slate-800 hover:text-green-700 focus:relative w-full".to_string();
+    let mut classes = "inline-block p-2 text-sm font-normal text-slate-800 hover:text-green-700 focus:relative w-full".to_string();
     if game.tributes().len() != 24 || game.status == GameStatus::NotStarted {
         classes += " hidden";
     }

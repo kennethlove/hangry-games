@@ -8,6 +8,11 @@ pub fn GameLog(id: i32) -> Element {
     let game = Game::from(get_game_by_id(id).unwrap());
 
     rsx! {
+        Link {
+            to: Routes::Home {},
+            class: "flex flex-row items-center gap-2 justify-center",
+            "Home"
+        }
         div {
             h2 {
                 class: "text-2xl font-bold text-slate-900 orbitron-font tracking-wider",
