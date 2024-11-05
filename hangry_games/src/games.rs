@@ -133,7 +133,6 @@ impl Game {
         match living_tributes.len() {
             0 => {
                 let message = GameMessage::NoOneWins;
-                println!("{}", message);
                 create_full_log(game.id, message.to_string(), None, None, None, None);
                 game.end();
                 return;
@@ -141,7 +140,6 @@ impl Game {
             1 => {
                 let winner = living_tributes[0].clone();
                 let message = GameMessage::TributeWins(Tribute::from(winner.clone()));
-                println!("{}", message);
                 create_full_log(game.id, message.to_string(), None, Some(winner.id), None, None);
                 game.end();
                 return;
@@ -152,20 +150,16 @@ impl Game {
         // Make any announcements for the day
         match self.day {
             Some(1) => {
-                println!("{}", GameMessage::FirstDayStart);
                 create_full_log(game.id, GameMessage::FirstDayStart.to_string(), None, None, None, None);
             }
             Some(3) => {
-                println!("{}", GameMessage::FeastDayStart);
                 create_full_log(game.id, GameMessage::FeastDayStart.to_string(), None, None, None, None);
             }
             _ => {
-                println!("{}", GameMessage::GameDayStart(self.day.unwrap()));
                 create_full_log(game.id, GameMessage::GameDayStart(self.day.unwrap()).to_string(), None, None, None, None);
             }
         }
 
-        println!("{}", GameMessage::TributesLeft(living_tributes.len() as i32));
         create_full_log(game.id, GameMessage::TributesLeft(living_tributes.len() as i32).to_string(), None, None, None, None);
 
         // Run the day
@@ -174,7 +168,6 @@ impl Game {
         // Clean up any deaths
         self.clean_up_recent_deaths();
 
-        println!("{}", GameMessage::GameNightStart(self.day.unwrap()));
         create_full_log(game.id, GameMessage::GameNightStart(self.day.unwrap()).to_string(), None, None, None, None);
 
         // Run the night
@@ -286,11 +279,9 @@ impl Game {
         let game = get_game(self.name.as_str()).expect("Error loading game");
         let dead_tributes = get_recently_dead_tributes(&game);
 
-        println!("{}", GameMessage::DailyDeathAnnouncement(dead_tributes.len() as i32));
         create_full_log(game.id, GameMessage::DailyDeathAnnouncement(dead_tributes.len() as i32).to_string(), None, None, None, None);
 
         for tribute in dead_tributes {
-            println!("{}", GameMessage::DeathAnnouncement(Tribute::from(tribute.clone())));
             create_full_log(game.id, GameMessage::DeathAnnouncement(Tribute::from(tribute.clone())).to_string(), None, Some(tribute.id), None, None);
             tribute.dies();
         }

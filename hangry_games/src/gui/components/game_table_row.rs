@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use crate::games::Game;
+use crate::games::{Game, GameStatus};
 use crate::gui::components::game_actions_group::GameActionsGroup;
 
 #[component]
@@ -15,7 +15,20 @@ pub fn GameTableRow(game: Game) -> Element {
                 "{game.day.unwrap_or(0)}"
             }
             td {
-                "{game.tributes().len()}/24"
+                "{game.living_tributes().len()}/24"
+            }
+            td {
+                {
+                    match game.winner() {
+                        Some(winner) => winner.name,
+                        None => {
+                            match game.status {
+                                GameStatus::Finished => "No winner".to_string(),
+                                _ => "".to_string(),
+                            }
+                        }
+                    }
+                }
             }
             td {
                 class: "flex justify-end pr-2 py-2",

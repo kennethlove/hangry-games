@@ -38,6 +38,9 @@ fn ConfirmDeleteTributeModal(id: i32, mut tributes: Signal<Vec<Tribute>>) -> Ele
     let mut state = use_context::<Signal<ShowModal>>();
     let mut selected_tribute = use_context::<Signal<SelectedItem>>();
     let tributes_read = tributes.read();
+    if selected_tribute.read().id == -1 {
+        return rsx! {};
+    }
     let tribute = tributes_read.iter().find(|t| t.id.unwrap() == selected_tribute.read().id).unwrap();
 
     rsx! {

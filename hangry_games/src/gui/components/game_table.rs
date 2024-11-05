@@ -33,6 +33,10 @@ pub fn GameTable() -> Element {
                             "Living Tributes"
                         }
                         th {
+                            class: "font-semibold",
+                            "Winner"
+                        }
+                        th {
                             class: "font-semibold text-right pr-4",
                             "Actions"
                         }
@@ -54,6 +58,9 @@ fn ConfirmDeleteGameModal() -> Element {
     let mut selected_game = use_context::<Signal<SelectedItem>>();
     let mut state = use_context::<Signal<HGState>>();
     let game_state = state.read();
+    if selected_game.read().id == -1 {
+        return rsx! {};
+    }
     let game = game_state.games.iter().find(|t| t.id.unwrap() == selected_game.read().id).unwrap();
 
     rsx! {

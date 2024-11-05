@@ -101,7 +101,10 @@ pub fn create_full_log(
         .values(&new_log_entry)
         .returning(LogEntry::as_returning())
         .get_result(connection) {
-            Ok(log) => log,
+            Ok(log) => {
+                println!("{}", log.message);
+                log
+            },
             Err(e) => {
                 dbg!(&new_log_entry);
                 dbg!(&e);
