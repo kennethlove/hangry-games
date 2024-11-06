@@ -31,14 +31,15 @@ pub fn GameDetail(id: i32) -> Element {
                     "{game.name}"
                 },
             }
-            if game.status == crate::games::GameStatus::InProgress {
-                Button {
-                    text: "Play next day",
-                    onclick: move |_| {
-                        let nav = navigator();
-                        nav.push(Routes::GamePlay { id: game.id.unwrap() });
-                    },
-                }
+            if game.status == crate::games::GameStatus::InProgress ||
+                (game.status == crate::games::GameStatus::NotStarted && tributes.read().len() == 24) {
+                    Button {
+                        text: "Play next day",
+                        onclick: move |_| {
+                            let nav = navigator();
+                            nav.push(Routes::GamePlay { id: game.id.unwrap() });
+                        },
+                    }
             }
         }
         if game.day.unwrap_or(0) > 0 {
