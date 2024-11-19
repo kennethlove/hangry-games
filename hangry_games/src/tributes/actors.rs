@@ -853,7 +853,7 @@ impl Tribute {
                     Some(self.id.unwrap())
                 );
             },
-            TributeAction::Rest => {
+            TributeAction::Rest | TributeAction::None => {
                 tribute.long_rests();
                 self.take_action(action, None);
                 create_full_log(
@@ -902,18 +902,6 @@ impl Tribute {
                         self.take_action(TributeAction::Attack, None);
                     }
                 }
-            },
-            TributeAction::None => {
-                tribute.long_rests();
-                tribute.take_action(action, None);
-                create_full_log(
-                    self.game_id.unwrap(),
-                    GameMessage::TributeLongRest(tribute.clone()).to_string(),
-                    Some(tribute.area.clone().unwrap().id()),
-                    Some(self.id.unwrap()),
-                    None,
-                    None
-                );
             },
             TributeAction::TakeItem => {
                 let item = tribute.take_nearby_item(area);
