@@ -125,12 +125,10 @@ impl Tribute {
 
     /// Restores movement.
     pub fn short_rests(&mut self) {
-        println!("{}", GameMessage::TributeRest(self.clone()));
         self.movement = 100;
     }
 
     pub fn long_rests(&mut self) {
-        println!("{}", GameMessage::TributeLongRest(self.clone()));
         self.short_rests();
         self.heals(5);
         self.heals_mental_damage(5);
@@ -164,7 +162,6 @@ impl Tribute {
 
     /// Hides the tribute from view.
     pub fn hides(&mut self) {
-        println!("{}", GameMessage::TributeHide(self.clone()));
         self.is_hidden = Some(true);
     }
 
@@ -187,63 +184,144 @@ impl Tribute {
         let terror = terror - connectedness;
 
         if terror.round() > 1.0 {
-            println!("{}", GameMessage::TributeSuffer(self.clone()));
+            create_full_log(
+                self.game_id.unwrap(),
+                GameMessage::TributeSuffer(self.clone()).to_string(),
+                Some(self.area.clone().unwrap().id()),
+                Some(self.id.unwrap()),
+                None,
+                None
+            );
             self.takes_mental_damage(terror.round() as i32);
         }
     }
 
     pub fn attacks(&mut self, target: &mut Tribute) -> AttackOutcome {
         if self == target {
-            println!("{}", GameMessage::TributeSelfHarm(self.clone()));
+            create_full_log(
+                self.game_id.unwrap(),
+                GameMessage::TributeSelfHarm(self.clone()).to_string(),
+                Some(self.area.clone().unwrap().id()),
+                Some(self.id.unwrap()),
+                Some("attack".to_string()),
+                Some(self.id.unwrap())
+            );
         }
 
         match attack_contest(self.clone(), target.clone()) {
             AttackResult::AttackerWins => {
-                println!("{}", GameMessage::TributeAttackWin(self.clone(), target.clone()));
                 target.takes_physical_damage(self.strength.unwrap());
                 target.defeats = Some(target.defeats.unwrap_or(0) + 1);
                 self.wins = Some(self.wins.unwrap_or(0) + 1);
 
+                create_full_log(
+                    self.game_id.unwrap(),
+                    GameMessage::TributeAttackWin(self.clone(), target.clone()).to_string(),
+                    Some(self.area.clone().unwrap().id()),
+                    Some(self.id.unwrap()),
+                    Some("attack".to_string()),
+                    Some(target.id.unwrap())
+                );
+
                 if target.health > 0 {
-                    println!("{}", GameMessage::TributeAttackWound(self.clone(), target.clone()));
+                    create_full_log(
+                        self.game_id.unwrap(),
+                        GameMessage::TributeAttackWound(self.clone(), target.clone()).to_string(),
+                        Some(self.area.clone().unwrap().id()),
+                        Some(self.id.unwrap()),
+                        Some("attack".to_string()),
+                        Some(target.id.unwrap())
+                    );
                     return AttackOutcome::Wound(self.clone(), target.clone())
                 }
             }
             AttackResult::AttackerWinsDecisively => {
-                println!("{}", GameMessage::TributeAttackWinExtra(self.clone(), target.clone()));
                 target.takes_physical_damage(self.strength.unwrap() * 2);
                 target.defeats = Some(target.defeats.unwrap_or(0) + 1);
                 self.wins = Some(self.wins.unwrap_or(0) + 1);
 
+                create_full_log(
+                    self.game_id.unwrap(),
+                    GameMessage::TributeAttackWinExtra(self.clone(), target.clone()).to_string(),
+                    Some(self.area.clone().unwrap().id()),
+                    Some(self.id.unwrap()),
+                    Some("attack".to_string()),
+                    Some(target.id.unwrap())
+                );
+
                 if target.health > 0 {
-                    println!("{}", GameMessage::TributeAttackWound(self.clone(), target.clone()));
+                    create_full_log(
+                        self.game_id.unwrap(),
+                        GameMessage::TributeAttackWound(self.clone(), target.clone()).to_string(),
+                        Some(self.area.clone().unwrap().id()),
+                        Some(self.id.unwrap()),
+                        Some("attack".to_string()),
+                        Some(target.id.unwrap())
+                    );
                     return AttackOutcome::Wound(self.clone(), target.clone())
                 }
             }
             AttackResult::DefenderWins => {
-                println!("{}", GameMessage::TributeAttackLose(self.clone(), target.clone()));
                 self.takes_physical_damage(target.strength.unwrap());
                 self.defeats = Some(self.defeats.unwrap() + 1);
                 target.wins = Some(target.wins.unwrap() + 1);
 
+                create_full_log(
+                    self.game_id.unwrap(),
+                    GameMessage::TributeAttackLose(self.clone(), target.clone()).to_string(),
+                    Some(self.area.clone().unwrap().id()),
+                    Some(self.id.unwrap()),
+                    Some("attack".to_string()),
+                    Some(target.id.unwrap())
+                );
+
                 if self.health > 0 {
-                    println!("{}", GameMessage::TributeAttackWound(target.clone(), self.clone()));
+                    create_full_log(
+                        self.game_id.unwrap(),
+                        GameMessage::TributeAttackWound(target.clone(), self.clone()).to_string(),
+                        Some(self.area.clone().unwrap().id()),
+                        Some(target.id.unwrap()),
+                        Some("attack".to_string()),
+                        Some(self.id.unwrap())
+                    );
                     return AttackOutcome::Wound(target.clone(), self.clone())
                 }
             }
             AttackResult::DefenderWinsDecisively => {
-                println!("{}", GameMessage::TributeAttackLoseExtra(target.clone(), self.clone()));
                 self.takes_physical_damage(target.strength.unwrap() * 2);
                 self.defeats = Some(self.defeats.unwrap() + 1);
                 target.wins = Some(target.wins.unwrap() + 1);
 
+                create_full_log(
+                    self.game_id.unwrap(),
+                    GameMessage::TributeAttackLoseExtra(self.clone(), target.clone()).to_string(),
+                    Some(self.area.clone().unwrap().id()),
+                    Some(self.id.unwrap()),
+                    Some("attack".to_string()),
+                    Some(target.id.unwrap())
+                );
+
                 if self.health > 0 {
-                    println!("{}", GameMessage::TributeAttackWound(target.clone(), self.clone()));
+                    create_full_log(
+                        self.game_id.unwrap(),
+                        GameMessage::TributeAttackWound(target.clone(), self.clone()).to_string(),
+                        Some(self.area.clone().unwrap().id()),
+                        Some(target.id.unwrap()),
+                        Some("attack".to_string()),
+                        Some(self.id.unwrap())
+                    );
                     return AttackOutcome::Wound(target.clone(), self.clone())
                 }
             }
             AttackResult::Miss => {
-                println!("{}", GameMessage::TributeAttackMiss(self.clone(), target.clone()));
+                create_full_log(
+                    self.game_id.unwrap(),
+                    GameMessage::TributeAttackMiss(self.clone(), target.clone()).to_string(),
+                    Some(self.area.clone().unwrap().id()),
+                    Some(self.id.unwrap()),
+                    Some("attack".to_string()),
+                    Some(target.id.unwrap())
+                );
                 self.draws = Some(self.draws.unwrap() + 1);
                 target.draws = Some(target.draws.unwrap() + 1);
 
@@ -252,19 +330,33 @@ impl Tribute {
         };
 
         if self.health <= 0 {
-            println!("{}", GameMessage::TributeAttackKill(self.clone(), target.clone()));
+            create_full_log(
+                self.game_id.unwrap(),
+                GameMessage::TributeAttackKill(self.clone(), target.clone()).to_string(),
+                Some(self.area.clone().unwrap().id()),
+                Some(target.id.unwrap()),
+                Some("attack".to_string()),
+                Some(self.id.unwrap())
+            );
             self.killed_by = Some(target.name.clone());
             self.status = TributeStatus::RecentlyDead;
             self.dies();
             AttackOutcome::Kill(target.clone(), self.clone())
         } else if target.health <= 0 {
-            println!("{}", GameMessage::TributeAttackSuccessKill(self.clone(), target.clone()));
+            create_full_log(
+                self.game_id.unwrap(),
+                GameMessage::TributeAttackSuccessKill(self.clone(), target.clone()).to_string(),
+                Some(self.area.clone().unwrap().id()),
+                Some(self.id.unwrap()),
+                Some("attack".to_string()),
+                Some(target.id.unwrap())
+            );
             target.killed_by = Some(self.name.clone());
             target.status = TributeStatus::RecentlyDead;
             target.dies();
             AttackOutcome::Kill(self.clone(), target.clone())
         } else {
-            return AttackOutcome::Miss(self.clone(), target.clone())
+            AttackOutcome::Miss(self.clone(), target.clone())
         }
 
         // apply_violence_stress(self);
@@ -299,7 +391,6 @@ impl Tribute {
         };
 
         if suggested_area.is_some() && suggested_area.clone().unwrap() == area {
-            println!("{}", GameMessage::TributeTravelAlreadyThere(self.clone(), suggested_area.clone().unwrap()));
             create_full_log(
                 self.game_id.unwrap(),
                 GameMessage::TributeTravelAlreadyThere(self.clone(), suggested_area.clone().unwrap()).to_string(),
@@ -313,7 +404,6 @@ impl Tribute {
 
         let handle_suggested_area = || -> TravelResult {
             if suggested_area.is_some() {
-                println!("{}", GameMessage::TributeTravel(self.clone(), area.clone(), suggested_area.clone().unwrap()));
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeTravel(self.clone(), area.clone(), suggested_area.clone().unwrap()).to_string(),
@@ -330,7 +420,6 @@ impl Tribute {
         match self.movement {
             // No movement left, can't move
             0 => {
-                println!("{}", GameMessage::TributeTravelTooTired(self.clone(), area.clone()));
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeTravelTooTired(self.clone(), area.clone()).to_string(),
@@ -346,7 +435,6 @@ impl Tribute {
                 match handle_suggested_area() {
                     TravelResult::Success(area) => TravelResult::Success(area),
                     TravelResult::Failure => {
-                        println!("{}", GameMessage::TributeTravelTooTired(self.clone(), area.clone()));
                         create_full_log(
                             self.game_id.unwrap(),
                             GameMessage::TributeTravelTooTired(self.clone(), area.clone()).to_string(),
@@ -370,7 +458,6 @@ impl Tribute {
                     if area.tributes(self.game_id.unwrap()).iter()
                         .filter(|t| t.district == self.district)
                         .count() > 0 {
-                            println!("{}", GameMessage::TributeTravelFollow(self.clone(), area.clone()));
                             create_full_log(
                                 self.game_id.unwrap(),
                                 GameMessage::TributeTravelFollow(self.clone(), area.clone()).to_string(),
@@ -389,7 +476,6 @@ impl Tribute {
                         count += 1;
 
                         if count == 10 {
-                            println!("{}", GameMessage::TributeTravelStay(self.clone(), area.clone()));
                             create_full_log(
                                 self.game_id.unwrap(),
                                 GameMessage::TributeTravelStay(self.clone(), area.clone()).to_string(),
@@ -405,7 +491,6 @@ impl Tribute {
                     }
                     break new_area.clone();
                 };
-                println!("{}", GameMessage::TributeTravel(self.clone(), area.clone(), new_area.clone()));
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeTravel(self.clone(), area.clone(), new_area.clone()).to_string(),
@@ -424,7 +509,6 @@ impl Tribute {
         match status {
             TributeStatus::Wounded => {
                 self.takes_physical_damage(1);
-                println!("{}", GameMessage::TributeBleeds(self.clone()));
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeBleeds(self.clone()).to_string(),
@@ -437,7 +521,6 @@ impl Tribute {
             TributeStatus::Sick => {
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
-                println!("{}", GameMessage::TributeSick(self.clone()));
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeSick(self.clone()).to_string(),
@@ -449,7 +532,6 @@ impl Tribute {
             },
             TributeStatus::Electrocuted => {
                 self.takes_physical_damage(20);
-                println!("{}", GameMessage::TributeElectrocuted(self.clone()));
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeElectrocuted(self.clone()).to_string(),
@@ -461,7 +543,6 @@ impl Tribute {
             },
             TributeStatus::Frozen => {
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
-                println!("{}", GameMessage::TributeFrozen(self.clone()));
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeFrozen(self.clone()).to_string(),
@@ -473,7 +554,6 @@ impl Tribute {
             },
             TributeStatus::Overheated => {
                 self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 1));
-                println!("{}", GameMessage::TributeOverheated(self.clone()));
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeOverheated(self.clone()).to_string(),
@@ -485,7 +565,6 @@ impl Tribute {
             },
             TributeStatus::Dehydrated => {
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
-                println!("{}", GameMessage::TributeDehydrated(self.clone()));
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeDehydrated(self.clone()).to_string(),
@@ -497,7 +576,6 @@ impl Tribute {
             },
             TributeStatus::Starving => {
                 self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 1));
-                println!("{}", GameMessage::TributeStarving(self.clone()));
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeStarving(self.clone()).to_string(),
@@ -509,7 +587,6 @@ impl Tribute {
             },
             TributeStatus::Poisoned => {
                 self.takes_mental_damage(5);
-                println!("{}", GameMessage::TributePoisoned(self.clone()));
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributePoisoned(self.clone()).to_string(),
@@ -527,7 +604,6 @@ impl Tribute {
 
                 if leg_bone {
                     self.speed = Some(std::cmp::max(1, self.speed.unwrap() - 5));
-                    println!("{}", GameMessage::TributeBrokenLeg(self.clone()));
                     create_full_log(
                         self.game_id.unwrap(),
                         GameMessage::TributeBrokenLeg(self.clone()).to_string(),
@@ -538,7 +614,6 @@ impl Tribute {
                     );
                 } else {
                     self.strength = Some(std::cmp::max(1, self.strength.unwrap() - 5));
-                    println!("{}", GameMessage::TributeBrokenArm(self.clone()));
                     create_full_log(
                         self.game_id.unwrap(),
                         GameMessage::TributeBrokenArm(self.clone()).to_string(),
@@ -552,7 +627,6 @@ impl Tribute {
             TributeStatus::Infected => {
                 self.takes_physical_damage(2);
                 self.takes_mental_damage(2);
-                println!("{}", GameMessage::TributeInfected(self.clone()));
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeInfected(self.clone()).to_string(),
@@ -565,7 +639,6 @@ impl Tribute {
             TributeStatus::Drowned => {
                 self.takes_physical_damage(2);
                 self.takes_mental_damage(2);
-                println!("{}", GameMessage::TributeDrowned(self.clone()));
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeDrowned(self.clone()).to_string(),
@@ -579,7 +652,6 @@ impl Tribute {
                 let number_of_animals = thread_rng().gen_range(2..=5);
                 let damage = animal.damage() * number_of_animals;
                 self.takes_physical_damage(damage);
-                println!("{}", GameMessage::TributeMauled(self.clone(), number_of_animals, animal.clone(), damage));
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeMauled(self.clone(), number_of_animals, animal.clone(), damage).to_string(),
@@ -591,7 +663,6 @@ impl Tribute {
             },
             TributeStatus::Burned => {
                 self.takes_physical_damage(5);
-                println!("{}", GameMessage::TributeBurned(self.clone()));
                 create_full_log(
                     self.game_id.unwrap(),
                     GameMessage::TributeBurned(self.clone()).to_string(),
@@ -605,7 +676,6 @@ impl Tribute {
         }
 
         if self.health <= 0 {
-            println!("{}", GameMessage::TributeDiesFromStatus(self.clone(), self.status.clone()));
             create_full_log(
                 self.game_id.unwrap(),
                 GameMessage::TributeDiesFromStatus(self.clone(), self.status.clone()).to_string(),
@@ -659,7 +729,6 @@ impl Tribute {
             },
         }
         if self.health <= 0 {
-            println!("{}", GameMessage::TributeDiesFromTributeEvent(self.clone(), tribute_event.clone()));
             create_full_log(
                 self.game_id.unwrap(),
                 GameMessage::TributeDiesFromTributeEvent(self.clone(), tribute_event.clone()).to_string(),
@@ -674,58 +743,57 @@ impl Tribute {
     }
 
     pub fn do_day_night(&mut self, suggested_action: Option<TributeAction>, probability: Option<f64>, day: bool) -> Tribute {
+        let mut tribute = Tribute::from(get_tribute_by_id(self.id.unwrap()));
+
         // Tribute is already dead, do nothing.
-        if !self.is_alive() {
-            println!("{}", GameMessage::TributeAlreadyDead(self.clone()));
+        if !tribute.is_alive() {
             create_full_log(
                 self.game_id.unwrap(),
-                GameMessage::TributeAlreadyDead(self.clone()).to_string(),
-                Some(self.area.clone().unwrap().id()),
+                GameMessage::TributeAlreadyDead(tribute.clone()).to_string(),
+                Some(tribute.area.clone().unwrap().id()),
                 Some(self.id.unwrap()),
                 None,
                 None
             );
-            return self.clone();
+            return tribute.clone();
         }
 
         // Update the tribute based on the period's events.
-        self.process_status();
+        tribute.process_status();
 
         // Nighttime terror
-        if !day && self.is_alive() {
-            self.suffers();
+        if !day && tribute.is_alive() {
+            tribute.suffers();
+        }
 
-            // Gift from patrons?
-            let chance = match self.district {
-                1 | 2 => 1.0 / 10.0,
-                3 | 4 => 1.0 / 15.0,
-                5 | 6 => 1.0 / 20.0,
-                7 | 8 => 1.0 / 25.0,
-                9 | 10 => 1.0 / 30.0,
-                _ => 1.0 / 50.0,
-            };
+        // Gift from patrons?
+        let chance = match self.district {
+            1 | 2 => 1.0 / 10.0,
+            3 | 4 => 1.0 / 15.0,
+            5 | 6 => 1.0 / 20.0,
+            7 | 8 => 1.0 / 25.0,
+            9 | 10 => 1.0 / 30.0,
+            _ => 1.0 / 50.0,
+        };
 
-            if thread_rng().gen_bool(chance) {
-                let item = Item::new_random("Gift".to_string(), self.game_id, None, self.id);
-                println!("{}", GameMessage::SponsorGift(self.clone(), item.clone()));
-                create_full_log(
-                    self.game_id.unwrap(),
-                    GameMessage::SponsorGift(self.clone(), item.clone()).to_string(),
-                    None,
-                    Some(self.id.unwrap()),
-                    None,
-                    None
-                );
-            }
+        if thread_rng().gen_bool(chance) {
+            let item = Item::new_random("Gift".to_string(), self.game_id, None, self.id);
+            create_full_log(
+                self.game_id.unwrap(),
+                GameMessage::SponsorGift(tribute.clone(), item.clone()).to_string(),
+                None,
+                Some(self.id.unwrap()),
+                None,
+                None
+            );
         }
 
         // Tribute died to the period's events.
-        if self.status == TributeStatus::RecentlyDead || self.health <= 0 {
-            println!("{}", GameMessage::TributeDead(self.clone()));
+        if tribute.status == TributeStatus::RecentlyDead || tribute.health <= 0 {
             create_full_log(
                 self.game_id.unwrap(),
-                GameMessage::TributeDead(self.clone()).to_string(),
-                Some(self.area.clone().unwrap().id()),
+                GameMessage::TributeDead(tribute.clone()).to_string(),
+                Some(tribute.area.clone().unwrap().id()),
                 Some(self.id.unwrap()),
                 None,
                 None
@@ -734,24 +802,10 @@ impl Tribute {
         }
 
         let game = get_game_by_id(self.game_id.unwrap()).unwrap();
-        let area = self.area.clone().unwrap();
+        let area = tribute.area.clone().unwrap();
         let closed_areas = game.closed_areas().clone();
 
-        // Area is closed, tribute must move.
-        if closed_areas.contains(&area) {
-            self.travels(closed_areas.clone(), None);
-            create_full_log(
-                self.game_id.unwrap(),
-                GameMessage::TributeTravel(self.clone(), area.clone(), self.area.clone().unwrap()).to_string(),
-                Some(area.id()),
-                Some(self.id.unwrap()),
-                Some("Area".to_string()),
-                Some(self.area.clone().unwrap().id())
-            );
-            return self.clone();
-        }
-
-        let brain = &mut self.brain.clone();
+        let brain = &mut tribute.brain.clone();
 
         if suggested_action.is_some() {
             brain.set_preferred_action(suggested_action.unwrap(), probability.unwrap());
@@ -763,69 +817,59 @@ impl Tribute {
             .filter(|t| t.clone().area.unwrap() == area)
             .collect::<Vec<_>>().len();
 
-        let action = brain.act(self, nearby_tributes, closed_areas.clone());
+        let action = brain.act(&tribute, nearby_tributes, closed_areas.clone());
 
         match &action {
             TributeAction::Move(area) => {
                 match self.travels(closed_areas.clone(), area.clone()) {
                     TravelResult::Success(area) => {
-                        self.changes_area(area.clone());
+                        tribute.changes_area(area.clone());
                         self.take_action(action.clone(), Some(area.clone().to_string()));
-                        create_full_log(
-                            self.game_id.unwrap(),
-                            GameMessage::TributeTravel(self.clone(), self.area.clone().unwrap(), area.clone()).to_string(),
-                            Some(self.area.clone().unwrap().id()),
-                            Some(self.id.unwrap()),
-                            Some(action.clone().as_str().to_string()),
-                            Some(area.id())
-                        );
+                        // No need to log the move, it's already done in self.travels.
                     },
                     TravelResult::Failure => {
-                        println!("{}", GameMessage::TributeRest(self.clone()));
+                        tribute.short_rests();
+                        self.take_action(action.clone(), None);
                         create_full_log(
                             self.game_id.unwrap(),
-                            GameMessage::TributeRest(self.clone()).to_string(),
-                            Some(self.area.clone().unwrap().id()),
+                            GameMessage::TributeRest(tribute.clone()).to_string(),
+                            Some(tribute.area.clone().unwrap().id()),
                             Some(self.id.unwrap()),
                             None,
                             None
                         );
-                        self.short_rests();
-                        self.take_action(action.clone(), None);
                     }
                 }
             },
             TributeAction::Hide => {
-                println!("{}", GameMessage::TributeHide(self.clone()));
+                tribute.hides();
+                self.take_action(action.clone(), None);
                 create_full_log(
                     self.game_id.unwrap(),
-                    GameMessage::TributeHide(self.clone()).to_string(),
-                    Some(self.area.clone().unwrap().id()),
+                    GameMessage::TributeHide(tribute.clone()).to_string(),
+                    Some(tribute.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     Some(action.clone().as_str().to_string()),
                     Some(self.id.unwrap())
                 );
-                self.hides();
-                self.take_action(action, None);
             },
             TributeAction::Rest => {
-                println!("{}", GameMessage::TributeLongRest(self.clone()));
+                tribute.long_rests();
+                self.take_action(action, None);
                 create_full_log(
                     self.game_id.unwrap(),
-                    GameMessage::TributeLongRest(self.clone()).to_string(),
-                    Some(self.area.clone().unwrap().id()),
+                    GameMessage::TributeLongRest(tribute.clone()).to_string(),
+                    Some(tribute.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     None,
                     None
                 );
-                self.long_rests();
-                self.take_action(action, None);
             },
             TributeAction::Attack => {
-                let target = pick_target(self.clone().into());
+                let target = pick_target(tribute.clone().into());
                 if let Some(mut target) = target {
                     if target.is_visible() {
-                        match self.attacks(&mut target) {
+                        match tribute.attacks(&mut target) {
                             AttackOutcome::Kill(mut attacker, mut target) => {
                                 if attacker.health <= 0 {
                                     attacker.dies();
@@ -842,24 +886,15 @@ impl Tribute {
                                 }
                                 update_tribute(attacker.id.unwrap(), attacker.clone().into());
                                 update_tribute(target.id.unwrap(), target.clone().into());
-                                create_full_log(
-                                    self.game_id.unwrap(),
-                                    GameMessage::TributeAttackKill(attacker.clone(), target.clone()).to_string(),
-                                    Some(self.area.clone().unwrap().id()),
-                                    Some(attacker.id.unwrap()),
-                                    Some(action.as_str().to_string()),
-                                    Some(target.id.unwrap())
-                                );
                             },
                             _ => ()
                         }
                         self.take_action(action, Some(target.clone().name));
                     } else {
-                        println!("{}", GameMessage::TributeAttackHidden(self.clone(), target.clone()));
                         create_full_log(
                             self.game_id.unwrap(),
-                            GameMessage::TributeAttackHidden(self.clone(), target.clone()).to_string(),
-                            Some(self.area.clone().unwrap().id()),
+                            GameMessage::TributeAttackHidden(tribute.clone(), target.clone()).to_string(),
+                            Some(tribute.area.clone().unwrap().id()),
                             Some(self.id.unwrap()),
                             Some(action.clone().as_str().to_string()),
                             Some(target.id.unwrap())
@@ -869,40 +904,44 @@ impl Tribute {
                 }
             },
             TributeAction::None => {
-                self.long_rests();
-                self.take_action(action, None);
-            },
-            TributeAction::TakeItem => {
-                let item = self.take_nearby_item(area);
-                println!("{}", GameMessage::TributeTakeItem(self.clone(), item.clone()));
-                dbg!(&item);
-                dbg!(&action);
+                tribute.long_rests();
+                tribute.take_action(action, None);
                 create_full_log(
                     self.game_id.unwrap(),
-                    GameMessage::TributeTakeItem(self.clone(), item.clone()).to_string(),
-                    Some(self.area.clone().unwrap().id()),
+                    GameMessage::TributeLongRest(tribute.clone()).to_string(),
+                    Some(tribute.area.clone().unwrap().id()),
+                    Some(self.id.unwrap()),
+                    None,
+                    None
+                );
+            },
+            TributeAction::TakeItem => {
+                let item = tribute.take_nearby_item(area);
+                self.take_action(action.clone(), Some(item.name.clone()));
+                create_full_log(
+                    self.game_id.unwrap(),
+                    GameMessage::TributeTakeItem(tribute.clone(), item.clone()).to_string(),
+                    Some(tribute.area.clone().unwrap().id()),
                     Some(self.id.unwrap()),
                     Some(action.clone().as_str().to_string()),
                     Some(item.id.unwrap())
                 );
-                self.take_action(action, Some(item.name.clone()));
             },
             TributeAction::UseItem(None) => {
                 // Get consumable items
                 let mut items = self.consumable_items();
                 if items.is_empty() {
-                    self.long_rests();
+                    tribute.long_rests();
                     self.take_action(TributeAction::Rest, None);
                 } else {
                     // Use random item
                     let item = items.choose_mut(&mut thread_rng()).unwrap();
-                    match self.use_consumable(item.clone()) {
+                    match tribute.use_consumable(item.clone()) {
                         true => {
-                            println!("{}", GameMessage::TributeUseItem(self.clone(), item.clone()));
                             create_full_log(
                                 self.game_id.unwrap(),
-                                GameMessage::TributeUseItem(self.clone(), item.clone()).to_string(),
-                                Some(self.area.clone().unwrap().id()),
+                                GameMessage::TributeUseItem(tribute.clone(), item.clone()).to_string(),
+                                Some(tribute.area.clone().unwrap().id()),
                                 Some(self.id.unwrap()),
                                 Some(action.clone().as_str().to_string()),
                                 Some(item.id.unwrap())
@@ -910,33 +949,31 @@ impl Tribute {
                             self.take_action(action, Some(item.name.clone()));
                         },
                         false => {
-                            println!("{}", GameMessage::TributeCannotUseItem(self.clone(), item.clone()));
                             create_full_log(
                                 self.game_id.unwrap(),
-                                GameMessage::TributeCannotUseItem(self.clone(), item.clone()).to_string(),
-                                Some(self.area.clone().unwrap().id()),
+                                GameMessage::TributeCannotUseItem(tribute.clone(), item.clone()).to_string(),
+                                Some(tribute.area.clone().unwrap().id()),
                                 Some(self.id.unwrap()),
                                 Some(action.clone().as_str().to_string()),
                                 Some(item.id.unwrap())
                             );
-                            self.short_rests();
+                            tribute.short_rests();
                             self.take_action(TributeAction::Rest, None);
                         }
                     };
                 }
             }
             TributeAction::UseItem(item) => {
-                let items = self.consumable_items();
+                let items = tribute.consumable_items();
                 if let Some(item) = item {
                     let selected_item = items.iter().find(|i| i.name == item.clone());
                     if selected_item.is_some() {
-                        match self.use_consumable(selected_item.unwrap().clone()) {
+                        match tribute.use_consumable(selected_item.unwrap().clone()) {
                             true => {
-                                println!("{}", GameMessage::TributeUseItem(self.clone(), selected_item.unwrap().clone()));
                                 create_full_log(
                                     self.game_id.unwrap(),
-                                    GameMessage::TributeUseItem(self.clone(), selected_item.unwrap().clone()).to_string(),
-                                    Some(self.area.clone().unwrap().id()),
+                                    GameMessage::TributeUseItem(tribute.clone(), selected_item.unwrap().clone()).to_string(),
+                                    Some(tribute.area.clone().unwrap().id()),
                                     Some(self.id.unwrap()),
                                     Some(action.clone().as_str().to_string()),
                                     Some(selected_item.unwrap().id.unwrap())
@@ -944,16 +981,15 @@ impl Tribute {
                                 self.take_action(action, Some(selected_item.unwrap().name.clone()));
                             },
                             false => {
-                                println!("{}", GameMessage::TributeCannotUseItem(self.clone(), selected_item.unwrap().clone()));
                                 create_full_log(
                                     self.game_id.unwrap(),
-                                    GameMessage::TributeCannotUseItem(self.clone(), selected_item.unwrap().clone()).to_string(),
-                                    Some(self.area.clone().unwrap().id()),
+                                    GameMessage::TributeCannotUseItem(tribute.clone(), selected_item.unwrap().clone()).to_string(),
+                                    Some(tribute.area.clone().unwrap().id()),
                                     Some(self.id.unwrap()),
                                     Some(action.clone().as_str().to_string()),
                                     Some(selected_item.unwrap().id.unwrap())
                                 );
-                                self.short_rests();
+                                tribute.short_rests();
                                 self.take_action(TributeAction::Rest, None);
                             }
                         };
@@ -1071,7 +1107,14 @@ fn apply_violence_stress(tribute: &mut Tribute) {
     }
 
     if terror.round() > 0.0 {
-        println!("{}", GameMessage::TributeHorrified(tribute.clone(), terror.round() as i32));
+        create_full_log(
+            tribute.game_id.unwrap(),
+            GameMessage::TributeHorrified(tribute.clone(), terror.round() as i32).to_string(),
+            Some(tribute.area.clone().unwrap().id()),
+            Some(tribute.id.unwrap()),
+            None,
+            None
+        );
         tribute.takes_mental_damage(terror.round() as i32);
     }
 }
@@ -1084,7 +1127,6 @@ fn attack_contest(attacker: Tribute, target: Tribute) -> AttackResult {
         tribute1_roll += weapon.effect; // Add weapon damage
         weapon.quantity -= 1;
         if weapon.quantity <= 0 {
-            println!("{}", GameMessage::WeaponBreak(attacker.clone(), weapon.clone()));
             create_full_log(
                 attacker.game_id.unwrap(),
                 GameMessage::WeaponBreak(attacker.clone(), weapon.clone()).to_string(),
@@ -1107,7 +1149,6 @@ fn attack_contest(attacker: Tribute, target: Tribute) -> AttackResult {
         tribute2_roll += shield.effect; // Add weapon defense
         shield.quantity -= 1;
         if shield.quantity <= 0 {
-            println!("{}", GameMessage::ShieldBreak(target.clone(), shield.clone()));
             create_full_log(
                 target.game_id.unwrap(),
                 GameMessage::ShieldBreak(target.clone(), shield.clone()).to_string(),
@@ -1153,7 +1194,6 @@ pub fn pick_target(tribute: TributeModel) -> Option<Tribute> {
         0 => { // there are no other targets
             match tribute.sanity {
                 0..=9 => { // attempt suicide
-                    println!("{}", GameMessage::TributeSuicide(Tribute::from(tribute.clone())));
                     create_full_log(
                         tribute.game_id.unwrap(),
                         GameMessage::TributeSuicide(Tribute::from(tribute.clone())).to_string(),
@@ -1166,7 +1206,6 @@ pub fn pick_target(tribute: TributeModel) -> Option<Tribute> {
                 },
                 10..=19 => match thread_rng().gen_bool(0.2) {
                     true => { // attempt suicide
-                        println!("{}", GameMessage::TributeSuicide(Tribute::from(tribute.clone())));
                         create_full_log(
                             tribute.game_id.unwrap(),
                             GameMessage::TributeSuicide(Tribute::from(tribute.clone())).to_string(),
@@ -1211,7 +1250,7 @@ impl Default for Tribute {
     }
 }
 
-use crate::models::{create_full_log, get_all_living_tributes, get_area, get_area_by_id, get_game_by_id, update_item, update_tribute, Action, Tribute as TributeModel};
+use crate::models::{create_full_log, get_all_living_tributes, get_area, get_area_by_id, get_game_by_id, get_tribute_by_id, update_item, update_tribute, Action, Tribute as TributeModel};
 impl From<TributeModel> for Tribute {
     fn from(tribute: models::tribute::Tribute) -> Self {
         use crate::areas::Area;

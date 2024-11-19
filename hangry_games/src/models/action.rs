@@ -22,6 +22,5 @@ pub fn get_action(name: &str) -> Action {
         .filter(action::name.ilike(format!("{}%", name)))
         .first(connection)
         .expect("Error loading action");
-    dbg!(&action);
     action
 }

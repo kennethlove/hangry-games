@@ -153,7 +153,6 @@ impl Area {
         let closed_areas = game.closed_areas();
         let area = Area::random_open_area(closed_areas);
 
-        println!("{}", GameMessage::AreaEvent(event.clone(), area.clone()));
         create_full_log(
             game_id,
             GameMessage::AreaEvent(event.clone(), area.clone()).to_string(),
@@ -184,7 +183,6 @@ impl Area {
                 .collect::<Vec<_>>();
 
             for mut tribute in tributes {
-                println!("{}", GameMessage::TrappedInArea(tribute.clone(), area.clone()));
                 create_full_log(
                     game_id,
                     GameMessage::TrappedInArea(tribute.clone(), area.clone()).to_string(),
@@ -225,7 +223,6 @@ impl Area {
                     tribute.dies();
                     tribute.health = 0;
                     tribute.killed_by = Some(last_event.name.clone());
-                    println!("{}", GameMessage::DiedInArea(tribute.clone(), area.clone()));
                     create_full_log(
                         game_id,
                         GameMessage::DiedInArea(tribute.clone(), area.clone()).to_string(),
@@ -240,7 +237,6 @@ impl Area {
 
             // Re-open the area?
             if rng.gen_bool(0.5) {
-                println!("{}", GameMessage::AreaOpen(area.clone()));
                 create_full_log(
                     game_id,
                     GameMessage::AreaOpen(area.clone()).to_string(),
