@@ -1,9 +1,9 @@
 use crate::schema::log_entry;
-use crate::{establish_connection, models};
+use crate::{establish_connection, models, schema};
 use diesel::prelude::*;
 use models::get_game_by_id;
 
-#[derive(Queryable, Selectable, Debug, Associations)]
+#[derive(Queryable, Selectable, Debug, Associations, PartialEq, Clone)]
 #[diesel(table_name = log_entry)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[diesel(belongs_to(models::Area, foreign_key = area_id))]
@@ -68,6 +68,14 @@ impl LogEntry {
             .returning(LogEntry::as_returning())
             .get_result(connection)
             .expect("Error saving new log entry")
+    }
+
+    pub fn tribute(&self) -> Option<models::Tribute> {
+        let connection = &mut establish_connection();
+        match self.tribute_id {
+            Some(id) => Option::from(models::get_tribute_by_id(id)),
+            None => None,
+        }
     }
 }
 

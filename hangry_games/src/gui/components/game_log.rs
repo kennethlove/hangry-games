@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use crate::games::Game;
 use crate::gui::router::Routes;
-use crate::models::{get_game_by_id, get_logs_for_game_day};
+use crate::models::{get_game_by_id, get_logs_for_game_day, LogEntry};
 
 #[component]
 pub fn GameLog(id: i32) -> Element {
@@ -51,7 +51,7 @@ pub fn GameLog(id: i32) -> Element {
                             ol {
                                 class: "indent-4 mb-4 text-yellow-900 dark:text-yellow-200",
                                 for log in get_logs_for_game_day(game.id.unwrap(), day).iter() {
-                                    li { "{log.message}" }
+                                    LogListItem { log: log.clone() }
                                 }
                             }
                         }
@@ -74,6 +74,30 @@ pub fn GameLog(id: i32) -> Element {
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn LogListItem(log: LogEntry) -> Element {
+    let classes = match log.tribute_id {
+        Some(_) => "text-red-800 dark:text-yellow-500",
+        None => "text-yellow-800 dark:text-red-500 text-center",
+    };
+    let tribute = log.tribute();
+    if let Some(tribute) = tribute {
+        rsx! {
+            li {
+                class: classes,
+                "{log.message} by {tribute.name}"
+            }
+        }
+    } else {
+        rsx! {
+            li {
+                class: classes,
+                "{log.message}"
             }
         }
     }

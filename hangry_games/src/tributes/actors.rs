@@ -9,6 +9,8 @@ use rand::prelude::*;
 use std::str::FromStr;
 use crate::items::{Attribute, Item};
 use crate::messages::GameMessage;
+use crate::models::{create_full_log, get_all_living_tributes, get_area, get_area_by_id, get_game_by_id,
+                    get_tribute_by_id, update_item, update_tribute, Action, Tribute as TributeModel};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tribute {
@@ -330,9 +332,10 @@ impl Tribute {
         };
 
         if self.health <= 0 {
+            // Attacker was killed by target
             create_full_log(
                 self.game_id.unwrap(),
-                GameMessage::TributeAttackKill(self.clone(), target.clone()).to_string(),
+                GameMessage::TributeAttackDied(self.clone(), target.clone()).to_string(),
                 Some(self.area.clone().unwrap().id()),
                 Some(target.id.unwrap()),
                 Some("attack".to_string()),
@@ -343,6 +346,7 @@ impl Tribute {
             self.dies();
             AttackOutcome::Kill(target.clone(), self.clone())
         } else if target.health <= 0 {
+            // Target was killed by attacker
             create_full_log(
                 self.game_id.unwrap(),
                 GameMessage::TributeAttackSuccessKill(self.clone(), target.clone()).to_string(),
@@ -830,14 +834,6 @@ impl Tribute {
                     TravelResult::Failure => {
                         tribute.short_rests();
                         self.take_action(action.clone(), None);
-                        create_full_log(
-                            self.game_id.unwrap(),
-                            GameMessage::TributeRest(tribute.clone()).to_string(),
-                            Some(tribute.area.clone().unwrap().id()),
-                            Some(self.id.unwrap()),
-                            None,
-                            None
-                        );
                     }
                 }
             },
@@ -853,7 +849,7 @@ impl Tribute {
                     Some(self.id.unwrap())
                 );
             },
-            TributeAction::Rest => {
+            TributeAction::Rest | TributeAction::None => {
                 tribute.long_rests();
                 self.take_action(action, None);
                 create_full_log(
@@ -866,8 +862,7 @@ impl Tribute {
                 );
             },
             TributeAction::Attack => {
-                let target = pick_target(tribute.clone().into());
-                if let Some(mut target) = target {
+                if let Some(mut target) = pick_target(tribute.clone().into()) {
                     if target.is_visible() {
                         match tribute.attacks(&mut target) {
                             AttackOutcome::Kill(mut attacker, mut target) => {
@@ -902,18 +897,6 @@ impl Tribute {
                         self.take_action(TributeAction::Attack, None);
                     }
                 }
-            },
-            TributeAction::None => {
-                tribute.long_rests();
-                tribute.take_action(action, None);
-                create_full_log(
-                    self.game_id.unwrap(),
-                    GameMessage::TributeLongRest(tribute.clone()).to_string(),
-                    Some(tribute.area.clone().unwrap().id()),
-                    Some(self.id.unwrap()),
-                    None,
-                    None
-                );
             },
             TributeAction::TakeItem => {
                 let item = tribute.take_nearby_item(area);
@@ -997,7 +980,7 @@ impl Tribute {
                 }
             }
         }
-        self.clone()
+        tribute.clone()
     }
 
     fn take_action(&self, action: TributeAction, target: Option<String>) {
@@ -1250,7 +1233,6 @@ impl Default for Tribute {
     }
 }
 
-use crate::models::{create_full_log, get_all_living_tributes, get_area, get_area_by_id, get_game_by_id, get_tribute_by_id, update_item, update_tribute, Action, Tribute as TributeModel};
 impl From<TributeModel> for Tribute {
     fn from(tribute: models::tribute::Tribute) -> Self {
         use crate::areas::Area;

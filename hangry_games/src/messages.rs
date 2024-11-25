@@ -52,7 +52,7 @@ pub enum GameMessage {
     TributeAttackLose(Tribute, Tribute),
     TributeAttackLoseExtra(Tribute, Tribute),
     TributeAttackMiss(Tribute, Tribute),
-    TributeAttackKill(Tribute, Tribute),
+    TributeAttackDied(Tribute, Tribute),
     TributeAttackSuccessKill(Tribute, Tribute),
     TributeAttackHidden(Tribute, Tribute),
     TributeDiesFromStatus(Tribute, TributeStatus),
@@ -205,7 +205,7 @@ impl Display for GameMessage {
             GameMessage::TributeAttackMiss(tribute, target) => {
                 write!(f, "{}", format!("😰 {} attacks {}, but misses!", tribute.name, target.name))
             }
-            GameMessage::TributeAttackKill(tribute, target) => {
+            GameMessage::TributeAttackDied(tribute, target) => {
                 write!(f, "{}", format!("☠️ {} is killed by {}", tribute.name, target.name))
             }
             GameMessage::TributeAttackSuccessKill(tribute, target) => {
