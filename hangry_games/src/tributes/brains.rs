@@ -166,7 +166,9 @@ mod tests {
     #[test]
     fn decide_on_action_default() {
         // If there are no enemies nearby, the tribute should move
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        let mut tribute = Tribute::new("Katniss".to_string(), None, None);
+        tribute.id = Some(1);
+        tribute.game_id = Some(1);
         let action = tribute.brain.act(&tribute.clone(),2, vec![]);
         assert_eq!(action, TributeAction::Attack);
     }
@@ -174,7 +176,9 @@ mod tests {
     #[test]
     fn decide_on_action_low_health() {
         // If the tribute has low health, they should rest
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        let mut tribute = Tribute::new("Katniss".to_string(), None, None);
+        tribute.id = Some(1);
+        tribute.game_id = Some(1);
         tribute.takes_physical_damage(90);
         let action = tribute.brain.act(&tribute.clone(), 2, vec![]);
         assert_eq!(action, TributeAction::Move(None));
@@ -183,7 +187,9 @@ mod tests {
     #[test]
     fn decide_on_action_no_movement() {
         // If the tribute has no movement, they should rest
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        let mut tribute = Tribute::new("Katniss".to_string(), None, None);
+        tribute.id = Some(1);
+        tribute.game_id = Some(1);
         tribute.speed = Some(50);
         tribute.moves();
         tribute.moves();
@@ -194,7 +200,9 @@ mod tests {
     #[test]
     fn decide_on_action_enemies() {
         // If there are enemies nearby, the tribute should attack
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        let mut tribute = Tribute::new("Katniss".to_string(), None, None);
+        tribute.id = Some(1);
+        tribute.game_id = Some(1);
         let action = tribute.brain.act(&tribute.clone(), 2, vec![]);
         assert_eq!(action, TributeAction::Attack);
     }
@@ -203,7 +211,9 @@ mod tests {
     fn decide_on_action_enemies_low_health() {
         // If there are enemies nearby, but the tribute is low on health
         // the tribute should hide
-        let mut tribute = Tribute::new("Katniss".to_string(), None);
+        let mut tribute = Tribute::new("Katniss".to_string(), None, None);
+        tribute.id = Some(1);
+        tribute.game_id = Some(1);
         tribute.takes_physical_damage(90);
         let action = tribute.brain.act(&tribute.clone(), 2, vec![]);
         assert_eq!(action, TributeAction::Move(None));

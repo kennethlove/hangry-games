@@ -60,30 +60,16 @@ impl Game {
         let game = get_game(self.name.as_str()).expect("Error loading game");
         let the_cornucopia = Area::from_str("cornucopia").expect("Error loading area");
         for _ in 0..10 {
-            let knife = NewItem {
-                name: "knife".to_string(),
-                item_type: Weapon.to_string(),
-                game_id: Some(game.id),
-                area_id: Some(the_cornucopia.id()),
-                tribute_id: None,
-                quantity: 1,
-                attribute: Attribute::Strength.to_string(),
-                effect: 5,
-            };
-            create_item(knife);
-        }
-        for _ in 0..2 {
-            let health_pack = NewItem {
-                name: "health pack".to_string(),
-                item_type: Consumable.to_string(),
-                game_id: Some(game.id),
-                area_id: Some(the_cornucopia.id()),
-                tribute_id: None,
-                quantity: 1,
-                attribute: Attribute::Health.to_string(),
-                effect: 10,
-            };
-            create_item(health_pack);
+            Item::new_random_weapon(
+                Some(game.id),
+                Some(the_cornucopia.id()),
+                None
+            );
+            Item::new_generic_consumable(
+                Some(game.id),
+                Some(the_cornucopia.id()),
+                None
+            );
         }
     }
 
@@ -200,20 +186,17 @@ impl Game {
             if items.len() <= 12 {
                 let count = (12 - items.len()) / 3;
                 for _ in 0..count {
-                    Item::new_consumable(
-                        "Consumable".to_string(),
+                    Item::new_generic_consumable(
                         self.id,
                         Some(cornucopia.id()),
                         None
                     );
-                    Item::new_weapon(
-                        "Weapon".to_string(),
+                    Item::new_random_weapon(
                         self.id,
                         Some(cornucopia.id()),
                         None
                     );
-                    Item::new_shield(
-                        "Shield".to_string(),
+                    Item::new_random_shield(
                         self.id,
                         Some(cornucopia.id()),
                         None
