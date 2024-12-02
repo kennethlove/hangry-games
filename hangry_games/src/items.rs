@@ -5,6 +5,7 @@ use crate::models::{get_area_by_id, get_game_by_id, update_item, UpdateItem};
 use rand::Rng;
 use std::fmt::Display;
 use std::str::FromStr;
+use crate::item_name_generator::{generate_shield_name, generate_weapon_name};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Item {
@@ -87,6 +88,11 @@ impl Item {
         Item::create(name, item_type.to_string(), quantity, attribute.to_string(), effect, game_id, area_id, tribute_id)
     }
 
+    pub fn new_random_weapon(game_id: Option<i32>, area_id: Option<i32>, tribute_id: Option<i32>) -> Item {
+        let name = generate_weapon_name();
+        Item::new_weapon(name, game_id, area_id, tribute_id)
+    }
+
     pub fn new_consumable(name: String, game_id: Option<i32>, area_id: Option<i32>, tribute_id: Option<i32>) -> Item {
         let mut rng = rand::thread_rng();
 
@@ -98,6 +104,42 @@ impl Item {
         Item::create(name, item_type.to_string(), quantity, attribute.to_string(), effect, game_id, area_id, tribute_id)
     }
 
+    pub fn new_generic_consumable(game_id: Option<i32>, area_id: Option<i32>, tribute_id: Option<i32>) -> Item {
+        let mut item = Item::new_consumable("NONE".to_string(), game_id, area_id, tribute_id);
+        match item.attribute {
+            Attribute::Health => {
+                // restores health
+                item.name = "health kit".to_string();
+            }
+            Attribute::Sanity => {
+                // restores sanity
+                item.name = "memento".to_string();
+            }
+            Attribute::Movement => {
+                // move further
+                item.name = "trail mix".to_string();
+            }
+            Attribute::Bravery => {
+                // sure, you can win that fight
+                item.name = "yayo".to_string();
+            }
+            Attribute::Speed => {
+                // move faster
+                item.name = "go-juice".to_string();
+            }
+            Attribute::Strength => {
+                // hit harder
+                item.name = "adrenaline".to_string();
+            }
+            Attribute::Defense => {
+                // take hits better
+                item.name = "bear spray".to_string();
+            }
+        }
+        item.save();
+        item
+    }
+
     pub fn new_shield(name: String, game_id: Option<i32>, area_id: Option<i32>, tribute_id: Option<i32>) -> Item {
         let mut rng = rand::thread_rng();
 
@@ -107,6 +149,11 @@ impl Item {
         let effect = rng.gen_range(1..=7);
 
         Item::create(name, item_type.to_string(), quantity, attribute.to_string(), effect, game_id, area_id, tribute_id)
+    }
+
+    pub fn new_random_shield(game_id: Option<i32>, area_id: Option<i32>, tribute_id: Option<i32>) -> Item {
+        let name = generate_shield_name();
+        Item::new_shield(name, game_id, area_id, tribute_id)
     }
 
     pub fn is_weapon(&self) -> bool {

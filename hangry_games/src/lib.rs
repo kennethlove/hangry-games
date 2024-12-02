@@ -10,5 +10,6 @@ pub mod models;
 pub mod messages;
 pub mod schema;
 pub mod tributes;
+pub mod item_name_generator;
 
 pub use db::establish_connection;

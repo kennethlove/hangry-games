@@ -781,7 +781,7 @@ impl Tribute {
         };
 
         if thread_rng().gen_bool(chance) {
-            let item = Item::new_random("Gift".to_string(), self.game_id, None, self.id);
+            let item = Item::new_generic_consumable(self.game_id, None, self.id);
             create_full_log(
                 self.game_id.unwrap(),
                 GameMessage::SponsorGift(tribute.clone(), item.clone()).to_string(),

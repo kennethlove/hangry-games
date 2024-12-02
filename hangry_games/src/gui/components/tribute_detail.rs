@@ -206,11 +206,11 @@ pub fn TributeDetail(id: i32) -> Element {
                                 }
                                 dd {
                                     {
-                                        let mut killer = "Unknown";
+                                        let mut _killer = "Unknown";
                                         if tribute.read().killed_by.is_some() {
-                                            killer = tribute.read().killed_by.as_ref().unwrap();
+                                            _killer = tribute.read().killed_by.as_ref().unwrap();
                                         }
-                                        "{killer}"
+                                        "{_killer}"
                                     }
                                 }
                             }

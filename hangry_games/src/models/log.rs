@@ -1,5 +1,5 @@
 use crate::schema::log_entry;
-use crate::{establish_connection, models, schema};
+use crate::{establish_connection, models};
 use diesel::prelude::*;
 use models::get_game_by_id;
 
@@ -71,7 +71,6 @@ impl LogEntry {
     }
 
     pub fn tribute(&self) -> Option<models::Tribute> {
-        let connection = &mut establish_connection();
         match self.tribute_id {
             Some(id) => Option::from(models::get_tribute_by_id(id)),
             None => None,
