@@ -17,7 +17,7 @@ fn main() {
     if cfg!(target_family = "windows") {
         head.push_str(r#"<link rel="stylesheet" href="assets/hangry-games.css">"#);
     } else {
-        head.push_str(r#"<link rel="stylesheet" href="hangry-games.css">"#);
+        head.push_str(r#"<link rel="stylesheet" href="assets/hangry-games.css">"#);
     }
 
     let config = Config::new()

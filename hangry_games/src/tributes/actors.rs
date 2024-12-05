@@ -42,6 +42,7 @@ pub struct Tribute {
     pub dexterity: Option<i32>,
     pub status: TributeStatus,
     pub avatar: Option<String>,
+    pub real_name: Option<String>,
 }
 
 impl Tribute {
@@ -79,6 +80,7 @@ impl Tribute {
             dexterity: Some(rng.gen_range(1..=100)),
             status: TributeStatus::Healthy,
             avatar,
+            real_name: None,
         }
     }
 
@@ -92,11 +94,7 @@ impl Tribute {
     }
 
     pub fn avatar(&self) -> String {
-        if cfg!(target_family = "windows") {
-            format!("assets/{}", self.avatar.clone().unwrap_or("hangry-games.png".to_string()))
-        } else {
-            self.avatar.clone().unwrap_or("hangry-games.png".to_string())
-        }
+        format!("assets/{}", self.avatar.clone().unwrap_or("hangry-games.png".to_string()))
     }
 
     /// Reduces health, triggers death if health reaches 0.
@@ -1281,6 +1279,7 @@ impl From<TributeModel> for Tribute {
             dexterity: tribute.dexterity,
             status: TributeStatus::from_str(tribute.status.as_str()).unwrap(),
             avatar: tribute.avatar.clone(),
+            real_name: tribute.real_name,
         }
     }
 }
@@ -1319,6 +1318,7 @@ impl Into<UpdateTribute> for Tribute {
             dexterity: self.dexterity,
             status: self.status.to_string(),
             avatar: self.avatar,
+            real_name: self.real_name.clone(),
         }
     }
 }
