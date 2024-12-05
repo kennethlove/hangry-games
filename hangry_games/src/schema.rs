@@ -102,6 +102,7 @@ diesel::table! {
         #[max_length = 255]
         status -> Varchar,
         avatar -> Nullable<Text>,
+        real_name -> Nullable<Text>,
     }
 }
 

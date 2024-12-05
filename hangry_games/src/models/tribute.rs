@@ -39,6 +39,7 @@ pub struct Tribute {
     pub dexterity: Option<i32>,
     pub status: String,
     pub avatar: Option<String>,
+    pub real_name: Option<String>,
 }
 
 impl Tribute {
@@ -212,6 +213,7 @@ impl From<crate::tributes::actors::Tribute> for Tribute {
             dexterity: tribute.dexterity,
             status: tribute.status.to_string(),
             avatar: tribute.avatar,
+            real_name: tribute.real_name,
         };
         out_tribute
     }
@@ -233,6 +235,7 @@ pub struct NewTribute {
     pub dexterity: Option<i32>,
     pub status: String,
     pub avatar: Option<String>,
+    pub real_name: Option<String>,
 }
 
 impl From<crate::tributes::actors::Tribute> for NewTribute {
@@ -251,6 +254,7 @@ impl From<crate::tributes::actors::Tribute> for NewTribute {
             dexterity: tribute.dexterity,
             status: tribute.status.to_string(),
             avatar: tribute.avatar,
+            real_name: tribute.real_name,
         };
         out_tribute
     }
@@ -285,7 +289,8 @@ pub struct UpdateTribute {
     pub is_hidden: Option<bool>,
     pub dexterity: Option<i32>,
     pub status: String,
-    pub avatar: Option<String>
+    pub avatar: Option<String>,
+    pub real_name: Option<String>,
 }
 
 #[derive(Insertable, Debug, AsChangeset)]
@@ -293,7 +298,8 @@ pub struct UpdateTribute {
 pub struct EditTribute {
     pub name: String,
     pub district: i32,
-    pub avatar: Option<String>
+    pub avatar: Option<String>,
+    pub real_name: Option<String>,
 }
 
 pub fn edit_tribute(tribute_id: i32, tribute: EditTribute) {
@@ -394,6 +400,7 @@ pub fn update_tribute(tribute_id: i32, tribute: Tribute) {
         dexterity: tribute.dexterity,
         status: tribute.status,
         avatar: tribute.avatar,
+        real_name: tribute.real_name,
     };
     diesel::update(tribute::table.find(tribute_id))
         .set(&update_tribute)

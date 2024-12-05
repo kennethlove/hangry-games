@@ -98,6 +98,7 @@ pub fn TributeEdit(id: i32) -> Element {
                         dexterity: tribute.read().dexterity,
                         status: tribute.read().status.to_string(),
                         avatar: if new_avatar_path.is_some() { Some(new_avatar_path.unwrap()) } else { tribute.read().avatar.clone() },
+                        real_name: tribute.read().real_name.clone(),
                     };
                     Tribute::update(&tribute.read(), update);
 
@@ -140,6 +141,17 @@ pub fn TributeEdit(id: i32) -> Element {
                             name: "tribute-district".to_string(),
                             placeholder: "District".to_string(),
                             oninput: move |evt: Rc<FormData>| tribute.write().district = evt.value().parse::<i32>().unwrap()
+                        }
+                    }
+                    div {
+                        class: "w-full mb-2",
+                        InputWithLabel {
+                            label: "Real name".to_string(),
+                            value: tribute.read().real_name.clone().unwrap_or("".to_string()),
+                            name: "tribute-real-name".to_string(),
+                            placeholder: "Real name".to_string(),
+                            oninput: move |evt: Rc<FormData>| tribute.write().real_name = Some(evt.value().clone()),
+                            extra_css_classes: Some("w-72".to_string())
                         }
                     }
                     div {

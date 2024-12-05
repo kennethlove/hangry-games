@@ -7,7 +7,7 @@ use crate::tributes::actors::Tribute;
 #[component]
 pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>, game: Game) -> Element {
     let mut avatar = Some(
-        format!("{}", tribute.avatar.as_ref().unwrap_or(&"hangry-games.png".to_string()))
+        format!("assets/{}", tribute.avatar.as_ref().unwrap_or(&"hangry-games.png".to_string()))
     );
 
     if cfg!(target_family = "windows") {
@@ -32,6 +32,8 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>, game: Gam
         _ => "from-gray-900 to-gray-700",
     };
 
+    let real_name = tribute.clone().real_name.unwrap_or("".to_string());
+
     rsx! {
         div {
             class: "group relative block overflow-hidden rounded-full border-4 border-orange-200 p-2 mb-2 bg-gray-800 bg-gradient-to-b {gradient_stop}",
@@ -49,6 +51,19 @@ pub fn TributeListItem(tribute: Tribute, signal: Signal<Vec<Tribute>>, game: Gam
                         Link {
                             to: Routes::TributeDetail { id: tribute.id.unwrap() },
                             "{tribute.name}"
+                        }
+                    }
+                    if real_name.len() > 0 {
+                        div {
+                            class: "text-xs text-white flex flex-row gap-1",
+                            span {
+                                class: "text-orange-300 material-symbols-outlined text-sm",
+                                "person"
+                            }
+                            span {
+                                class: "uppercase mt-0.5",
+                                "{real_name}"
+                            }
                         }
                     }
                     div {
