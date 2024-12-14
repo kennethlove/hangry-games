@@ -105,7 +105,7 @@ fn ConfirmFillModal(id: i32, mut tributes: Signal<Vec<Tribute>>) -> Element {
             open: state.read().show,
             class: "relative z-10",
             role: "alert",
-            div { class: "fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"}
+            div { class: "v-full w-full fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"}
             div {
                 class: "fixed inset-0 z-10 w-screen overflow-y-hidden",
                 div {

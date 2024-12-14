@@ -16,3 +16,15 @@ rand = "0.8.5"
 dioxus = { version = "0.5.6", features = ["desktop", "router"] }
 dioxus-logger = "0.5.1"
 strum = { version = "0.26.3", features = ["derive"] }
+
+[profile]
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 1
+
+[profile.server-dev]
+inherits = "dev"
+
+[profile.android-dev]
+inherits = "dev"
